@@ -22,7 +22,7 @@
 		</data>
 		<key>flutter_assets/NOTICES.Z</key>
 		<data>
-		g8BmmQNzVc6RwbfsXRj2eUMNKOA=
+		Dg6xqvNvQ0JDhg1qKOBSdnCMUOc=
 		</data>
 		<key>flutter_assets/NativeAssetsManifest.json</key>
 		<data>
@@ -70,11 +70,11 @@
 		</data>
 		<key>flutter_assets/isolate_snapshot_data</key>
 		<data>
-		gRDbYzMNgtJeT9rLZDdiOJ0RXMg=
+		PgYZNgZ7nxC3tFt+nGCEL6wxuNY=
 		</data>
 		<key>flutter_assets/kernel_blob.bin</key>
 		<data>
-		cuIfBCFo732VwNuaGp7CEV5sVPw=
+		gAkj6qyGyFsxYx1z6YGj9AwdyVk=
 		</data>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
 		<data>
@@ -82,11 +82,11 @@
 		</data>
 		<key>flutter_assets/shaders/ink_sparkle.frag</key>
 		<data>
-		VoVnsu58hN7wrwazX0nyAopiB0Q=
+		VvTF10G1gIeea4aI0DhJjCjHgXQ=
 		</data>
 		<key>flutter_assets/vm_snapshot_data</key>
 		<data>
-		6f33nJbLQOxwLNQ7Pq7TZR9ENuo=
+		SoHnDHqzNKozN7o/zhsvOoXVErY=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -116,7 +116,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			jeFJYIYg0IKkruIMHjBScB5UN8Xo+RophvBa6ZaymRg=
+			6AM62W5FoCqzwJFzLRlo7tzLk4CGBttY14pjI+Qm2qw=
 			</data>
 		</dict>
 		<key>flutter_assets/NativeAssetsManifest.json</key>
@@ -200,14 +200,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Ut/uEhc6+hUf6S/IpyxQydpXSJV0AmyYEkKu13s4D6o=
+			Y6T4MBhQBv9hSvbFzkj/7l2qb75MlOBIl0B6jKveoKE=
 			</data>
 		</dict>
 		<key>flutter_assets/kernel_blob.bin</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			UFS/LLB20zIHtzBmFpWibA2inZfd8S2ldZUcwS8FlHs=
+			QWMhzzIT6DL25yx59/XXSn+pAFHdmOomj1RsOtIVLR0=
 			</data>
 		</dict>
 		<key>flutter_assets/packages/cupertino_icons/assets/CupertinoIcons.ttf</key>
@@ -221,14 +221,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			4PC1vOWKHlNOnW4dGwFfD4TPwBCllniPCsOy7+1X5co=
+			TGVjYgE+Oyl6guvhhPPrWfynkxkJeFjSzSLsQqn7Q3M=
 			</data>
 		</dict>
 		<key>flutter_assets/vm_snapshot_data</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			EkAQI7At/OAUaTSQUy3t6/4PpHWrvbPs+YdJHmzJ978=
+			RTqty/gYjcrXxgR3QLjNukvL8gGpfV6MdaYktQJaIa8=
 			</data>
 		</dict>
 	</dict>
