@@ -1,4 +1,4 @@
-package com.example.eato
+package com.hlt.eato
 
 import io.flutter.embedding.android.FlutterActivity
 

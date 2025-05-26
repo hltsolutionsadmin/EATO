@@ -1,6 +1,6 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-3    package="com.example.eato"
+3    package="com.hlt.eato"
 4    android:versionCode="1"
 5    android:versionName="1.0.0" >
 6
@@ -76,12 +76,12 @@
 46
 47    <permission
 47-->[androidx.core:core:1.13.1] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:22:5-24:47
-48        android:name="com.example.eato.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+48        android:name="com.hlt.eato.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
 48-->[androidx.core:core:1.13.1] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:23:9-81
 49        android:protectionLevel="signature" />
 49-->[androidx.core:core:1.13.1] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:24:9-44
 50
-51    <uses-permission android:name="com.example.eato.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+51    <uses-permission android:name="com.hlt.eato.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
 51-->[androidx.core:core:1.13.1] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:26:5-97
 51-->[androidx.core:core:1.13.1] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/8cf478dec41eed746328fa8046755ba2/transformed/core-1.13.1/AndroidManifest.xml:26:22-94
 52
@@ -94,7 +94,7 @@
 58        android:icon="@mipmap/ic_launcher"
 59        android:label="eato" >
 60        <activity
-61            android:name="com.example.eato.MainActivity"
+61            android:name="com.hlt.eato.MainActivity"
 62            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
 63            android:exported="true"
 64            android:hardwareAccelerated="true"
@@ -170,7 +170,7 @@
 112-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:24:9-32:20
 113            android:name="androidx.startup.InitializationProvider"
 113-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:25:13-67
-114            android:authorities="com.example.eato.androidx-startup"
+114            android:authorities="com.hlt.eato.androidx-startup"
 114-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:26:13-68
 115            android:exported="false" >
 115-->[androidx.lifecycle:lifecycle-process:2.7.0] /Users/jagadeesh/.gradle/caches/8.10.2/transforms/e80aa748ff6540407d8dba61c0d945fe/transformed/jetified-lifecycle-process-2.7.0/AndroidManifest.xml:27:13-37

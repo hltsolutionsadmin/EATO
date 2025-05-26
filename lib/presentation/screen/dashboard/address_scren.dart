@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -9,154 +7,158 @@ class AddressScreen extends StatefulWidget {
   State<AddressScreen> createState() => _AddressScreenState();
 }
 
-class _AddressScreenState extends State<AddressScreen> {
-  String selectedAddress = 'Tap below to select your delivery address';
-  late GoogleMapController _mapController;
-  final LatLng _initialPosition = LatLng(28.6139, 77.2090); // Delhi
+class _AddressScreenState extends State<AddressScreen>
+    with SingleTickerProviderStateMixin {
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController houseController = TextEditingController();
+  final TextEditingController streetController = TextEditingController();
+  final TextEditingController landmarkController = TextEditingController();
+  final TextEditingController cityController = TextEditingController();
+  final TextEditingController stateController = TextEditingController();
+  final TextEditingController pincodeController = TextEditingController();
 
-void _openEditAddressBottomSheet() async {
-  final result = await showCupertinoModalBottomSheet<String>(
-    context: context,
-    expand: false,
-    builder: (_) => EditAddressBottomSheet(),
-  );
+  List<String> savedAddresses = [];
 
-  if (result != null && result.isNotEmpty) {
+  void _saveAddress() {
+    if (nameController.text.trim().isEmpty ||
+        phoneController.text.trim().isEmpty ||
+        houseController.text.trim().isEmpty ||
+        streetController.text.trim().isEmpty ||
+        cityController.text.trim().isEmpty ||
+        stateController.text.trim().isEmpty ||
+        pincodeController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please fill all required fields")),
+      );
+      return;
+    }
+
+    final fullAddress = '''
+Name: ${nameController.text}
+Phone: ${phoneController.text}
+${houseController.text}, ${streetController.text}
+${landmarkController.text.isNotEmpty ? "Landmark: ${landmarkController.text}\n" : ""}
+${cityController.text}, ${stateController.text} - ${pincodeController.text}
+''';
+
     setState(() {
-      selectedAddress = result;
+      savedAddresses.add(fullAddress);
     });
-  }
-}
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Address Saved")),
+    );
+
+    // Clear fields after saving
+    nameController.clear();
+    phoneController.clear();
+    houseController.clear();
+    streetController.clear();
+    landmarkController.clear();
+    cityController.clear();
+    stateController.clear();
+    pincodeController.clear();
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller,
+      {int maxLines = 1, bool required = true}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label + (required ? ' *' : ''),
+          style: const TextStyle(fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          keyboardType: label == "Phone Number" || label == "Pincode"
+              ? TextInputType.number
+              : TextInputType.text,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey.shade100,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            hintText: 'Enter $label',
+          ),
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        title: const Text("Select Delivery Location", style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.transparent,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-      ),
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: CameraPosition(target: _initialPosition, zoom: 14),
-            onMapCreated: (controller) => _mapController = controller,
-            myLocationEnabled: true,
-            myLocationButtonEnabled: true,
-            zoomControlsEnabled: false,
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Delivery Address"),
+          centerTitle: true,
+          backgroundColor: Colors.deepOrange,
+          foregroundColor: Colors.white,
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: "Add Address"),
+              Tab(text: "Saved Addresses"),
+            ],
           ),
-          Center(
-            child: Icon(Icons.location_on, size: 40, color: Colors.deepOrange.withOpacity(0.9)),
-          ),
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.95),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
-              ),
+        ),
+        body: TabBarView(
+          children: [
+            // Tab 1: Add Address
+            SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    selectedAddress,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton.icon(
-                    onPressed: _openEditAddressBottomSheet,
-                    icon: const Icon(Icons.edit_location_alt),
-                    label: const Text("Choose Address"),
+                  _buildTextField("Full Name", nameController),
+                  _buildTextField("Phone Number", phoneController),
+                  _buildTextField("House No. / Building", houseController),
+                  _buildTextField("Street / Locality", streetController),
+                  _buildTextField("Landmark (optional)", landmarkController,
+                      required: false),
+                  _buildTextField("City", cityController),
+                  _buildTextField("State", stateController),
+                  _buildTextField("Pincode", pincodeController),
+                  ElevatedButton(
+                    onPressed: _saveAddress,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepOrange,
                       foregroundColor: Colors.white,
                       minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
+                    child: const Text("Save Address"),
                   ),
                 ],
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
-class EditAddressBottomSheet extends StatefulWidget {
-  const EditAddressBottomSheet({super.key});
-
-  @override
-  State<EditAddressBottomSheet> createState() => _EditAddressBottomSheetState();
-}
-
-class _EditAddressBottomSheetState extends State<EditAddressBottomSheet> {
-  final TextEditingController _controller = TextEditingController();
-
-  void _submitAddress() {
-    if (_controller.text.trim().isNotEmpty) {
-      Navigator.pop(context, _controller.text.trim());
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom), // for keyboard
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 50,
-              height: 5,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              "Enter Delivery Address",
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _controller,
-              maxLines: 4,
-              decoration: InputDecoration(
-                hintText: "House No, Street, City, Zip Code",
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _submitAddress,
-              child: const Text("Save Address"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-              ),
-            ),
+            // Tab 2: Saved Addresses
+            savedAddresses.isEmpty
+                ? const Center(child: Text("No saved addresses"))
+                : ListView.separated(
+                    padding: const EdgeInsets.all(20),
+                    itemCount: savedAddresses.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      return Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          border: Border.all(color: Colors.deepOrange),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(savedAddresses[index]),
+                      );
+                    },
+                  ),
           ],
         ),
       ),
