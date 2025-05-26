@@ -14,7 +14,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		jRVe960/sf0o466t5yfEEX2T3NI=
+		nU/OlgI5O4kpPZJMl+JpstNclwY=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -22,11 +22,11 @@
 		</data>
 		<key>Modules/speech_to_text.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		2T/OLndg3CoXIEfWLWpcdAQ9CuI=
+		ynZXJJh7UUrN+uO9LYal5DWi8tc=
 		</data>
 		<key>Modules/speech_to_text.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		Shg8TrEsaS8EoP7sfu/jG2z/ylM=
+		hrEnuZbE5rWOsV3at7unjUWNOic=
 		</data>
 		<key>Modules/speech_to_text.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -38,7 +38,7 @@
 		</data>
 		<key>Modules/speech_to_text.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		2Go3mTnsmSg9YcNl3m3KOVYWZv0=
+		XyHDtsw82y05UDiuO77/CRqYiLQ=
 		</data>
 		<key>Modules/speech_to_text.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
@@ -50,7 +50,7 @@
 		</data>
 		<key>Modules/speech_to_text.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		pNmz3glguqTP7V6Z5fA280SuH1s=
+		WAsTSCLhss8BcVY1tKoDJnsN9j4=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -80,14 +80,14 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			xndPWVFUyjEHLJIsjmLlAlnsNYjm+9X/ljJW/JSebo4=
+			Obe8fW/JpZaYa6nrQzrEBc4OtFGQvU49gTbjp4NSe8E=
 			</data>
 		</dict>
 		<key>Modules/speech_to_text.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			/W/IoiXfRmuwBZVKLODQ0yKAKsS+e0XX0tMcUQBts20=
+			Z0DjVYuMC59Q8eICjVc3GPTyj5bMqilgA58okvgrY/c=
 			</data>
 		</dict>
 		<key>Modules/speech_to_text.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
@@ -108,7 +108,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			+x2jgehhn39zdhBxVg5eX76pQSc2XEVN3sG93f12PEY=
+			HoPCSV+QQzcIK9+rqoNTQ0It3qYv+bn+HKIMbfrSm5g=
 			</data>
 		</dict>
 		<key>Modules/speech_to_text.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
@@ -129,7 +129,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			/SKErErt5ZLun5kmLeVwoEdchFX/e+IzoXUzYlzt6Lk=
+			9pcX6bzvZUuoTRghj2XOXtL27WQxlNeMJpB5tx+JMbQ=
 			</data>
 		</dict>
 	</dict>
