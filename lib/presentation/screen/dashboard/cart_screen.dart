@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:eato/components/custom_button.dart' as eato_button;
+import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
@@ -7,6 +10,8 @@ import 'package:eato/presentation/screen/dashboard/address_scren.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class CartScreen extends StatefulWidget {
   final List<Map<String, dynamic>> cartItems;
@@ -23,6 +28,11 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
+  late Razorpay _razorpay;
+  //chaitanya//
+  final razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
+  final razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
+  bool loading = false;
   late Map<String, int> cart;
   late List<Map<String, dynamic>> selectedItems;
 
@@ -34,7 +44,103 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
     _initializeCartAndSelectedItems();
+  }
+
+  void handlePaymentSuccess(PaymentSuccessResponse response) async {}
+
+  void handlePaymentFailure(PaymentFailureResponse response) {
+    print('Payment Failure: ${response.message}');
+    CustomSnackbars.showErrorSnack(
+      context: context,
+      title: 'ERROR',
+      message: 'payment failed, please try after some time',
+    );
+    setState(() {
+      loading = false;
+    });
+  }
+
+  void handleExternalWallet(ExternalWalletResponse response) {
+    print('External Wallet: ${response.walletName}');
+    CustomSnackbars.showInfoSnack(
+      context: context,
+      title: 'Info',
+      message: 'Transaction under process, please check after some time',
+    );
+    setState(() {
+      loading = false;
+    });
+  }
+
+  void openCheckOut() async {
+    String orderId = await createOrder(amount: 300);
+    print('orderId---$orderId');
+    var options = {
+      'key': razorPayKey,
+      'amount': 200 * 100,
+      'name': 'EATO',
+      'order_id': orderId,
+      'description': 'name',
+      'timeout': 90,
+      'prefill': {'contact': '9705047662', 'email': 'harishpeela03@gmail.com'},
+      'image':
+          "https://koveladev.s3.eu-north-1.amazonaws.com/1738847003650app_icon.png",
+      'theme': {
+        'color': '#F0C244',
+        'hide_topbar': false,
+        'backdrop_color': '#F0C244',
+      }
+    };
+    try {
+      _razorpay.open(options);
+    } catch (e) {
+      print("Error: $e");
+    }
+  }
+
+  razorPayApi(num amount, String recieptId) async {
+    var auth =
+        'Basic ${base64Encode(utf8.encode('$razorPayKey:$razorPaySecret'))}';
+    var headers = {
+      'content-type': 'application/json',
+      "Access-Control_Allow_Origin": "*",
+      'Authorization': auth
+    };
+    var data = {
+      "amount": amount.toInt(),
+      "currency": "INR",
+      "receipt": recieptId
+    };
+    var request =
+        http.Request('POST', Uri.parse('https://api.razorpay.com/v1/orders'));
+    request.body = json.encode(data);
+    request.headers.addAll(headers);
+
+    http.StreamedResponse response = await request.send();
+    if (response.statusCode == 200) {
+      return {
+        "status": "success",
+        "body": jsonDecode(await response.stream.bytesToString())
+      };
+    } else {
+      return {"status": "fail", "message": (response.reasonPhrase)};
+    }
+  }
+
+  Future<String> createOrder({required num amount}) async {
+    final myData = await razorPayApi(amount, "rcp_id_2");
+    if (myData["status"] == "success") {
+      debugPrint("Order Created: ${myData["body"]}");
+      return myData["body"]["id"];
+    } else {
+      debugPrint("Order Creation Failed: ${myData["message"]}");
+      return "";
+    }
   }
 
   void _initializeCartAndSelectedItems() {
@@ -44,7 +150,10 @@ class _CartScreenState extends State<CartScreen> {
       final productId = item['productId'] as int?;
       final quantity = item['quantity'] as int?;
       final name = item['name'] as String?;
-      if (productId != null && quantity != null && quantity > 0 && name != null) {
+      if (productId != null &&
+          quantity != null &&
+          quantity > 0 &&
+          name != null) {
         cart[name] = quantity;
         selectedItems.add(item);
       }
@@ -139,8 +248,6 @@ class _CartScreenState extends State<CartScreen> {
     print("Payload: $payload");
   }
 
-  
-
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProductsAddToCartCubit, ProductsAddToCartState>(
@@ -189,7 +296,8 @@ class _CartScreenState extends State<CartScreen> {
               Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -199,10 +307,15 @@ class _CartScreenState extends State<CartScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Deliver to", style: TextStyle(fontSize: 14, color: Colors.grey)),
+                              const Text("Deliver to",
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey)),
                               Text(
                                 selectedAddress,
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                                style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white),
                               ),
                             ],
                           ),
@@ -211,7 +324,8 @@ class _CartScreenState extends State<CartScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => AddressScreen()),
+                              MaterialPageRoute(
+                                  builder: (context) => AddressScreen()),
                             );
                           },
                           child: const Text("Edit"),
@@ -224,7 +338,8 @@ class _CartScreenState extends State<CartScreen> {
                         ? const Center(
                             child: Text(
                               "No items in the cart!",
-                              style: TextStyle(fontSize: 18, color: Colors.grey),
+                              style:
+                                  TextStyle(fontSize: 18, color: Colors.grey),
                             ),
                           )
                         : ListView.builder(
@@ -277,7 +392,8 @@ class _CartScreenState extends State<CartScreen> {
                           ? const CircularProgressIndicator()
                           : eato_button.CustomButton(
                               buttonText: "Checkout",
-                              onPressed: () => handleCheckout(context),
+                              // onPressed: () => handleCheckout(context),
+                              onPressed: () => openCheckOut(),
                             ),
                     ],
                   ),

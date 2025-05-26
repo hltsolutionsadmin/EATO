@@ -8,7 +8,7 @@ const userDetails = 'user/userDetails';
 const rolePostUrl = 'user/user';
 String getNearbyRestaurantsUrl(
     double latitude, double longitude, String postalCode, int page, int size) {
-  return 'business/find?latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalCode&page=$page&size=$size';
+  return 'business/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&page=$page&size=$size';
 }
 const addressSave = 'api/addresses/save';
 
