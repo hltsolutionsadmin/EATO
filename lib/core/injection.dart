@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:eato/core/network/dio_client.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/core/network/network_service.dart';
+import 'package:eato/data/datasource/address/getAddress/getAddress_dataSource.dart';
+import 'package:eato/data/datasource/address/saveAddress/saveAddress_dataSource.dart';
 import 'package:eato/data/datasource/authentication/current_customer_remote_data_source.dart';
 import 'package:eato/data/datasource/authentication/rolesPost_dataSource.dart';
 import 'package:eato/data/datasource/authentication/signin_remote_data_source.dart';
@@ -12,8 +14,12 @@ import 'package:eato/data/datasource/cart/getCart/getCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/productsAddToCart/productsAddtoCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/updateCartItems/updateCartItems_dataSource.dart';
 import 'package:eato/data/datasource/location/location_remotedatasource.dart';
+import 'package:eato/data/datasource/payment/payment_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getNearbyRestaurants/getNearByrestarants_dataSource.dart';
+import 'package:eato/data/datasource/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_dataSource.dart';
+import 'package:eato/data/repositoryImpl/address/getAddress/getAddress_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/address/saveAddress/saveAddress_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/authentication/current_customer_repository_impl.dart';
 import 'package:eato/data/repositoryImpl/authentication/rolesPost_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/authentication/signin_repository_impl.dart';
@@ -24,8 +30,12 @@ import 'package:eato/data/repositoryImpl/cart/getCart/getCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/productsAddToCart/productsAddtoCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/updateCartItems/updateCartItems_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/location/location_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/payment/payment_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getNearbyRestaurants/getNearByrestarants_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_repoImpl.dart';
+import 'package:eato/domain/repository/address/getAddress/getAddress_repository.dart';
+import 'package:eato/domain/repository/address/saveAddress/saveAddress_repository.dart';
 import 'package:eato/domain/repository/authentication/current_customer_repository.dart';
 import 'package:eato/domain/repository/authentication/rolesPost_repository.dart';
 import 'package:eato/domain/repository/authentication/signin_repository.dart';
@@ -36,8 +46,12 @@ import 'package:eato/domain/repository/cart/getCart/getCart_repository.dart';
 import 'package:eato/domain/repository/cart/productsAddToCart/productsAddtoCart_repository.dart';
 import 'package:eato/domain/repository/cart/updateCartItems/updateCartItems_repository.dart';
 import 'package:eato/domain/repository/location/location_repo.dart';
+import 'package:eato/domain/repository/payment/payment_repository.dart';
 import 'package:eato/domain/repository/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repository.dart';
 import 'package:eato/domain/repository/restaurants/getNearbyRestaurants/getNearByrestarants_repository.dart';
+import 'package:eato/domain/repository/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_repository.dart';
+import 'package:eato/domain/usecase/address/getAddress/getAddress_usecase.dart';
+import 'package:eato/domain/usecase/address/saveAddress/saveAddress_usecase.dart';
 import 'package:eato/domain/usecase/authentication/current_customer_usecase.dart';
 import 'package:eato/domain/usecase/authentication/rolesPost_usecase.dart';
 import 'package:eato/domain/usecase/authentication/signin_usecase.dart';
@@ -48,8 +62,12 @@ import 'package:eato/domain/usecase/cart/getCart/getCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/productsAddToCart/productsAddtoCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/updateCartItems/updateCartItems_usecase.dart';
 import 'package:eato/domain/usecase/location/location_usecase.dart';
+import 'package:eato/domain/usecase/payment/payment_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getNearbyRestaurants/getNearByrestarants_usecase.dart';
+import 'package:eato/domain/usecase/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_usecase.dart';
+import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
@@ -60,8 +78,10 @@ import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/updateCartItems/updateCartItems_cubit.dart';
 import 'package:eato/presentation/cubit/location/location_cubit.dart';
+import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_cubit.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
@@ -252,7 +272,7 @@ void init() {
         sl<ProductsAddToCartUseCase>(),
       ));
 
-      //UpdateCartItems
+  //UpdateCartItems
   sl.registerLazySingleton<UpdateCartItemsRemoteDataSource>(
     () => UpdateCartItemsRemoteDataSourceImpl(client: sl<DioClient>().dio),
   );
@@ -261,10 +281,71 @@ void init() {
         remoteDataSource: sl<UpdateCartItemsRemoteDataSource>()),
   );
   sl.registerLazySingleton(
-    () =>
-        UpdateCartItemsUseCase(repository: sl<UpdateCartItemsRepository>()),
+    () => UpdateCartItemsUseCase(repository: sl<UpdateCartItemsRepository>()),
   );
   sl.registerFactory(() => UpdateCartItemsCubit(
         sl<UpdateCartItemsUseCase>(),
+      ));
+
+  //SaveAddress
+  sl.registerLazySingleton<SaveAddressRemoteDataSource>(
+    () => SaveAddressRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<SaveAddressRepository>(
+    () => SaveAddressRepositoryImpl(
+        remoteDataSource: sl<SaveAddressRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => SaveAddressUseCase(repository: sl<SaveAddressRepository>()),
+  );
+  sl.registerFactory(() => SaveAddressCubit(
+        sl<SaveAddressUseCase>(),
+      ));
+
+  //GetAddress
+  sl.registerLazySingleton<GetAddressRemoteDataSource>(
+    () => GetAddressRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<GetAddressRepository>(
+    () => GetAddressRepositoryImpl(
+        remoteDataSource: sl<GetAddressRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => GetAddressUseCase(repository: sl<GetAddressRepository>()),
+  );
+  sl.registerFactory(() => GetAddressCubit(
+        sl<GetAddressUseCase>(),
+      ));
+
+  //Payment
+  sl.registerLazySingleton<PaymentRemoteDataSource>(
+    () => PaymentRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<PaymentRepository>(
+    () =>
+        PaymentRepositoryImpl(remoteDataSource: sl<PaymentRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => PaymentUseCase(repository: sl<PaymentRepository>()),
+  );
+  sl.registerFactory(() => PaymentCubit(
+        sl<PaymentUseCase>(),
+      ));
+
+  //GetRestaurantsByProductName
+  sl.registerLazySingleton<GetRestaurantsByProductNameRemoteDataSource>(
+    () => GetRestaurantsByProductNameRemoteDataSourceImpl(
+        client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<GetRestaurantsByProductNameRepository>(
+    () => GetRestaurantsByProductNameRepositoryImpl(
+        remoteDataSource: sl<GetRestaurantsByProductNameRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => GetRestaurantsByProductNameUseCase(
+        repository: sl<GetRestaurantsByProductNameRepository>()),
+  );
+  sl.registerFactory(() => GetRestaurantsByProductNameCubit(
+        sl<GetRestaurantsByProductNameUseCase>(),
       ));
 }

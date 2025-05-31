@@ -3,7 +3,7 @@ import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/injection.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_state.dart';
-import 'package:eato/presentation/screen/dashboard/dashboard_screen.dart';
+import 'package:eato/presentation/screen/authentication/onboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';

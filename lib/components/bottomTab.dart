@@ -1,5 +1,6 @@
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/presentation/screen/dashboard/foodDelivery_screen.dart';
+import 'package:eato/core/utils/push_notication_services.dart';
+import 'package:eato/presentation/screen/dashboard/dashboard_screen.dart';
 import 'package:eato/presentation/screen/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -12,12 +13,34 @@ class BottomTab extends StatefulWidget {
 
 class _BottomTabState extends State<BottomTab> {
   int _selectedIndex = 0;
+  final NotificationServices _notificationServices = NotificationServices();
 
   final List<Widget> _pages = [
-    FoodDeliveryScreen(),
+    DashboardScreen(),
     Center(child: Text('Reorder Screen', style: TextStyle(fontSize: 24))),
     ProfileScreen()
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _initNotifications();
+  }
+
+Future<void> _initNotifications() async {
+  await _notificationServices.requestNotificationPermissions();
+  await _notificationServices.forgroundMessage();
+  await _notificationServices.firebaseInit(context);
+  await _notificationServices.setupInteractMessage(context);
+  await _notificationServices.isRefreshToken();
+
+  _notificationServices.getDeviceToken().then((fcmToken) {
+    if (fcmToken != null) {
+      print("FCM Token: $fcmToken");
+    }
+  });
+}
+
 
   void _onItemTapped(int index) {
     setState(() {

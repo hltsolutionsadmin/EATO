@@ -101,7 +101,7 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "₹${item.price?.toStringAsFixed(0) ?? '0'}",
+                  "₹${item.price ?? '0'}",
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,

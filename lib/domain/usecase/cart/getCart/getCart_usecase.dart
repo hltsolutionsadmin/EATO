@@ -7,6 +7,6 @@ class GetCartUseCase {
   GetCartUseCase({required this.repository});
 
   Future<GetCartModel> execute() {
-    return repository.getCurrentCustomerCart();
+    return repository.getCart();
   }
 }

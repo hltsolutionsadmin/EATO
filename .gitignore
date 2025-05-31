@@ -1,0 +1,35 @@
+# Build directories
+build/
+ios/Flutter/Flutter.podspec
+ios/Podfile.lock
+ios/.symlinks/
+ios/Flutter/App.framework/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/ServiceDefinitions.json
+ios/Runner/GeneratedPluginRegistrant.*
+
+# Android
+.gradle/
+/android/app/build/
+/android/local.properties
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE files (VS Code, IntelliJ)
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+
+# Flutter/Dart
+.dart_tool/
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+pubspec.lock

@@ -21,13 +21,12 @@ class CartItemWidget extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColor.PrimaryColor,
+        color: AppColor.PrimaryColor.withOpacity(0.2),
         borderRadius: BorderRadius.circular(16),
        
       ),
       child: Row(
         children: [
-          // Image
           ClipRRect(
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(
@@ -47,7 +46,7 @@ class CartItemWidget extends StatelessWidget {
                   item["name"] ?? "",
                   style: const TextStyle(
                     fontSize: 16,
-                    color: Colors.white,
+                    color: Colors.black,
                     fontWeight: FontWeight.bold,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -55,15 +54,14 @@ class CartItemWidget extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  "${item["price"]}",
+                  "₹${item["price"]}",
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white,
+                    color: AppColor.Black,
                   ),
                 ),
                 const SizedBox(height: 10),
 
-                // Quantity Selector
                 Row(
                   children: [
                     GestureDetector(
@@ -93,7 +91,7 @@ class CartItemWidget extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -120,7 +118,6 @@ class CartItemWidget extends StatelessWidget {
             ),
           ),
 
-          // Remove Button
           IconButton(
             onPressed: () => onRemove(item["name"]),
             icon: const Icon(

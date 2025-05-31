@@ -4,7 +4,7 @@ import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 
 
 abstract class GetCartRemoteDataSource {
-  Future<GetCartModel> currentCustomer();
+  Future<GetCartModel> getCart();
 }
 
 class GetCartRemoteDataSourceImpl
@@ -14,7 +14,7 @@ class GetCartRemoteDataSourceImpl
   GetCartRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<GetCartModel> currentCustomer() async {
+  Future<GetCartModel> getCart() async {
     try {
       final response = await client.request(
         '$baseUrl$getCartUrl',
