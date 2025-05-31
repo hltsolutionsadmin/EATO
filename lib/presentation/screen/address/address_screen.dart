@@ -22,6 +22,7 @@ class _AddressScreenState extends State<AddressScreen>
   List<String> savedAddresses = [];
 
   void _saveAddress() {
+    print("Saving address...");
     if (nameController.text.trim().isEmpty ||
         phoneController.text.trim().isEmpty ||
         houseController.text.trim().isEmpty ||
