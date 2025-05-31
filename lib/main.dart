@@ -1,5 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:eato/core/network/network_cubit.dart';
+import 'package:eato/firebase_options.dart';
+import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
@@ -10,18 +13,38 @@ import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/updateCartItems/updateCartItems_cubit.dart';
 import 'package:eato/presentation/cubit/location/location_cubit.dart';
+import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_cubit.dart';
 import 'package:eato/presentation/screen/authentication/splash_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/injection.dart' as di;
 
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  print("Handling a background message: ${message.messageId}");
+}
 
+// Future<void> requestPermissions() async {
+//   await Permission.storage.request();
+//   await Permission.photos.request();
+// }
 
-final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("Firebase initialized successfully");
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+  } catch (e) {
+    print("Firebase initialization error: $e");
+  }
 
   di.init();
 
@@ -31,7 +54,6 @@ void main() async {
   } else {
     print("Connected to the Internet");
   }
-  // WidgetsFlutterBinding.ensureInitialized();
 
   runApp(const MyApp());
 }
@@ -61,6 +83,10 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<GetCartCubit>()),
         BlocProvider(create: (_) => di.sl<ProductsAddToCartCubit>()),
         BlocProvider(create: (_) => di.sl<UpdateCartItemsCubit>()),
+        BlocProvider(create: (_) => di.sl<SaveAddressCubit>()),
+        BlocProvider(create: (_) => di.sl<GetAddressCubit>()),
+        BlocProvider(create: (_) => di.sl<PaymentCubit>()),
+        BlocProvider(create: (_) => di.sl<GetRestaurantsByProductNameCubit>()),
       ],
       child: MaterialApp(
         title: 'Eato',
@@ -70,7 +96,7 @@ class _MyAppState extends State<MyApp> {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
           useMaterial3: true,
         ),
-        home:  SplashScreen(),
+        home: SplashScreen(),
       ),
     );
   }

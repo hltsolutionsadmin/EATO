@@ -21,6 +21,9 @@ class CurrentCustomerCubit extends Cubit<CurrentCustomerState> {
       }
     });
   }
+   void reset() {
+    emit(CurrentCustomerInitial());
+  }
 
   Future<void> GetCurrentCustomer(BuildContext context) async {
     bool isConnected = await NetworkHelper.checkInternetAndShowSnackbar(

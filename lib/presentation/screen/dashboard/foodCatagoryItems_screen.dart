@@ -1,6 +1,6 @@
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/presentation/screen/widgets/searchBar.dart';
+import 'package:eato/components/searchBar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

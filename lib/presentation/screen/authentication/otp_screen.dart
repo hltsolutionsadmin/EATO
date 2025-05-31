@@ -133,7 +133,7 @@ class _OtpScreenState extends State<OtpScreen>
   Widget _buildOtpContainer(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      height: MediaQuery.of(context).size.height * 0.44,
+      height: MediaQuery.of(context).size.height * 0.52,
       decoration: BoxDecoration(
         color: AppColor.PrimaryColor,
         borderRadius: const BorderRadius.only(

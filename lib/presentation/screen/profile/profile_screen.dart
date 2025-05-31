@@ -1,5 +1,6 @@
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/presentation/screen/widgets/logout.dart';
 import 'package:flutter/material.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -12,7 +13,7 @@ class ProfileScreen extends StatelessWidget {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [AppColor.PrimaryColor, AppColor.White],
+            colors: [AppColor.White, AppColor.White],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -30,7 +31,7 @@ class ProfileScreen extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      _buildOptionsList(),
+                      _buildOptionsList(context),
                     ],
                   ),
                 ),
@@ -114,14 +115,25 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildOptionsList() {
+  Widget _buildOptionsList(BuildContext context) {
     final options = [
       _Option(Icons.shopping_bag, "Orders"),
       _Option(Icons.payment, "Payments"),
       _Option(Icons.location_on, "Saved Addresses"),
       _Option(Icons.local_offer, "Offers"),
       _Option(Icons.support_agent, "Help Center"),
-      _Option(Icons.logout, "Logout"),
+      _Option(
+        Icons.logout,
+        "Logout",
+        onTap: () {
+          showModalBottomSheet(
+            context: context,
+            builder: (context) {
+              return const LogOutCnfrmBottomSheet();
+            },
+          );
+        },
+      ),
     ];
 
     return Column(
@@ -139,9 +151,9 @@ class ProfileScreen extends StatelessWidget {
               opt.title,
               style: const TextStyle(fontWeight: FontWeight.w500),
             ),
-            trailing:
-                Icon(Icons.arrow_forward_ios, size: 16, color: AppColor.PrimaryColor),
-            onTap: () {},
+            trailing: Icon(Icons.arrow_forward_ios,
+                size: 16, color: AppColor.PrimaryColor),
+            onTap: opt.onTap ?? () {},
           ),
         );
       }).toList(),
@@ -152,5 +164,6 @@ class ProfileScreen extends StatelessWidget {
 class _Option {
   final IconData icon;
   final String title;
-  _Option(this.icon, this.title);
+  final VoidCallback? onTap;
+  _Option(this.icon, this.title, {this.onTap});
 }

@@ -8,7 +8,7 @@ class GetCartRepositoryImpl implements GetCartRepository {
   GetCartRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<GetCartModel> getCurrentCustomerCart() {
-    return remoteDataSource.currentCustomer();
+  Future<GetCartModel> getCart() {
+    return remoteDataSource.getCart();
   }
 }

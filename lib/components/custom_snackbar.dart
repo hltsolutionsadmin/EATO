@@ -62,7 +62,7 @@ class CustomSnackbars {
             opacity: _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
             child: SlideTransition(
               position: Tween<Offset>(
-                begin: const Offset(0, -1), // Slide from the top
+                begin: const Offset(0, -1),
                 end: Offset.zero,
               ).animate(CurvedAnimation(
                 parent: _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
@@ -73,7 +73,7 @@ class CustomSnackbars {
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Colors.red, Color.fromARGB(255, 210, 161, 158)],
+                      colors: [Colors.green, Colors.white],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),

@@ -1,132 +1,259 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
-import 'package:eato/presentation/screen/authentication/login_screen.dart';
+import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
+import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_state.dart';
+import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_state.dart';
+import 'package:eato/presentation/screen/restaurantMenu/restaurantMenu_screen.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/foodCatagoryIcons.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/foodItemCard.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/locationHeader.dart';
+import 'package:eato/components/searchBar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class OnboardingScreen extends StatelessWidget {
-  const OnboardingScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          Positioned.fill(
-            child: Container(color: AppColor.PrimaryColor),
-          ),
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
-          Positioned.fill(
-            child: ClipPath(
-              clipper: DiagonalWaveClipper(),
-              child: Container(color: AppColor.BgColor),
-            ),
-          ),
+class _DashboardScreenState extends State<DashboardScreen> {
+  double? latitude;
+  double? longitude;
+  String searchQuery = '';
 
-          Positioned(
-            top: 30,
-            right: -10,
-            child: ClipOval(
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: const BoxDecoration(shape: BoxShape.circle),
-                child: Image.asset(
-                  dish,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-          ),
-          
-          Positioned(
-            top: 380,
-            left: 30,
-            right: 30,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Lorem ipsum dolor sit amet, consectetur adipiscing elit sed.",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: AppColor.Black,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                 Text(
-                  "Tempor incididunt ut labore et dolore magna aliqua consectetur adipiscing elit sed.",
-                  style: TextStyle(fontSize: 16, color: AppColor.Black),
-                ),
-              ],
-            ),
-          ),
+  @override
+  void initState() {
+    super.initState();
+    context.read<CreateCartCubit>().createCart();
+    context.read<GetCartCubit>().fetchCart();
+    _loadCoordinatesAndFetch();
+  }
 
-          Positioned(
-            bottom: 60,
-            left: 100,
-            right: 100,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.BgColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                elevation: 5,
-              ),
-              onPressed: () {
-                 Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => LoginScreen()),
-            );
-              },
-              child:  Text(
-                "Get Started",
-                style: TextStyle(fontSize: 18, color: AppColor.PrimaryColor),
-              ),
-            ),
-          ),
-        ],
+  Future<void> _loadCoordinatesAndFetch() async {
+    final prefs = await SharedPreferences.getInstance();
+    latitude = prefs.getDouble('saved_latitude') ?? 17.385044;
+    longitude = prefs.getDouble('saved_longitude') ?? 78.486671;
+
+    context.read<GetNearbyRestaurantsCubit>().fetchNearbyRestaurants({
+      "latitude": latitude,
+      "longitude": longitude,
+      "postalCode": "531001",
+      "page": 0,
+      "size": 10,
+    });
+  }
+
+  void _showRestaurantMenu(String restaurantName, String restaurantId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RestaurantMenuScreen(
+          restaurantName: restaurantName,
+          restaurantId: restaurantId,
+        ),
       ),
     );
   }
-}
 
-class DiagonalWaveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-
-    path.moveTo(size.width, size.height * 0);
-    path.quadraticBezierTo(
-      size.width * 1, size.height * 0.25,
-      size.width * 0.45, size.height * 0.25,
+  Widget _buildNearbyRestaurants() {
+    return BlocBuilder<GetNearbyRestaurantsCubit, GetNearbyRestaurantsState>(
+      builder: (context, state) {
+        if (state is GetNearbyRestaurantsLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is GetNearbyRestaurantsLoaded) {
+          final restaurants = state.model.content;
+          return ListView.builder(
+            itemCount: restaurants.length,
+            itemBuilder: (context, index) {
+              final restaurant = restaurants[index];
+              final data = {
+                "Restaurant": restaurant.businessName ?? "Unknown",
+                "Items": restaurant.categoryName ?? "",
+                "price": "₹200",
+                "itemPrice": "From ₹ 89",
+                "image": dish,
+                "time": "20 - 25 MINS",
+              };
+              return FoodItemCard(
+                data: data,
+                onRestaurantTap: (name) =>
+                    _showRestaurantMenu(name, (restaurant.id ?? "").toString()),
+              );
+            },
+          );
+        } else if (state is GetNearbyRestaurantsError) {
+          print("Error: ${state.message}");
+          return Center(child: Text("Error: ${state.message}"));
+        } else {
+          return const SizedBox();
+        }
+      },
     );
-    path.quadraticBezierTo(
-      size.width * 0.2, size.height * 0.27,
-      5, size.height * 0.45,
+  }
+
+  Widget _buildSearchResults() {
+    return BlocBuilder<GetRestaurantsByProductNameCubit,
+        GetRestaurantsByProductNameState>(
+      builder: (context, state) {
+        if (state is GetRestaurantsByProductNameLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (state is GetRestaurantsByProductNameSuccess) {
+          final restaurants = state.model.content;
+          if (restaurants.isEmpty) {
+            return const Center(child: Text("No restaurants found"));
+          }
+          return ListView.builder(
+            itemCount: restaurants.length,
+            itemBuilder: (context, index) {
+              final restaurant = restaurants[index];
+              final data = {
+                "Restaurant": restaurant.name ?? "Unknown",
+                "Items": restaurant.categoryName ?? "",
+                "price": "₹200",
+                "itemPrice": "From ₹ 89",
+                "image": dish,
+                "time": "20 - 25 MINS",
+              };
+              return FoodItemCard(
+                data: data,
+                onRestaurantTap: (name) => _showRestaurantMenu(
+                    name, (restaurant.businessId ?? "").toString()),
+              );
+            },
+          );
+        } else if (state is GetRestaurantsByProductNameFailure) {
+          return Center(child: Text("Error fetching results"));
+        } else {
+          return const SizedBox();
+        }
+      },
     );
-
-    path.lineTo(0, size.height );
-
-    path.quadraticBezierTo(
-      size.width * 0, size.height * 0.78,
-      size.width * 0.45, size.height * 0.75,
-    );
-    path.quadraticBezierTo(
-      size.width * 0.72, size.height * 0.73,
-      size.width, size.height * 0.55,
-    );
-
-    path.lineTo(size.width, size.height * 0.2);
-    path.close();
-
-    return path;
   }
 
   @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+  Widget build(BuildContext context) {
+    return FutureBuilder<SharedPreferences>(
+      future: SharedPreferences.getInstance(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+
+        final prefs = snapshot.data!;
+        final lat = prefs.getDouble('saved_latitude');
+        final lng = prefs.getDouble('saved_longitude');
+
+        return Scaffold(
+          appBar: PreferredSize(
+            preferredSize: const Size.fromHeight(150),
+            child: AppBar(
+              automaticallyImplyLeading: false,
+              backgroundColor: AppColor.PrimaryColor,
+              elevation: 0,
+              title: LocationHeader(latitude: lat, longitude: lng),
+              shape: const RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.vertical(bottom: Radius.circular(28)),
+              ),
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(80),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: CategorySearchBar(
+                    hintText: "Search for restaurants, dishes, and cuisines",
+                    onChanged: (value) async {
+                      setState(() {
+                        searchQuery = value;
+                      });
+                      if (value.isNotEmpty) {
+                        final prefs = await SharedPreferences.getInstance();
+                        final latitude =
+                            prefs.getDouble('saved_latitude') ?? 17.385044;
+                        final longitude =
+                            prefs.getDouble('saved_longitude') ?? 78.486671;
+
+                        context
+                            .read<GetRestaurantsByProductNameCubit>()
+                            .fetchRestaurantsByProductName({
+                          "productName": value,
+                          "latitude": latitude,
+                          "longitude": longitude,
+                          "postalCode": "531001",
+                          "page": 0,
+                          "size": 10,
+                        });
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+          backgroundColor: AppColor.White,
+          body: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 20),
+                  FoodCategoryIcons(
+                    onCategoryTap: (label) async {
+                      if (label.isNotEmpty) {
+                        setState(() {
+                          searchQuery = label;
+                        });
+                        final prefs = await SharedPreferences.getInstance();
+                        final latitude =
+                            prefs.getDouble('saved_latitude') ?? 17.385044;
+                        final longitude =
+                            prefs.getDouble('saved_longitude') ?? 78.486671;
+
+                        context
+                            .read<GetRestaurantsByProductNameCubit>()
+                            .fetchRestaurantsByProductName({
+                          "productName": label,
+                          "latitude": latitude,
+                          "longitude": longitude,
+                          "postalCode": "531001",
+                          "page": 0,
+                          "size": 10,
+                        });
+                      } else {
+                        setState(() {
+                          searchQuery = '';
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "Restaurants to Explore",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                      color: AppColor.Black,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: searchQuery.isEmpty
+                        ? _buildNearbyRestaurants()
+                        : _buildSearchResults(),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
-
-
