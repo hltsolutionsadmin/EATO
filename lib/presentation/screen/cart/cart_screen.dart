@@ -11,6 +11,7 @@ import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_state.dart';
 import 'package:eato/presentation/screen/address/address_screen.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -430,7 +431,7 @@ class _CartScreenState extends State<CartScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => AddressScreen()),
+                                builder: (context) => LocationPickerPage()),
                           );
                         },
                         child: const Text("change"),

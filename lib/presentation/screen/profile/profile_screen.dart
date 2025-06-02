@@ -1,5 +1,6 @@
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
 import 'package:eato/presentation/screen/widgets/logout.dart';
 import 'package:flutter/material.dart';
 
@@ -117,7 +118,12 @@ class ProfileScreen extends StatelessWidget {
 
   Widget _buildOptionsList(BuildContext context) {
     final options = [
-      _Option(Icons.shopping_bag, "Orders"),
+      _Option(Icons.shopping_bag, "Orders", onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => LocationPickerPage()),
+        );
+      }),
       _Option(Icons.payment, "Payments"),
       _Option(Icons.location_on, "Saved Addresses"),
       _Option(Icons.local_offer, "Offers"),
