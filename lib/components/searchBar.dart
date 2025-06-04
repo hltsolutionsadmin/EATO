@@ -1,3 +1,4 @@
+import 'package:eato/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
@@ -84,38 +85,31 @@ class _CategorySearchBarState extends State<CategorySearchBar> {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           decoration: BoxDecoration(
-            color: Colors.transparent,
+            color: AppColor.White,
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                spreadRadius: 4,
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            border: Border.all(color: Colors.black.withOpacity(0.3)),
+            
           ),
           child: TextField(
             controller: _controller,
             onChanged: widget.onChanged,
             style: GoogleFonts.poppins(
               fontSize: 14,
-              color: Colors.white,
+              color: Colors.black,
             ),
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               border: InputBorder.none,
-              hintText: "Search ${widget.hintText}...",
+              hintText: "${widget.hintText}...",
               hintStyle: GoogleFonts.poppins(
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.black.withOpacity(0.7),
                 fontSize: 14,
               ),
-              prefixIcon: const Icon(Icons.search, color: Colors.white70),
+              prefixIcon: const Icon(Icons.search, color: Colors.black),
               suffixIcon: IconButton(
                 icon: _isListening
                     ? const Icon(Icons.mic_none, color: Colors.green)
-                    : const Icon(Icons.mic, color: Colors.white70),
+                    : const Icon(Icons.mic, color: Colors.black),
                 onPressed: _toggleMic,
               ),
             ),

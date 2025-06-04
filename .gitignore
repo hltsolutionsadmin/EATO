@@ -1,35 +1,53 @@
-# Build directories
+# Build output
 build/
-ios/Flutter/Flutter.podspec
-ios/Podfile.lock
-ios/.symlinks/
-ios/Flutter/App.framework/
-ios/Flutter/Flutter.framework/
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/ServiceDefinitions.json
-ios/Runner/GeneratedPluginRegistrant.*
+.android/
+.ios/
+linux/build/
+macos/build/
+web/build/
+windows/build/
 
-# Android
-.gradle/
-/android/app/build/
-/android/local.properties
-
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-
-# IDE files (VS Code, IntelliJ)
-.vscode/
-.idea/
-*.iml
-*.swp
-*.swo
-
-# Flutter/Dart
+# Flutter/Dart stuff
 .dart_tool/
 .packages
+.pub-cache/
 .flutter-plugins
 .flutter-plugins-dependencies
+.melos_tool/
+generated_plugin_registrant.dart
+
+# Android
+android/.gradle/
+android/app/build/
+android/local.properties
+*.jks
+
+# iOS/macOS
+ios/Flutter/
+ios/Pods/
+ios/.symlinks/
+ios/Runner.xcworkspace/
+ios/DerivedData/
+ios/.generated/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/
+
+# IDE and misc
+.idea/
+.vscode/
+*.iml
+*.log
+*.tmp
+*.lock
+*.swp
+*.swo
+.DS_Store
+
+# Web-specific
+web/.dart_tool/
+
+# Other
 pubspec.lock

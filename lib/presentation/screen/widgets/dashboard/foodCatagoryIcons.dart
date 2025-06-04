@@ -1,3 +1,4 @@
+import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -61,7 +62,7 @@ class _FoodCategoryIconsState extends State<FoodCategoryIcons> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: isSelected ? Colors.orange : Colors.transparent,
+                          color: isSelected ? AppColor.PrimaryColor : Colors.transparent,
                           width: 3,
                         ),
                       ),
@@ -81,7 +82,7 @@ class _FoodCategoryIconsState extends State<FoodCategoryIcons> {
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: Colors.orange,
+                            color: AppColor.PrimaryColor,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
@@ -97,7 +98,7 @@ class _FoodCategoryIconsState extends State<FoodCategoryIcons> {
                 Text(
                   category["label"],
                   style: GoogleFonts.poppins(
-                    color: isSelected ? Colors.orange : Colors.black,
+                    color: isSelected ? AppColor.PrimaryColor : Colors.black,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),

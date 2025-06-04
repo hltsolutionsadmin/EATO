@@ -3,13 +3,16 @@ import 'package:eato/components/custom_button.dart' as eato_button;
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_state.dart';
+import 'package:eato/presentation/cubit/orders/createOrder/createOrder_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_state.dart';
 import 'package:eato/presentation/screen/address/address_screen.dart';
+import 'package:eato/presentation/screen/order/orderSuccess_screen.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
 import 'package:flutter/material.dart';
@@ -72,19 +75,24 @@ class _CartScreenState extends State<CartScreen> {
         "status": "SUCCESS"
       };
 
-      context.read<PaymentCubit>().makePayment(payload);
+      setState(() => loading = true);
 
-      setState(() {
-        loading = false;
-      });
+      await context.read<PaymentCubit>().makePayment(payload);
+
+      await context.read<CreateOrderCubit>().createOrder();
+
+      context.read<ClearCartCubit>().clearCart();
+
+      setState(() => loading = false);
+
+      // Navigate to success screen
+      Navigator.push(context, MaterialPageRoute(builder: (_) => OrderSuccessScreen()));
     } catch (e) {
-      setState(() {
-        loading = false;
-      });
+      setState(() => loading = false);
       CustomSnackbars.showErrorSnack(
         context: context,
         title: 'ERROR',
-        message: 'Payment verification failed: ${e.toString()}',
+        message: 'Payment or order creation failed: ${e.toString()}',
       );
     }
   }
@@ -128,7 +136,6 @@ class _CartScreenState extends State<CartScreen> {
     });
 
     try {
-      // Get the exact amount with decimals
       final exactAmount = getTotalAmount();
       print('Exact amount: $exactAmount');
 
@@ -314,9 +321,6 @@ class _CartScreenState extends State<CartScreen> {
     final payload = getCartPayload();
     context.read<ProductsAddToCartCubit>().addToCart(payload);
     print("Payload: $payload");
-    if (cartId != null) {
-      print("Cart ID for checkout: $cartId");
-    }
   }
 
   @override
@@ -326,11 +330,11 @@ class _CartScreenState extends State<CartScreen> {
         BlocListener<ProductsAddToCartCubit, ProductsAddToCartState>(
           listener: (context, state) {
             if (state is ProductsAddToCartSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Checkout successful!')),
-              );
-              Navigator.pop(context);
+              openCheckOut();
             } else if (state is ProductsAddToCartFailure) {
+              setState(() {
+                loading = false;
+              });
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Error: ${state.message}')),
               );
@@ -352,15 +356,12 @@ class _CartScreenState extends State<CartScreen> {
         BlocListener<PaymentCubit, PaymentState>(
           listener: (context, state) {
             if (state is PaymentSuccess) {
-              // Handle successful payment verification
               CustomSnackbars.showSuccessSnack(
                 context: context,
                 title: 'SUCCESS',
                 message: 'Payment verified successfully!',
               );
-              // Optionally clear the cart or navigate to order success screen
             } else if (state is PaymentFailure) {
-              // Handle payment verification failure
               CustomSnackbars.showErrorSnack(
                 context: context,
                 title: 'ERROR',
@@ -504,7 +505,13 @@ class _CartScreenState extends State<CartScreen> {
                             }
                             return eato_button.CustomButton(
                               buttonText: "Checkout",
-                              onPressed: () => openCheckOut(),
+                              onPressed: () {
+                                if (loading) return;
+                                setState(() {
+                                  loading = true;
+                                });
+                                handleCheckout(context);
+                              },
                             );
                           },
                         );

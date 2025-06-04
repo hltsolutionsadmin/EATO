@@ -35,10 +35,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadCoordinatesAndFetch();
   }
 
+  // Add this method to be called when location changes
+  void onLocationChanged() {
+    _loadCoordinatesAndFetch();
+    setState(() {}); // Trigger a rebuild
+  }
+
   Future<void> _loadCoordinatesAndFetch() async {
     final prefs = await SharedPreferences.getInstance();
-    latitude = prefs.getDouble('saved_latitude') ?? 17.385044;
-    longitude = prefs.getDouble('saved_longitude') ?? 78.486671;
+    setState(() {
+      latitude = prefs.getDouble('saved_latitude') ?? 17.385044;
+      longitude = prefs.getDouble('saved_longitude') ?? 78.486671;
+    });
 
     context.read<GetNearbyRestaurantsCubit>().fetchNearbyRestaurants({
       "latitude": latitude,
@@ -89,7 +97,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         } else if (state is GetNearbyRestaurantsError) {
           print("Error: ${state.message}");
-          return Center(child: Text("Error: ${state.message}"));
+          return Center(child: Text("Error fetching restaurants")); 
         } else {
           return const SizedBox();
         }
@@ -146,10 +154,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
               body: Center(child: CircularProgressIndicator()));
         }
 
-        final prefs = snapshot.data!;
-        final lat = prefs.getDouble('saved_latitude');
-        final lng = prefs.getDouble('saved_longitude');
-
         return Scaffold(
           appBar: PreferredSize(
             preferredSize: const Size.fromHeight(150),
@@ -157,7 +161,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               automaticallyImplyLeading: false,
               backgroundColor: AppColor.PrimaryColor,
               elevation: 0,
-              title: LocationHeader(latitude: lat, longitude: lng),
+              title: LocationHeader(
+                latitude: latitude,
+                longitude: longitude,
+                onLocationChanged: onLocationChanged, // Pass the callback
+              ),
               shape: const RoundedRectangleBorder(
                 borderRadius:
                     BorderRadius.vertical(bottom: Radius.circular(28)),

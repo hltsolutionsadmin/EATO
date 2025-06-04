@@ -9,11 +9,14 @@ import 'package:eato/data/datasource/authentication/rolesPost_dataSource.dart';
 import 'package:eato/data/datasource/authentication/signin_remote_data_source.dart';
 import 'package:eato/data/datasource/authentication/signup_remote_data_source.dart';
 import 'package:eato/data/datasource/authentication/trigger_otp_remote_data_source.dart';
+import 'package:eato/data/datasource/cart/clearCart/clearCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/createCart/createCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/getCart/getCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/productsAddToCart/productsAddtoCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/updateCartItems/updateCartItems_dataSource.dart';
 import 'package:eato/data/datasource/location/location_remotedatasource.dart';
+import 'package:eato/data/datasource/orders/createOrder/createOrder_dataSource.dart';
+import 'package:eato/data/datasource/orders/orderHistory/orderHistory_dataSource.dart';
 import 'package:eato/data/datasource/payment/payment_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getNearbyRestaurants/getNearByrestarants_dataSource.dart';
@@ -25,11 +28,14 @@ import 'package:eato/data/repositoryImpl/authentication/rolesPost_repoImpl.dart'
 import 'package:eato/data/repositoryImpl/authentication/signin_repository_impl.dart';
 import 'package:eato/data/repositoryImpl/authentication/signup_repository_impl.dart';
 import 'package:eato/data/repositoryImpl/authentication/trigger_otp_repository_impl.dart';
+import 'package:eato/data/repositoryImpl/cart/clearCart/clearCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/createCart/createCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/getCart/getCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/productsAddToCart/productsAddtoCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/updateCartItems/updateCartItems_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/location/location_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/orders/createOrder/createOrder_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/orders/orderHistory/orderHistory_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/payment/payment_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getNearbyRestaurants/getNearByrestarants_repoImpl.dart';
@@ -41,11 +47,14 @@ import 'package:eato/domain/repository/authentication/rolesPost_repository.dart'
 import 'package:eato/domain/repository/authentication/signin_repository.dart';
 import 'package:eato/domain/repository/authentication/signup_repository.dart';
 import 'package:eato/domain/repository/authentication/trigger_otp_repository.dart';
+import 'package:eato/domain/repository/cart/clearCart/clearCart_repository.dart';
 import 'package:eato/domain/repository/cart/createCart/createCart_repository.dart';
 import 'package:eato/domain/repository/cart/getCart/getCart_repository.dart';
 import 'package:eato/domain/repository/cart/productsAddToCart/productsAddtoCart_repository.dart';
 import 'package:eato/domain/repository/cart/updateCartItems/updateCartItems_repository.dart';
 import 'package:eato/domain/repository/location/location_repo.dart';
+import 'package:eato/domain/repository/orders/createOrder/createOrder_repository.dart';
+import 'package:eato/domain/repository/orders/orderHistory/orderHistory_repository.dart';
 import 'package:eato/domain/repository/payment/payment_repository.dart';
 import 'package:eato/domain/repository/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repository.dart';
 import 'package:eato/domain/repository/restaurants/getNearbyRestaurants/getNearByrestarants_repository.dart';
@@ -57,11 +66,14 @@ import 'package:eato/domain/usecase/authentication/rolesPost_usecase.dart';
 import 'package:eato/domain/usecase/authentication/signin_usecase.dart';
 import 'package:eato/domain/usecase/authentication/signup_usecase.dart';
 import 'package:eato/domain/usecase/authentication/trigger_otp_usecase.dart';
+import 'package:eato/domain/usecase/cart/clearCart/clearCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/createCart/createCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/getCart/getCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/productsAddToCart/productsAddtoCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/updateCartItems/updateCartItems_usecase.dart';
 import 'package:eato/domain/usecase/location/location_usecase.dart';
+import 'package:eato/domain/usecase/orders/createOrder/createOrder_usecase.dart';
+import 'package:eato/domain/usecase/orders/orderHistory/orderHistory_usecase.dart';
 import 'package:eato/domain/usecase/payment/payment_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getNearbyRestaurants/getNearByrestarants_usecase.dart';
@@ -73,11 +85,14 @@ import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.d
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signUp/signup_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signin/sigin_cubit.dart';
+import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/updateCartItems/updateCartItems_cubit.dart';
 import 'package:eato/presentation/cubit/location/location_cubit.dart';
+import 'package:eato/presentation/cubit/orders/createOrder/createOrder_cubit.dart';
+import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
@@ -348,4 +363,48 @@ void init() {
   sl.registerFactory(() => GetRestaurantsByProductNameCubit(
         sl<GetRestaurantsByProductNameUseCase>(),
       ));
+
+  //CreateOrder
+  sl.registerLazySingleton<CreateOrderRemoteDataSource>(
+    () => CreateOrderRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<CreateOrderRepository>(
+    () => CreateOrderRepositoryImpl(
+        remoteDataSource: sl<CreateOrderRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => CreateOrderUseCase(repository: sl<CreateOrderRepository>()),
+  );
+  sl.registerFactory(() => CreateOrderCubit(
+        sl<CreateOrderUseCase>(),
+      ));
+
+  //OrderHistory
+  sl.registerLazySingleton<OrderHistoryRemoteDataSource>(
+    () => OrderHistoryRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<OrderHistoryRepository>(
+    () => OrderHistoryRepositoryImpl(
+        remoteDataSource: sl<OrderHistoryRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => OrderHistoryUseCase(repository: sl<OrderHistoryRepository>()),
+  );
+  sl.registerFactory(() => OrderHistoryCubit(
+        sl<OrderHistoryUseCase>(),
+      ));
+
+      //ClearCart
+  sl.registerLazySingleton<ClearCartRemoteDataSource>(
+    () => ClearCartRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<ClearCartRepository>(
+    () => ClearCartRepositoryImpl(remoteDataSource: sl<ClearCartRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => ClearCartUseCase(repository: sl<ClearCartRepository>()),
+  );
+  sl.registerFactory(() => ClearCartCubit(
+      sl<ClearCartUseCase>(),
+    ));
 }
