@@ -352,7 +352,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   } else if (state is GetMenuByRestaurantIdError) {
                     return Center(
                       child: Text(
-                        "Error: ${state.message}",
+                        "Error Loading Menu",
                         style: GoogleFonts.poppins(color: Colors.red),
                       ),
                     );

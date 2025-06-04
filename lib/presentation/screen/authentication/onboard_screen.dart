@@ -18,7 +18,7 @@ class OnboardingScreen extends StatelessWidget {
           Positioned.fill(
             child: ClipPath(
               clipper: DiagonalWaveClipper(),
-              child: Container(color: AppColor.BgColor),
+              child: Container(color: AppColor.White),
             ),
           ),
 
@@ -68,7 +68,7 @@ class OnboardingScreen extends StatelessWidget {
             right: 100,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColor.BgColor,
+                backgroundColor: AppColor.White,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),

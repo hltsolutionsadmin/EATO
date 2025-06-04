@@ -7,8 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LocationHeader extends StatefulWidget {
   final double? latitude;
   final double? longitude;
+  final VoidCallback onLocationChanged;
 
-  const LocationHeader({this.latitude, this.longitude, super.key});
+  const LocationHeader({
+    this.latitude, 
+    this.longitude, 
+    required this.onLocationChanged,
+    super.key
+  });
 
   @override
   _LocationHeaderState createState() => _LocationHeaderState();
@@ -32,6 +38,7 @@ class _LocationHeaderState extends State<LocationHeader> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setDouble('saved_latitude', lat);
     await prefs.setDouble('saved_longitude', lng);
+    widget.onLocationChanged();
   }
 
   Future<void> _fetchLocation() async {

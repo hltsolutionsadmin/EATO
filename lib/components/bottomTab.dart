@@ -1,6 +1,7 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/utils/push_notication_services.dart';
 import 'package:eato/presentation/screen/dashboard/dashboard_screen.dart';
+import 'package:eato/presentation/screen/order/orderHistory_Screen.dart';
 import 'package:eato/presentation/screen/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -17,9 +18,10 @@ class _BottomTabState extends State<BottomTab> {
 
   final List<Widget> _pages = [
     DashboardScreen(),
-    Center(child: Text('Reorder Screen', style: TextStyle(fontSize: 24))),
+OrderHistoryScreen(),   
     ProfileScreen()
   ];
+//   OrderTracker(orderId: '1234', status: 'preparing'), 
 
   @override
   void initState() {

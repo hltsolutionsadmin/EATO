@@ -8,11 +8,14 @@ import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.d
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signUp/signup_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signin/sigin_cubit.dart';
+import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/updateCartItems/updateCartItems_cubit.dart';
 import 'package:eato/presentation/cubit/location/location_cubit.dart';
+import 'package:eato/presentation/cubit/orders/createOrder/createOrder_cubit.dart';
+import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
@@ -28,11 +31,6 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   print("Handling a background message: ${message.messageId}");
 }
-
-// Future<void> requestPermissions() async {
-//   await Permission.storage.request();
-//   await Permission.photos.request();
-// }
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -87,6 +85,9 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<GetAddressCubit>()),
         BlocProvider(create: (_) => di.sl<PaymentCubit>()),
         BlocProvider(create: (_) => di.sl<GetRestaurantsByProductNameCubit>()),
+        BlocProvider(create: (_) => di.sl<CreateOrderCubit>()),
+        BlocProvider(create: (_) => di.sl<OrderHistoryCubit>()),
+        BlocProvider(create: (_) => di.sl<ClearCartCubit>()),
       ],
       child: MaterialApp(
         title: 'Eato',

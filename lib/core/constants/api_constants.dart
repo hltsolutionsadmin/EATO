@@ -28,10 +28,13 @@ String getRestaurantsByProductNameUrl(String productName, double latitude,
 
 const createCartUrl = 'order/api/carts/create';
 const getCartUrl = 'order/api/carts/get';
+const clearCartUrl = 'order/api/carts/clear';
 const productsAddToCartUrl = 'order/api/carts/items';
 const saveAddressUrl = 'order/api/carts/address';
 const getAddressUrl = 'api/addresses/all';
 const paymentUrl = 'order/payments/process';
+const createOrderUrl = 'order/api/orders/create';
+const orderHistoryUrl = 'order/api/orders/history';
 
 String updateCartItemsUrl(String cartId) {
   return 'order/api/carts/items/$cartId';
