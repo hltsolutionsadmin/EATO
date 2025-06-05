@@ -11,8 +11,10 @@ class ProductsAddToCartCubit extends Cubit<ProductsAddToCartState> {
     emit(ProductsAddToCartLoading());
     try {
       final result = await useCase(payload);
+      print(result);
       emit(ProductsAddToCartSuccess(result));
     } catch (e) {
+      print(e);
       emit(ProductsAddToCartFailure(e.toString()));
     }
   }
