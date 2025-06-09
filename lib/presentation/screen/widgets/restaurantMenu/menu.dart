@@ -34,6 +34,7 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
       quantity = newQty;
     });
     widget.onQuantityChanged(quantity);
+    
   }
 
   @override

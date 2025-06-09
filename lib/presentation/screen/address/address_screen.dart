@@ -1,5 +1,7 @@
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AddressScreen extends StatefulWidget {
   const AddressScreen({super.key});
@@ -52,7 +54,6 @@ ${cityController.text}, ${stateController.text} - ${pincodeController.text}
       const SnackBar(content: Text("Address Saved")),
     );
 
-    // Clear fields after saving
     nameController.clear();
     phoneController.clear();
     houseController.clear();
@@ -79,6 +80,14 @@ ${cityController.text}, ${stateController.text} - ${pincodeController.text}
           keyboardType: label == "Phone Number" || label == "Pincode"
               ? TextInputType.number
               : TextInputType.text,
+          maxLength: label == "Phone Number"
+              ? 10
+              : label == "Pincode"
+                  ? 6
+                  : null,
+          inputFormatters: label == "Phone Number" || label == "Pincode"
+              ? [FilteringTextInputFormatter.digitsOnly]
+              : [],
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey.shade100,
@@ -100,26 +109,46 @@ ${cityController.text}, ${stateController.text} - ${pincodeController.text}
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Delivery Address"),
-          
+
           // centerTitle: true,
           backgroundColor: AppColor.PrimaryColor,
           foregroundColor: Colors.white,
-          bottom:  TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(child: Text("Add Address", style: TextStyle(fontWeight: FontWeight.bold,color: AppColor.White))),
-              Tab(child: Text("Saved Addresses", style: TextStyle(fontWeight: FontWeight.bold, color: AppColor.White))),
+              Tab(
+                  child: Text("Add Address",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: AppColor.White))),
+              Tab(
+                  child: Text("Saved Addresses",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: AppColor.White))),
             ],
           ),
         ),
         body: TabBarView(
           children: [
-            // Tab 1: Add Address
             SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   _buildTextField("Full Name", nameController),
                   _buildTextField("Phone Number", phoneController),
+                  InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => LocationPickerPage(onLocationPick : (val){
+                                print(val);
+                              })),
+                        );
+                      },
+                      child: Icon(Icons.location_pin)),
+                  SizedBox(
+                    height: 10,
+                  ),
                   _buildTextField("House No. / Building", houseController),
                   _buildTextField("Street / Locality", streetController),
                   _buildTextField("Landmark (optional)", landmarkController,
