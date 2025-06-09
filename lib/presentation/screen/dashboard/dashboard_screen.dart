@@ -121,7 +121,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             itemBuilder: (context, index) {
               final restaurant = restaurants[index];
               final data = {
-                "Restaurant": restaurant.name ?? "Unknown",
+                "Restaurant": restaurant.businessName ?? "Unknown",
                 "Items": restaurant.categoryName ?? "",
                 "price": "₹200",
                 "itemPrice": "From ₹ 89",

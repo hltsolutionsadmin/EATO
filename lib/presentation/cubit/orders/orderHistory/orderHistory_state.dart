@@ -7,9 +7,9 @@ class OrderHistoryInitial extends OrderHistoryState {}
 class OrderHistoryLoading extends OrderHistoryState {}
 
 class OrderHistoryLoaded extends OrderHistoryState {
-  final OrderHistoryModel model;
+  final OrderHistoryModel orders;
 
-  OrderHistoryLoaded(this.model);
+  OrderHistoryLoaded(this.orders);
 }
 
 class OrderHistoryError extends OrderHistoryState {

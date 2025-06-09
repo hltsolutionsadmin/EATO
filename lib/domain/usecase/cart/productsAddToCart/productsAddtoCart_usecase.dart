@@ -4,9 +4,12 @@ import 'package:eato/domain/repository/cart/productsAddToCart/productsAddtoCart_
 class ProductsAddToCartUseCase {
   final ProductsAddToCartRepository repository;
 
-  ProductsAddToCartUseCase({required this.repository});
+  ProductsAddToCartUseCase(this.repository);
 
-  Future<List<ProductsAddToCartModel>> call(List<Map<String, dynamic>> payload) {
-    return repository.productsAddToCart(payload);
+  Future<List<ProductsAddToCartModel>> call(
+    List<Map<String, dynamic>> payload, {
+    bool forceReplace = false,
+  }) async {
+    return await repository.productsAddToCart(payload, forceReplace: forceReplace);
   }
 }

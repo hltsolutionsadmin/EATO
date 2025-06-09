@@ -4,6 +4,8 @@ import 'package:eato/presentation/screen/order/orderTracking_screen.dart';
 import 'package:flutter/material.dart';
 
 class OrderSuccessScreen extends StatelessWidget {
+  const OrderSuccessScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -23,7 +23,7 @@ String getMenuByRestaurantIdUrl(
 
 String getRestaurantsByProductNameUrl(String productName, double latitude,
     double longitude, String postalcode, int page, int size) {
-  return 'product/api/products/nearby-search?productName=$productName&latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalcode&page=$page&size=$size';
+  return 'product/api/products/nearby-search?latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalcode&page=$page&size=$size&searchTerm=$productName';
 }
 
 const createCartUrl = 'order/api/carts/create';
@@ -34,7 +34,8 @@ const saveAddressUrl = 'order/api/carts/address';
 const getAddressUrl = 'api/addresses/all';
 const paymentUrl = 'order/payments/process';
 const createOrderUrl = 'order/api/orders/create';
-const orderHistoryUrl = 'order/api/orders/history';
+const orderHistoryUrl = 'order/api/orders/history?page=0&size=10&sortBy=createdDate&direction=DESC';
+const reOrderUrl = 'order/api/orders/reorder';
 
 String updateCartItemsUrl(String cartId) {
   return 'order/api/carts/items/$cartId';

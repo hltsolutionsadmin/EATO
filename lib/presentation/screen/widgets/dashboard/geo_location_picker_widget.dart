@@ -5,6 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class LocationPickerPage extends StatefulWidget {
+  const LocationPickerPage({super.key});
+
   @override
   _LocationPickerPageState createState() => _LocationPickerPageState();
 }
