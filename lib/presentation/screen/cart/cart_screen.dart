@@ -53,6 +53,7 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
+    print(widget.cartItems);
     context.read<GetCartCubit>().fetchCart();
 
     _razorpay = Razorpay();
@@ -330,7 +331,7 @@ class _CartScreenState extends State<CartScreen> {
         BlocListener<ProductsAddToCartCubit, ProductsAddToCartState>(
           listener: (context, state) {
             if (state is ProductsAddToCartSuccess) {
-              openCheckOut();
+              // openCheckOut();
             } else if (state is ProductsAddToCartFailure) {
               setState(() {
                 loading = false;
@@ -432,7 +433,7 @@ class _CartScreenState extends State<CartScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => LocationPickerPage()),
+                                builder: (context) => AddressScreen()),
                           );
                         },
                         child: const Text("change"),
