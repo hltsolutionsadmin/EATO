@@ -17,3 +17,8 @@ class ProductsAddToCartFailure extends ProductsAddToCartState {
 
   ProductsAddToCartFailure(this.message);
 }
+
+class ProductsAddToCartRejected extends ProductsAddToCartState {
+  final String message;
+  ProductsAddToCartRejected(this.message);
+}

@@ -16,6 +16,7 @@ import 'package:eato/presentation/cubit/cart/updateCartItems/updateCartItems_cub
 import 'package:eato/presentation/cubit/location/location_cubit.dart';
 import 'package:eato/presentation/cubit/orders/createOrder/createOrder_cubit.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
+import 'package:eato/presentation/cubit/orders/reOrder/reOrder_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
@@ -88,6 +89,7 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<CreateOrderCubit>()),
         BlocProvider(create: (_) => di.sl<OrderHistoryCubit>()),
         BlocProvider(create: (_) => di.sl<ClearCartCubit>()),
+        BlocProvider(create: (_) => di.sl<ReOrderCubit>()),
       ],
       child: MaterialApp(
         title: 'Eato',

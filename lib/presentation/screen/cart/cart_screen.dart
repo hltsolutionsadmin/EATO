@@ -11,7 +11,6 @@ import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart
 import 'package:eato/presentation/cubit/orders/createOrder/createOrder_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_state.dart';
-import 'package:eato/presentation/screen/address/address_screen.dart';
 import 'package:eato/presentation/screen/order/orderSuccess_screen.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
@@ -21,14 +20,16 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:http/http.dart' as http;
 
 class CartScreen extends StatefulWidget {
-  final List<Map<String, dynamic>> cartItems;
-  final Function(bool) onBottomSheetVisibilityChanged;
+  final int? orderId;
+  final List<Map<String, dynamic>>? cartItems;
+  final Function(bool)? onBottomSheetVisibilityChanged;
   final Widget? customCheckoutButton;
 
   const CartScreen({
     super.key,
-    required this.cartItems,
-    required this.onBottomSheetVisibilityChanged,
+    this.orderId,
+    this.cartItems,
+    this.onBottomSheetVisibilityChanged,
     this.customCheckoutButton,
   });
 
@@ -87,7 +88,8 @@ class _CartScreenState extends State<CartScreen> {
       setState(() => loading = false);
 
       // Navigate to success screen
-      Navigator.push(context, MaterialPageRoute(builder: (_) => OrderSuccessScreen()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (_) => OrderSuccessScreen()));
     } catch (e) {
       setState(() => loading = false);
       CustomSnackbars.showErrorSnack(
@@ -216,16 +218,18 @@ class _CartScreenState extends State<CartScreen> {
   void _initializeCartAndSelectedItems() {
     cart = {};
     selectedItems = [];
-    for (var item in widget.cartItems) {
-      final productId = item['productId'] as int?;
-      final quantity = item['quantity'] as int?;
-      final name = item['name'] as String?;
-      if (productId != null &&
-          quantity != null &&
-          quantity > 0 &&
-          name != null) {
-        cart[name] = quantity;
-        selectedItems.add(item);
+    if (widget.cartItems != null) {
+      for (var item in widget.cartItems!) {
+        final productId = item['productId'] as int?;
+        final quantity = item['quantity'] as int?;
+        final name = item['name'] as String?;
+        if (productId != null &&
+            quantity != null &&
+            quantity > 0 &&
+            name != null) {
+          cart[name] = quantity;
+          selectedItems.add(item);
+        }
       }
     }
   }
@@ -237,17 +241,21 @@ class _CartScreenState extends State<CartScreen> {
       } else {
         cart[itemName] = newQuantity;
         if (!selectedItems.any((item) => item['name'] == itemName)) {
-          final foundItem = widget.cartItems.firstWhere(
-            (item) => item['name'] == itemName,
-            orElse: () => {},
-          );
+          final foundItem = widget.cartItems != null
+              ? widget.cartItems!.firstWhere(
+                  (item) => item['name'] == itemName,
+                  orElse: () => {},
+                )
+              : {};
           if (foundItem.isNotEmpty) {
-            selectedItems.add(foundItem);
+            selectedItems.add(foundItem as Map<String, dynamic>);
           }
         }
       }
     });
-    widget.onBottomSheetVisibilityChanged(cart.isNotEmpty);
+    if (widget.onBottomSheetVisibilityChanged != null) {
+      widget.onBottomSheetVisibilityChanged!(cart.isNotEmpty);
+    }
   }
 
   void removeCartItem(String itemName) {
@@ -255,7 +263,9 @@ class _CartScreenState extends State<CartScreen> {
       cart.remove(itemName);
       selectedItems.removeWhere((item) => item['name'] == itemName);
     });
-    widget.onBottomSheetVisibilityChanged(cart.isNotEmpty);
+    if (widget.onBottomSheetVisibilityChanged != null) {
+      widget.onBottomSheetVisibilityChanged!(cart.isNotEmpty);
+    }
   }
 
   double getSubtotal() {
@@ -387,7 +397,9 @@ class _CartScreenState extends State<CartScreen> {
               'updatedCart': updatedCart,
               'cartItemsLength': getCartItemCount(),
             });
-            widget.onBottomSheetVisibilityChanged(updatedCart.isNotEmpty);
+            if (widget.onBottomSheetVisibilityChanged != null) {
+              widget.onBottomSheetVisibilityChanged!(updatedCart.isNotEmpty);
+            }
           },
         ),
         body: Stack(

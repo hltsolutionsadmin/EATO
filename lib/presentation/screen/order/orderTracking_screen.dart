@@ -8,10 +8,10 @@ class OrderTracker extends StatelessWidget {
   final String status;
 
   const OrderTracker({
-    Key? key,
+    super.key,
     required this.orderId,
     required this.status,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

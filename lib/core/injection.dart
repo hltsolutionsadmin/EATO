@@ -17,6 +17,7 @@ import 'package:eato/data/datasource/cart/updateCartItems/updateCartItems_dataSo
 import 'package:eato/data/datasource/location/location_remotedatasource.dart';
 import 'package:eato/data/datasource/orders/createOrder/createOrder_dataSource.dart';
 import 'package:eato/data/datasource/orders/orderHistory/orderHistory_dataSource.dart';
+import 'package:eato/data/datasource/orders/reOrder/reOrder_dataSource.dart';
 import 'package:eato/data/datasource/payment/payment_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getNearbyRestaurants/getNearByrestarants_dataSource.dart';
@@ -36,6 +37,7 @@ import 'package:eato/data/repositoryImpl/cart/updateCartItems/updateCartItems_re
 import 'package:eato/data/repositoryImpl/location/location_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/orders/createOrder/createOrder_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/orders/orderHistory/orderHistory_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/orders/reOrder/reOrder_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/payment/payment_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getNearbyRestaurants/getNearByrestarants_repoImpl.dart';
@@ -55,6 +57,7 @@ import 'package:eato/domain/repository/cart/updateCartItems/updateCartItems_repo
 import 'package:eato/domain/repository/location/location_repo.dart';
 import 'package:eato/domain/repository/orders/createOrder/createOrder_repository.dart';
 import 'package:eato/domain/repository/orders/orderHistory/orderHistory_repository.dart';
+import 'package:eato/domain/repository/orders/reOrder/reOrder_repository.dart';
 import 'package:eato/domain/repository/payment/payment_repository.dart';
 import 'package:eato/domain/repository/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repository.dart';
 import 'package:eato/domain/repository/restaurants/getNearbyRestaurants/getNearByrestarants_repository.dart';
@@ -74,6 +77,7 @@ import 'package:eato/domain/usecase/cart/updateCartItems/updateCartItems_usecase
 import 'package:eato/domain/usecase/location/location_usecase.dart';
 import 'package:eato/domain/usecase/orders/createOrder/createOrder_usecase.dart';
 import 'package:eato/domain/usecase/orders/orderHistory/orderHistory_usecase.dart';
+import 'package:eato/domain/usecase/orders/reOrder/reOrder_usecase.dart';
 import 'package:eato/domain/usecase/payment/payment_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getNearbyRestaurants/getNearByrestarants_usecase.dart';
@@ -93,6 +97,7 @@ import 'package:eato/presentation/cubit/cart/updateCartItems/updateCartItems_cub
 import 'package:eato/presentation/cubit/location/location_cubit.dart';
 import 'package:eato/presentation/cubit/orders/createOrder/createOrder_cubit.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
+import 'package:eato/presentation/cubit/orders/reOrder/reOrder_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
@@ -280,8 +285,7 @@ void init() {
         remoteDataSource: sl<ProductsAddToCartRemoteDataSource>()),
   );
   sl.registerLazySingleton(
-    () =>
-        ProductsAddToCartUseCase(repository: sl<ProductsAddToCartRepository>()),
+    () => ProductsAddToCartUseCase(sl<ProductsAddToCartRepository>()),
   );
   sl.registerFactory(() => ProductsAddToCartCubit(
         sl<ProductsAddToCartUseCase>(),
@@ -407,4 +411,18 @@ void init() {
   sl.registerFactory(() => ClearCartCubit(
       sl<ClearCartUseCase>(),
     ));
+
+    //ReOrder
+  sl.registerLazySingleton<ReOrderRemoteDataSource>(
+    () => ReOrderRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<ReOrderRepository>(
+    () => ReOrderRepositoryImpl(remoteDataSource: sl<ReOrderRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => ReOrderUseCase(repository: sl<ReOrderRepository>()),
+  );
+  sl.registerFactory(() => ReOrderCubit(
+        sl<ReOrderUseCase>(),
+      ));
 }
