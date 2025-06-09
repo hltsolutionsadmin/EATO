@@ -5,8 +5,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class LocationPickerPage extends StatefulWidget {
-  const LocationPickerPage({super.key});
-
+  Function? onLocationPick;
+  LocationPickerPage({Key? key, this.onLocationPick}) : super(key: key);
   @override
   _LocationPickerPageState createState() => _LocationPickerPageState();
 }
@@ -45,7 +45,6 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
 
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-
     final currentLocation = LatLng(position.latitude, position.longitude);
 
     setState(() {
@@ -64,6 +63,10 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
+        widget.onLocationPick = (val) {
+          val = place;
+        };
+
         setState(() {
           _address =
               '${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
@@ -135,19 +138,29 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                   color: Colors.white70,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      'Lat: ${_selectedLocation!.latitude.toStringAsFixed(5)}, '
-                      'Lng: ${_selectedLocation!.longitude.toStringAsFixed(5)}',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      _address,
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                child: InkWell(
+                  onTap: (){
+                    Navigator.pop(context);
+                    setState(() {
+widget.onLocationPick = (val) {
+  val = _selectedLocation;
+};
+                    });
+                  },
+                  child: Column(
+                    children: [
+                      Text(
+                        'Lat: ${_selectedLocation!.latitude.toStringAsFixed(5)}, '
+                        'Lng: ${_selectedLocation!.longitude.toStringAsFixed(5)}',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        _address,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

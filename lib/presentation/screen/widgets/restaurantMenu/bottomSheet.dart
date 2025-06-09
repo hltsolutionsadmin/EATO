@@ -11,7 +11,6 @@ class RestaurantCartBottomSheet extends StatelessWidget {
     required this.totalItems,
     required this.onViewCartPressed,
   });
-
   @override
   Widget build(BuildContext context) {
     return Container(

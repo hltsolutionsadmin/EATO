@@ -8,6 +8,7 @@ class ProductsAddToCartCubit extends Cubit<ProductsAddToCartState> {
 
   ProductsAddToCartCubit(this.useCase) : super(ProductsAddToCartInitial());
 
+
   Future<void> addToCart(
   List<Map<String, dynamic>> payload, {
   BuildContext? context,
