@@ -41,8 +41,7 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
   Widget build(BuildContext context) {
     final item = widget.item;
     final mediaUrl =
-        item.media.isNotEmpty ? item.media.first : null;
-
+        item.media.isNotEmpty ? item.media.first.url : null;
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),
       padding: const EdgeInsets.all(12.0),
