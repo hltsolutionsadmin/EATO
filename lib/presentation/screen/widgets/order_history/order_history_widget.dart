@@ -262,7 +262,7 @@ Widget BuildOrderItem({
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

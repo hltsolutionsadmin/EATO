@@ -1,5 +1,7 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/data/model/address/getAddress/getAddress_model.dart';
+import 'package:eato/presentation/cubit/address/defaultAddress/get/getDefaultAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/defaultAddress/post/defaultAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_state.dart';
@@ -34,7 +36,15 @@ class SavedAddressesView extends StatelessWidget {
   }
 
   Widget _buildAddressList(BuildContext context, List<Content> addresses) {
-    if (addresses.isEmpty) {
+    // Sort addresses - default address first
+    final sortedAddresses = List<Content>.from(addresses)
+      ..sort((a, b) {
+        if (a.isDefault == true && b.isDefault != true) return -1;
+        if (a.isDefault != true && b.isDefault == true) return 1;
+        return 0;
+      });
+
+    if (sortedAddresses.isEmpty) {
       return _buildEmptyView(context);
     }
     
@@ -42,8 +52,12 @@ class SavedAddressesView extends StatelessWidget {
       onRefresh: () async => context.read<GetAddressCubit>().fetchAddress(),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: addresses.length,
-        itemBuilder: (context, index) => _buildAddressCard(context, addresses[index]),
+        itemCount: sortedAddresses.length,
+        itemBuilder: (context, index) => _buildAddressCard(
+          context, 
+          sortedAddresses[index],
+          isDefault: sortedAddresses[index].isDefault ?? false,
+        ),
       ),
     );
   }
@@ -82,20 +96,25 @@ class SavedAddressesView extends StatelessWidget {
             onPressed: () => context.read<GetAddressCubit>().fetchAddress(),
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.PrimaryColor),
-            child: const Text("Retry"),
+            child: const Text("Retry",style: TextStyle(fontSize: 16, color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAddressCard(BuildContext context, Content address) {
+  Widget _buildAddressCard(BuildContext context, Content address, {bool isDefault = false}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.shade200, width: 1),
+        side: BorderSide(
+          color: isDefault 
+            ? AppColor.PrimaryColor 
+            : Colors.grey.shade200, 
+          width: isDefault ? 2 : 1,
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -103,10 +122,14 @@ class SavedAddressesView extends StatelessWidget {
           if (onAddressSelected != null) {
             onAddressSelected!(address);
           } else {
+            final addressId = address.id!;
             final addressString = '${address.addressLine1}, ${address.city}';
-            Navigator.pop(context, addressString);
+            context.read<DefaultAddressCubit>().setDefaultAddress(addressId);
+            context.read<AddressSavetoCartCubit>().addressSavetoCart(addressId);
+            Navigator.pop(context,addressString);
           }
         },
+
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -116,11 +139,22 @@ class SavedAddressesView extends StatelessWidget {
                 children: [
                   Icon(Icons.location_on, color: AppColor.PrimaryColor, size: 20),
                   const SizedBox(width: 8),
-                  Text("Saved Address",
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      )),
+                  Text(
+                    isDefault ? "Default Address" : "Saved Address",
+                    style: TextStyle(
+                      color: isDefault 
+                        ? AppColor.PrimaryColor 
+                        : Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  if (isDefault) ...[
+                    const SizedBox(width: 8),
+                    Icon(Icons.check_circle, 
+                      color: AppColor.PrimaryColor, 
+                      size: 18
+                    ),
+                  ],
                 ],
               ),
               const SizedBox(height: 12),
@@ -153,26 +187,10 @@ class SavedAddressesView extends StatelessWidget {
 
               const SizedBox(height: 16),
 
-              // Edit/Delete buttons with better styling
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  OutlinedButton.icon(
-                    icon: Icon(Icons.edit, size: 18, color: AppColor.PrimaryColor),
-                    label: Text("EDIT",
-                        style: TextStyle(color: AppColor.PrimaryColor)),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      side: BorderSide(
-                          color: AppColor.PrimaryColor.withOpacity(0.5)),
-                    ),
-                    onPressed: () => _editAddress(context, address),
-                  ),
-                  const SizedBox(width: 8),
+                  
                   OutlinedButton.icon(
                     icon: Icon(Icons.delete, size: 18, color: Colors.red),
                     label: const Text("DELETE",
@@ -199,8 +217,6 @@ class SavedAddressesView extends StatelessWidget {
 
   void _editAddress(BuildContext context, Content address) {
     DefaultTabController.of(context).animateTo(0);
-    // You might want to pass this to a callback or use another method
-    // to populate the edit form in the parent widget
   }
 
   void _showDeleteConfirmation(BuildContext context, int addressId) {

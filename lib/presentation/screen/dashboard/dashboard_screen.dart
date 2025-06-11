@@ -1,6 +1,5 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
-import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
@@ -13,7 +12,6 @@ import 'package:eato/presentation/screen/widgets/dashboard/foodCatagoryIcons.dar
 import 'package:eato/presentation/screen/widgets/dashboard/foodItemCard.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/locationHeader.dart';
 import 'package:eato/components/searchBar.dart';
-import 'package:eato/presentation/screen/widgets/restaurantMenu/bottomSheet.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

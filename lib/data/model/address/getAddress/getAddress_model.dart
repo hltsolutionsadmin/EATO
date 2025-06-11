@@ -77,6 +77,7 @@ class Content {
         required this.longitude,
         required this.postalCode,
         required this.userId,
+        required this.isDefault,
     });
 
     final int? id;
@@ -90,6 +91,7 @@ class Content {
     final double? longitude;
     final String? postalCode;
     final int? userId;
+    final bool? isDefault;
 
     factory Content.fromJson(Map<String, dynamic> json){ 
         return Content(
@@ -104,6 +106,7 @@ class Content {
             longitude: json["longitude"],
             postalCode: json["postalCode"],
             userId: json["userId"],
+            isDefault: json["isDefault"],
         );
     }
 

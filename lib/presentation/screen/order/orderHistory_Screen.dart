@@ -27,9 +27,9 @@ final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   final int _pageSize = 10; // Adjust as needed
-  String _searchQuery = '';
+  final String _searchQuery = '';
   bool _isLoadingMore = false;
-  List<Content> _orders = [];
+  final List<Content> _orders = [];
 
   @override
   void initState() {
