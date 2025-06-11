@@ -1,42 +1,63 @@
 class GetAddressModel {
     GetAddressModel({
+        required this.success,
+        required this.data,
+        required this.message,
+    });
+
+    final bool? success;
+    final Data? data;
+    final String? message;
+
+    factory GetAddressModel.fromJson(Map<String, dynamic> json){ 
+        return GetAddressModel(
+            success: json["success"],
+            data: json["data"] == null ? null : Data.fromJson(json["data"]),
+            message: json["message"],
+        );
+    }
+
+}
+
+class Data {
+    Data({
         required this.content,
         required this.pageable,
-        required this.last,
-        required this.totalPages,
         required this.totalElements,
+        required this.totalPages,
+        required this.last,
         required this.size,
         required this.number,
         required this.sort,
-        required this.first,
         required this.numberOfElements,
+        required this.first,
         required this.empty,
     });
 
     final List<Content> content;
     final Pageable? pageable;
-    final bool? last;
-    final int? totalPages;
     final int? totalElements;
+    final int? totalPages;
+    final bool? last;
     final int? size;
     final int? number;
     final List<dynamic> sort;
-    final bool? first;
     final int? numberOfElements;
+    final bool? first;
     final bool? empty;
 
-    factory GetAddressModel.fromJson(Map<String, dynamic> json){ 
-        return GetAddressModel(
+    factory Data.fromJson(Map<String, dynamic> json){ 
+        return Data(
             content: json["content"] == null ? [] : List<Content>.from(json["content"]!.map((x) => Content.fromJson(x))),
             pageable: json["pageable"] == null ? null : Pageable.fromJson(json["pageable"]),
-            last: json["last"],
-            totalPages: json["totalPages"],
             totalElements: json["totalElements"],
+            totalPages: json["totalPages"],
+            last: json["last"],
             size: json["size"],
             number: json["number"],
             sort: json["sort"] == null ? [] : List<dynamic>.from(json["sort"]!.map((x) => x)),
-            first: json["first"],
             numberOfElements: json["numberOfElements"],
+            first: json["first"],
             empty: json["empty"],
         );
     }

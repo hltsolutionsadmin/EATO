@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:eato/core/network/dio_client.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/core/network/network_service.dart';
+import 'package:eato/data/datasource/address/deleteAddress/deleteAddress_dataSource.dart';
 import 'package:eato/data/datasource/address/getAddress/getAddress_dataSource.dart';
 import 'package:eato/data/datasource/address/saveAddress/saveAddress_dataSource.dart';
 import 'package:eato/data/datasource/authentication/current_customer_remote_data_source.dart';
@@ -9,6 +10,7 @@ import 'package:eato/data/datasource/authentication/rolesPost_dataSource.dart';
 import 'package:eato/data/datasource/authentication/signin_remote_data_source.dart';
 import 'package:eato/data/datasource/authentication/signup_remote_data_source.dart';
 import 'package:eato/data/datasource/authentication/trigger_otp_remote_data_source.dart';
+import 'package:eato/data/datasource/authentication/update_current_customer_dataSource.dart';
 import 'package:eato/data/datasource/cart/clearCart/clearCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/createCart/createCart_dataSource.dart';
 import 'package:eato/data/datasource/cart/getCart/getCart_dataSource.dart';
@@ -22,6 +24,7 @@ import 'package:eato/data/datasource/payment/payment_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getNearbyRestaurants/getNearByrestarants_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_dataSource.dart';
+import 'package:eato/data/repositoryImpl/address/deleteAddress/deleteAddress_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/address/getAddress/getAddress_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/address/saveAddress/saveAddress_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/authentication/current_customer_repository_impl.dart';
@@ -29,6 +32,7 @@ import 'package:eato/data/repositoryImpl/authentication/rolesPost_repoImpl.dart'
 import 'package:eato/data/repositoryImpl/authentication/signin_repository_impl.dart';
 import 'package:eato/data/repositoryImpl/authentication/signup_repository_impl.dart';
 import 'package:eato/data/repositoryImpl/authentication/trigger_otp_repository_impl.dart';
+import 'package:eato/data/repositoryImpl/authentication/update_current_customer_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/clearCart/clearCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/createCart/createCart_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/cart/getCart/getCart_repoImpl.dart';
@@ -42,6 +46,7 @@ import 'package:eato/data/repositoryImpl/payment/payment_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getNearbyRestaurants/getNearByrestarants_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_repoImpl.dart';
+import 'package:eato/domain/repository/address/deleteAddress/deleteAddress_repository.dart';
 import 'package:eato/domain/repository/address/getAddress/getAddress_repository.dart';
 import 'package:eato/domain/repository/address/saveAddress/saveAddress_repository.dart';
 import 'package:eato/domain/repository/authentication/current_customer_repository.dart';
@@ -49,6 +54,7 @@ import 'package:eato/domain/repository/authentication/rolesPost_repository.dart'
 import 'package:eato/domain/repository/authentication/signin_repository.dart';
 import 'package:eato/domain/repository/authentication/signup_repository.dart';
 import 'package:eato/domain/repository/authentication/trigger_otp_repository.dart';
+import 'package:eato/domain/repository/authentication/update_current_customer_repository.dart';
 import 'package:eato/domain/repository/cart/clearCart/clearCart_repository.dart';
 import 'package:eato/domain/repository/cart/createCart/createCart_repository.dart';
 import 'package:eato/domain/repository/cart/getCart/getCart_repository.dart';
@@ -62,6 +68,7 @@ import 'package:eato/domain/repository/payment/payment_repository.dart';
 import 'package:eato/domain/repository/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repository.dart';
 import 'package:eato/domain/repository/restaurants/getNearbyRestaurants/getNearByrestarants_repository.dart';
 import 'package:eato/domain/repository/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_repository.dart';
+import 'package:eato/domain/usecase/address/deleteAddress/deleteAddress_usecase.dart';
 import 'package:eato/domain/usecase/address/getAddress/getAddress_usecase.dart';
 import 'package:eato/domain/usecase/address/saveAddress/saveAddress_usecase.dart';
 import 'package:eato/domain/usecase/authentication/current_customer_usecase.dart';
@@ -69,6 +76,7 @@ import 'package:eato/domain/usecase/authentication/rolesPost_usecase.dart';
 import 'package:eato/domain/usecase/authentication/signin_usecase.dart';
 import 'package:eato/domain/usecase/authentication/signup_usecase.dart';
 import 'package:eato/domain/usecase/authentication/trigger_otp_usecase.dart';
+import 'package:eato/domain/usecase/authentication/update_current_customer_usecase.dart';
 import 'package:eato/domain/usecase/cart/clearCart/clearCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/createCart/createCart_usecase.dart';
 import 'package:eato/domain/usecase/cart/getCart/getCart_usecase.dart';
@@ -82,9 +90,11 @@ import 'package:eato/domain/usecase/payment/payment_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getNearbyRestaurants/getNearByrestarants_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_usecase.dart';
+import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
-import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signUp/signup_cubit.dart';
@@ -425,4 +435,37 @@ void init() {
   sl.registerFactory(() => ReOrderCubit(
         sl<ReOrderUseCase>(),
       ));
+
+      //DeleteAddress
+  sl.registerLazySingleton<DeleteAddressRemoteDataSource>(
+    () => DeleteAddressRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<DeleteAddressRepository>(
+    () => DeleteAddressRepositoryImpl(remoteDataSource: sl<DeleteAddressRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => DeleteAddressUseCase(repository: sl<DeleteAddressRepository>()),
+  );
+  sl.registerFactory(() => DeleteAddressCubit(
+      sl<DeleteAddressUseCase>(),
+    ));
+
+    //UpdateCurrentCustomer
+
+      sl.registerLazySingleton<UpdateCurrentCustomerRemoteDatasource>(
+    () =>
+        UpdateCurrentCustomerRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<UpdateCurrentCustomerRepository>(
+    () => UpdateCurrentCustomerRepositoryImpl(
+        remoteDatasource: sl<UpdateCurrentCustomerRemoteDatasource>()),
+  );
+  sl.registerLazySingleton(
+    () => UpdateCurrentCustomerUseCase(
+        repository: sl<UpdateCurrentCustomerRepository>()),
+  );
+  sl.registerFactory(() => UpdateCurrentCustomerCubit(
+        useCase: sl<UpdateCurrentCustomerUseCase>(),
+      ));
+
 }

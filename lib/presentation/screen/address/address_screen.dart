@@ -1,105 +1,209 @@
+import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/data/model/address/getAddress/getAddress_model.dart';
+import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_state.dart';
+import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_state.dart';
+import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
+import 'package:eato/presentation/screen/address/savedAddress_screen.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:latlong2/latlong.dart';
 
 class AddressScreen extends StatefulWidget {
-  const AddressScreen({super.key});
+  final Function(Content)? selectedAddress;
 
+  const AddressScreen({super.key, this.selectedAddress});
   @override
   State<AddressScreen> createState() => _AddressScreenState();
 }
 
-class _AddressScreenState extends State<AddressScreen>
-    with SingleTickerProviderStateMixin {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController phoneController = TextEditingController();
-  final TextEditingController houseController = TextEditingController();
-  final TextEditingController streetController = TextEditingController();
-  final TextEditingController landmarkController = TextEditingController();
-  final TextEditingController cityController = TextEditingController();
-  final TextEditingController stateController = TextEditingController();
-  final TextEditingController pincodeController = TextEditingController();
+class _AddressScreenState extends State<AddressScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final nameController = TextEditingController();
+  final phoneController = TextEditingController();
+  final houseController = TextEditingController();
+  final streetController = TextEditingController();
+  final landmarkController = TextEditingController();
+  final cityController = TextEditingController();
+  final stateController = TextEditingController();
+  final pincodeController = TextEditingController();
+  final countryController = TextEditingController();
+  LatLng? _selectedLatLng;
+  bool _isLocationPicked = false;
 
-  List<String> savedAddresses = [];
-
-  void _saveAddress() {
-    print("Saving address...");
-    if (nameController.text.trim().isEmpty ||
-        phoneController.text.trim().isEmpty ||
-        houseController.text.trim().isEmpty ||
-        streetController.text.trim().isEmpty ||
-        cityController.text.trim().isEmpty ||
-        stateController.text.trim().isEmpty ||
-        pincodeController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please fill all required fields")),
-      );
-      return;
-    }
-
-    final fullAddress = '''
-Name: ${nameController.text}
-Phone: ${phoneController.text}
-${houseController.text}, ${streetController.text}
-${landmarkController.text.isNotEmpty ? "Landmark: ${landmarkController.text}\n" : ""}
-${cityController.text}, ${stateController.text} - ${pincodeController.text}
-''';
-
-    setState(() {
-      savedAddresses.add(fullAddress);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Address Saved")),
-    );
-
-    nameController.clear();
-    phoneController.clear();
-    houseController.clear();
-    streetController.clear();
-    landmarkController.clear();
-    cityController.clear();
-    stateController.clear();
-    pincodeController.clear();
+  @override
+  void initState() {
+    super.initState();
+    _fetchAddresses();
   }
 
-  Widget _buildTextField(String label, TextEditingController controller,
-      {int maxLines = 1, bool required = true}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label + (required ? ' *' : ''),
-          style: const TextStyle(fontWeight: FontWeight.w500),
+  @override
+  void dispose() {
+    nameController.dispose();
+    phoneController.dispose();
+    houseController.dispose();
+    streetController.dispose();
+    landmarkController.dispose();
+    cityController.dispose();
+    stateController.dispose();
+    pincodeController.dispose();
+    countryController.dispose();
+    super.dispose();
+  }
+
+  void _fetchAddresses() => context.read<GetAddressCubit>().fetchAddress();
+
+  void _saveAddress() {
+    if (!_formKey.currentState!.validate() || !_isLocationPicked) {
+      if (!_isLocationPicked) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Please pick a location")),
+        );
+      }
+      return;
+    }
+    final payload = {
+      "addressLine1": houseController.text.trim(),
+      "addressLine2": landmarkController.text.trim(),
+      "street": streetController.text.trim(),
+      "city": cityController.text.trim(),
+      "state": stateController.text.trim(),
+      "country": countryController.text.trim(),
+      "latitude": _selectedLatLng?.latitude ?? 0.0,
+      "longitude": _selectedLatLng?.longitude ?? 0.0,
+      "postalCode": pincodeController.text.trim(),
+      "name": nameController.text.trim(),
+      "phone": phoneController.text.trim(),
+    };
+    context.read<SaveAddressCubit>().saveAddress(payload);
+  }
+
+  void _fillAddressFields(Placemark placemark, LatLng? latLng) {
+    setState(() {
+      streetController.text = [placemark.street, placemark.thoroughfare]
+          .where((p) => p != null && p.isNotEmpty)
+          .join(', ');
+      cityController.text = placemark.locality ?? placemark.subLocality ?? '';
+      stateController.text = placemark.administrativeArea ?? '';
+      pincodeController.text = placemark.postalCode ?? '';
+      countryController.text = placemark.country ?? '';
+      houseController.text = [placemark.name, placemark.subThoroughfare]
+          .where((p) => p != null && p.isNotEmpty)
+          .join(', ');
+      _selectedLatLng = latLng;
+      _isLocationPicked = true;
+    });
+  }
+
+  Future<void> _pickLocation() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LocationPickerPage(
+          onLocationSelected: (latLng, placemark) =>
+              _fillAddressFields(placemark, latLng),
         ),
-        const SizedBox(height: 6),
-        TextField(
-          controller: controller,
-          maxLines: maxLines,
-          keyboardType: label == "Phone Number" || label == "Pincode"
-              ? TextInputType.number
-              : TextInputType.text,
-          maxLength: label == "Phone Number"
-              ? 10
-              : label == "Pincode"
-                  ? 6
-                  : null,
-          inputFormatters: label == "Phone Number" || label == "Pincode"
-              ? [FilteringTextInputFormatter.digitsOnly]
-              : [],
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.grey.shade100,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            hintText: 'Enter $label',
-          ),
-        ),
-        const SizedBox(height: 16),
-      ],
+      ),
     );
+    if (result == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Location selection cancelled")),
+      );
+    }
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    int maxLines = 1,
+    bool required = true,
+    TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
+    String? Function(String?)? validator,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[700],
+                ),
+              ),
+              if (required)
+                const Text(
+                  '*',
+                  style: TextStyle(color: Colors.red),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: controller,
+            maxLines: maxLines,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
+            validator: validator,
+            decoration: InputDecoration(
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: Colors.grey.shade400,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: AppColor.PrimaryColor,
+                  width: 1.5,
+                ),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: Colors.red,
+                ),
+              ),
+              hintText: 'Enter $label',
+              hintStyle: TextStyle(
+                color: Colors.grey.shade500,
+                fontSize: 14,
+              ),
+            ),
+            style: const TextStyle(
+              fontSize: 14,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _clearForm() {
+    _formKey.currentState?.reset();
+    setState(() {
+      _selectedLatLng = null;
+      _isLocationPicked = false;
+    });
   }
 
   @override
@@ -107,91 +211,261 @@ ${cityController.text}, ${stateController.text} - ${pincodeController.text}
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text("Delivery Address"),
+        // appBar: CustomAppBar(
+        //   title: "Manage Addresses",
+        //   showBackButton: true,
+        //   onBackPressed: () {
+        //     Navigator.pop(context);
+        //     _clearForm();
+        //   },
+        // ),
 
-          // centerTitle: true,
-          backgroundColor: AppColor.PrimaryColor,
-          foregroundColor: Colors.white,
-          bottom: TabBar(
-            tabs: [
-              Tab(
-                  child: Text("Add Address",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: AppColor.White))),
-              Tab(
-                  child: Text("Saved Addresses",
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: AppColor.White))),
+        // Place TabBar inside the appBar's bottom property for proper display
+        appBar: PreferredSize(
+          preferredSize: const Size.fromHeight(200),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomAppBar(
+          title: "Manage Addresses",
+          showBackButton: true,
+          onBackPressed: () {
+            Navigator.pop(context);
+            _clearForm();
+          },
+              ),
+              TabBar(
+          labelColor: AppColor.PrimaryColor,
+          unselectedLabelColor: Colors.grey,
+          indicatorColor: AppColor.PrimaryColor,
+          tabs: const [
+            Tab(text: "Saved Addresses"),
+            Tab(text: "Add New Address"),
+          ],
+              ),
             ],
           ),
         ),
-        body: TabBarView(
-          children: [
-            SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  _buildTextField("Full Name", nameController),
-                  _buildTextField("Phone Number", phoneController),
-                  InkWell(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => LocationPickerPage(onLocationPick : (val){
-                                print(val);
-                              })),
-                        );
-                      },
-                      child: Icon(Icons.location_pin)),
-                  SizedBox(
-                    height: 10,
-                  ),
-                  _buildTextField("House No. / Building", houseController),
-                  _buildTextField("Street / Locality", streetController),
-                  _buildTextField("Landmark (optional)", landmarkController,
-                      required: false),
-                  _buildTextField("City", cityController),
-                  _buildTextField("State", stateController),
-                  _buildTextField("Pincode", pincodeController),
-                  ElevatedButton(
-                    onPressed: _saveAddress,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.PrimaryColor,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
-                    child: const Text("Save Address"),
-                  ),
-                ],
-              ),
+        body: MultiBlocListener(
+          listeners: [
+            BlocListener<SaveAddressCubit, SaveAddressState>(
+              listener: (context, state) {
+                if (state is SaveAddressSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Address Saved Successfully"),
+                      behavior: SnackBarBehavior.floating));
+                  _clearForm();
+                  _fetchAddresses();
+                } else if (state is SaveAddressFailure) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(state.message),
+                      behavior: SnackBarBehavior.floating));
+                }
+              },
             ),
-
-            // Tab 2: Saved Addresses
-            savedAddresses.isEmpty
-                ? const Center(child: Text("No saved addresses"))
-                : ListView.separated(
-                    padding: const EdgeInsets.all(20),
-                    itemCount: savedAddresses.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      return Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: AppColor.PrimaryColor.withOpacity(0.1),
-                          border: Border.all(color: AppColor.PrimaryColor),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(savedAddresses[index]),
-                      );
-                    },
-                  ),
+            BlocListener<DeleteAddressCubit, DeleteAddressState>(
+              listener: (context, state) {
+                if (state is DeleteAddressSuccess) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Address deleted successfully"),
+                      behavior: SnackBarBehavior.floating));
+                  _fetchAddresses();
+                } else if (state is DeleteAddressFailure) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(state.error),
+                      behavior: SnackBarBehavior.floating));
+                }
+              },
+            ),
           ],
+          child: TabBarView(
+            children: [
+              SavedAddressesView(
+                onAddressSelected: widget.selectedAddress,
+              ),
+              SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Add New Address",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey[800],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      _buildTextField(
+                        label: "Full Name",
+                        controller: nameController,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Please enter your name'
+                            : null,
+                      ),
+                      _buildTextField(
+                        label: "Phone Number",
+                        controller: phoneController,
+                        keyboardType: TextInputType.phone,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty)
+                            return 'Please enter phone number';
+                          if (v.trim().length != 10)
+                            return 'Please enter a valid 10-digit phone number';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Location *",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: _pickLocation,
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _isLocationPicked
+                                  ? AppColor.PrimaryColor
+                                  : Colors.grey.shade400,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.location_on,
+                                color: _isLocationPicked
+                                    ? AppColor.PrimaryColor
+                                    : Colors.grey,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  _isLocationPicked
+                                      ? "Location selected"
+                                      : "Pick location from map",
+                                  style: TextStyle(
+                                    color: _isLocationPicked
+                                        ? Colors.green
+                                        : Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right,
+                                color: Colors.grey.shade500,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        label: "House No. / Building",
+                        controller: houseController,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Please enter house/building details'
+                            : null,
+                      ),
+                      _buildTextField(
+                        label: "Street / Locality",
+                        controller: streetController,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Please enter street/locality'
+                            : null,
+                      ),
+                      _buildTextField(
+                        label: "Landmark (optional)",
+                        controller: landmarkController,
+                        required: false,
+                      ),
+                      _buildTextField(
+                        label: "City",
+                        controller: cityController,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Please enter city'
+                            : null,
+                      ),
+                      _buildTextField(
+                        label: "State",
+                        controller: stateController,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? 'Please enter state'
+                            : null,
+                      ),
+                      _buildTextField(
+                        label: "Pincode",
+                        controller: pincodeController,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly
+                        ],
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty)
+                            return 'Please enter pincode';
+                          if (v.trim().length != 6)
+                            return 'Please enter a valid 6-digit pincode';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      BlocBuilder<SaveAddressCubit, SaveAddressState>(
+                        builder: (context, state) => SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: state is SaveAddressLoading
+                                ? null
+                                : _saveAddress,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColor.PrimaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: state is SaveAddressLoading
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : const Text(
+                                    "Save Address",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Saved Addresses Tab
+            ],
+          ),
         ),
       ),
     );

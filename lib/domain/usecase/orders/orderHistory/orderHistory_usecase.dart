@@ -6,7 +6,7 @@ class OrderHistoryUseCase {
 
   OrderHistoryUseCase({required this.repository});
 
-  Future<OrderHistoryModel> execute() {
-    return repository.orderHistory();
+  Future<OrderHistoryModel> execute(int page, int size, String searchQuery) {
+    return repository.orderHistory(page, size, searchQuery);
   }
 }

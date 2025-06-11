@@ -19,16 +19,56 @@ class OrderHistoryScreen extends StatefulWidget {
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final Map<String, bool> _itemInCartStatus = {};
   final Map<String, int> _itemQuantities = {};
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  int _currentPage = 0;
+  final int _pageSize = 10; // Adjust as needed
+  String _searchQuery = '';
+  bool _isLoadingMore = false;
+  List<Content> _orders = [];
 
   @override
   void initState() {
     super.initState();
-    context.read<OrderHistoryCubit>().fetchCart();
+    _fetchInitialOrders();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _fetchInitialOrders() {
+    _currentPage = 0;
+    _orders.clear();
+    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery);
+  }
+
+  void _fetchMoreOrders() {
+    if (!_isLoadingMore) {
+      setState(() => _isLoadingMore = true);
+      _currentPage++;
+      context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery);
+    }
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
+      _fetchMoreOrders();
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    _searchQuery = query;
+    _fetchInitialOrders();
   }
 
   List<Map<String, dynamic>> _createPayload(OrderItem item, int quantity) => [
-        {"productId": item.productId, "quantity": quantity, "price": item.price}
-      ];
+    {"productId": item.productId, "quantity": quantity, "price": item.price}
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -46,54 +86,92 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             );
           }
         },
-        child: BlocBuilder<OrderHistoryCubit, OrderHistoryState>(
+        child: BlocConsumer<OrderHistoryCubit, OrderHistoryState>(
+          listener: (context, state) {
+            if (state is OrderHistoryLoaded) {
+              if (_currentPage == 0) {
+                _orders = state.orders.data?.content ?? [];
+              } else {
+                _orders.addAll(state.orders.data?.content ?? []);
+              }
+              _isLoadingMore = false;
+            }
+          },
           builder: (context, state) {
-            if (state is OrderHistoryLoading) return const Center(child: CircularProgressIndicator());
-            if (state is OrderHistoryError) return const Center(child: Text("Failed to load orders"));
-            if (state is OrderHistoryLoaded) return _buildOrderList(context, state.orders);
-            return const Center(child: Text('No orders found'));
+            if (state is OrderHistoryLoading && _currentPage == 0) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is OrderHistoryError) {
+              return Center(child: Text("Failed to load orders: ${state.message}"));
+            }
+            return _buildOrderList(context);
           },
         ),
       ),
     );
   }
 
-  Widget _buildOrderList(BuildContext context, OrderHistoryModel model) => Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: _buildSearchBar(),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: model.data?.content?.length ?? 0,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final order = model.data?.content?[index];
-                if (order == null) return const SizedBox.shrink();
-                return _buildOrderItem(order, context);
-              },
-            ),
-          ),
-        ],
-      );
-
-  Widget _buildSearchBar() => Container(
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-        child: TextField(
-          decoration: InputDecoration(
-            hintText: 'Search for restaurants and orders',
-            prefixIcon: const Icon(Icons.search, color: Colors.grey),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-            contentPadding: const EdgeInsets.symmetric(vertical: 12),
-            filled: true,
-            fillColor: Colors.grey[100],
+  Widget _buildOrderList(BuildContext context) => Column(
+    children: [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: _buildSearchBar(),
+      ),
+      const SizedBox(height: 8),
+      Expanded(
+        child: RefreshIndicator(
+          onRefresh: () async {
+            _fetchInitialOrders();
+          },
+          child: ListView.separated(
+            controller: _scrollController,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: _orders.length + (_isLoadingMore ? 1 : 0),
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              if (index >= _orders.length) {
+                return const Center(child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: CircularProgressIndicator(),
+                ));
+              }
+              final order = _orders[index];
+              return _buildOrderItem(order, context);
+            },
           ),
         ),
-      );
+      ),
+    ],
+  );
 
+  Widget _buildSearchBar() => Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: _onSearchChanged,
+        decoration: InputDecoration(
+          hintText: 'Search for restaurants and orders',
+          prefixIcon: GestureDetector(
+            onTap: () {
+              final searchText = _searchController.text;
+              if (searchText.isNotEmpty) {
+                _onSearchChanged(searchText);
+              }
+            },
+            child: const Icon(Icons.search, color: Colors.grey),
+          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+          contentPadding: const EdgeInsets.symmetric(vertical: 12),
+          filled: true,
+          fillColor: Colors.grey[100],
+        ),
+      ),
+    );
+
+  // Rest of your existing methods (_buildOrderItem, _getStatusColor, etc.) remain the same
   Widget _buildOrderItem(Content order, BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -166,7 +244,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 Text('Your order:', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.grey[700])),
                 const SizedBox(height: 8),
                 ...order.orderItems.map((item) {
-                  final itemKey = '${item.productId}_${item.productName}';
+                  final itemKey = '${item.productId}_${item.productName }';
                   _itemInCartStatus.putIfAbsent(itemKey, () => false);
                   _itemQuantities.putIfAbsent(itemKey, () => item.quantity ?? 1);
                   final isInCart = _itemInCartStatus[itemKey] ?? false;
@@ -179,7 +257,10 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         Row(
                           children: [
                             Container(width: 6, height: 6, margin: const EdgeInsets.only(right: 8), decoration: BoxDecoration(color: AppColor.PrimaryColor, shape: BoxShape.circle)),
-                            Expanded(child: Text('${item.productName} (${item.quantity} items)', style: const TextStyle(fontSize: 14))),
+                            if(item.productName == null || item.productName!.isEmpty)
+                              const Expanded(child: Text('N/A', style: TextStyle(fontSize: 14)))
+                            else
+                            Expanded(child: Text('${item.productName ?? ''} (${item.quantity} items)', style: const TextStyle(fontSize: 14))),
                             if (isInCart)
                               ...[
                                 GestureDetector(

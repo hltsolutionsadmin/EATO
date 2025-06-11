@@ -1,10 +1,26 @@
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_state.dart';
+import 'package:eato/presentation/screen/address/address_screen.dart';
+import 'package:eato/presentation/screen/order/myOrders_screen.dart';
 import 'package:eato/presentation/screen/widgets/logout.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+@override
+class _ProfileScreenState extends State<ProfileScreen> {
+  void initState() {
+    super.initState();
+    BlocProvider.of<CurrentCustomerCubit>(context).GetCurrentCustomer(context);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +32,7 @@ class ProfileScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildUserProfile(),
+            _buildUserProfile(context),
             const SizedBox(height: 24),
             _buildBasicOptions(context),
           ],
@@ -25,41 +41,86 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildUserProfile() {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 35,
-          backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
-          child: Icon(Icons.person, size: 40, color: AppColor.PrimaryColor),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "John Doe",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColor.PrimaryColor,
+  Widget _buildUserProfile(BuildContext context) {
+    return BlocBuilder<CurrentCustomerCubit, CurrentCustomerState>(
+      builder: (context, state) {
+        if (state is CurrentCustomerLoaded) {
+          final customer = state.currentCustomerModel;
+          return Row(
+            children: [
+              CircleAvatar(
+                radius: 35,
+                backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
+                child:
+                    Icon(Icons.person, size: 40, color: AppColor.PrimaryColor),
               ),
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    customer.fullName ?? 'No Name',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColor.PrimaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    customer.primaryContact ?? 'No Phone Number',
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
+            ],
+          );
+        } else if (state is CurrentCustomerError) {
+          return Text('Error fetching profile');
+        } else if (state is CurrentCustomerLoading) {
+          return CupertinoActivityIndicator();
+        }
+
+        return Row(
+          children: [
+            CircleAvatar(
+              radius: 35,
+              backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
+              child: Icon(Icons.person, size: 40, color: AppColor.PrimaryColor),
             ),
-            const SizedBox(height: 4),
-            Text(
-              "+91 9876543210",
-              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "Loading...",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.PrimaryColor,
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildBasicOptions(BuildContext context) {
     final options = [
-      _Option(Icons.shopping_bag_outlined, "My Orders"),
-      _Option(Icons.location_on_outlined, "Saved Addresses"),
+      _Option(Icons.shopping_bag_outlined, "My Orders", onTap: () {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MyOrders(),
+            ));
+      }),
+      _Option(Icons.location_on_outlined, "Saved Addresses", onTap: () {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => AddressScreen()));
+      }),
       _Option(Icons.logout, "Logout", onTap: () {
         showModalBottomSheet(
           context: context,

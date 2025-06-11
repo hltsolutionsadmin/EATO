@@ -7,12 +7,13 @@ class OrderHistoryCubit extends Cubit<OrderHistoryState> {
 
   OrderHistoryCubit(this.useCase) : super(OrderHistoryInitial());
 
-  Future<void> fetchCart() async {
+  Future<void> fetchCart(int page, int size, String searchQuery) async {
     emit(OrderHistoryLoading());
     try {
-      final cart = await useCase.execute();
+      final cart = await useCase.execute(page, size, searchQuery);
       emit(OrderHistoryLoaded(cart));
     } catch (e) {
+      print('Error fetching order history: $e');
       emit(OrderHistoryError(e.toString()));
     }
   }

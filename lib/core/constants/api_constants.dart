@@ -5,6 +5,8 @@ const TriggerOtp = 'auth/jtuserotp/trigger/sign-in?triggerOtp=false';
 const SigninUrl = 'auth/login';
 const SignupUrl = 'auth/jtuserotp/trigger/sign-up?triggerOtp=false';
 const userDetails = 'user/userDetails';
+const updateCurrentCustomerUrl = 'usermgmt/user/userDetails';
+
 const rolePostUrl = 'user/user';
 String getNearbyRestaurantsUrl(
     double latitude, double longitude, String postalCode, int page, int size) {
@@ -26,6 +28,10 @@ String getRestaurantsByProductNameUrl(String productName, double latitude,
   return 'product/api/products/nearby-search?latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalcode&page=$page&size=$size&searchTerm=$productName';
 }
 
+String orderHistoryUrl(int page, int size,String searchQuery) {
+  return 'order/api/orders/history?page=$page&size=$size&sortBy=createdDate&direction=DESC&query=$searchQuery';
+}
+
 const createCartUrl = 'order/api/carts/create';
 const getCartUrl = 'order/api/carts/get';
 const clearCartUrl = 'order/api/carts/clear';
@@ -34,8 +40,8 @@ const saveAddressUrl = 'order/api/carts/address';
 const getAddressUrl = 'api/addresses/all';
 const paymentUrl = 'order/payments/process';
 const createOrderUrl = 'order/api/orders/create';
-const orderHistoryUrl = 'order/api/orders/history?page=0&size=10&sortBy=createdDate&direction=DESC';
 const reOrderUrl = 'order/api/orders/reorder';
+const deleteAddressUrl = 'usermgmt/api/addresses';
 
 String updateCartItemsUrl(String cartId) {
   return 'order/api/carts/items/$cartId';

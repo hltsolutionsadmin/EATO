@@ -1,3 +1,4 @@
+import 'package:eato/core/constants/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -5,8 +6,11 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class LocationPickerPage extends StatefulWidget {
-  Function? onLocationPick;
-  LocationPickerPage({Key? key, this.onLocationPick}) : super(key: key);
+  final void Function(LatLng, Placemark)? onLocationSelected;
+
+  const LocationPickerPage({Key? key, this.onLocationSelected})
+      : super(key: key);
+
   @override
   _LocationPickerPageState createState() => _LocationPickerPageState();
 }
@@ -14,6 +18,8 @@ class LocationPickerPage extends StatefulWidget {
 class _LocationPickerPageState extends State<LocationPickerPage> {
   LatLng? _selectedLocation;
   String _address = 'Fetching address...';
+  Placemark? _currentPlacemark;
+  bool _isLoading = false;
 
   final MapController _mapController = MapController();
 
@@ -24,62 +30,79 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   }
 
   Future<void> _fetchCurrentLocation() async {
-    bool serviceEnabled;
-    LocationPermission permission;
+    setState(() => _isLoading = true);
 
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      return;
-    }
-
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.deniedForever) return;
-
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission != LocationPermission.whileInUse &&
-          permission != LocationPermission.always) {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location services are disabled')),
+        );
         return;
       }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.deniedForever) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Location permissions are permanently denied')),
+        );
+        return;
+      }
+
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission != LocationPermission.whileInUse &&
+            permission != LocationPermission.always) {
+          return;
+        }
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+      final currentLocation = LatLng(position.latitude, position.longitude);
+
+      setState(() {
+        _selectedLocation = currentLocation;
+      });
+
+      _mapController.move(currentLocation, 15.0);
+      await _getAddressFromLatLng(currentLocation);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error getting location: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
     }
-
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    final currentLocation = LatLng(position.latitude, position.longitude);
-
-    setState(() {
-      _selectedLocation = currentLocation;
-    });
-
-    _mapController.move(currentLocation, 15.0);
-
-    _getAddressFromLatLng(currentLocation);
   }
 
   Future<void> _getAddressFromLatLng(LatLng latLng) async {
+    setState(() {
+      _address = 'Fetching address...';
+      _isLoading = true;
+    });
+
     try {
       List<Placemark> placemarks =
           await placemarkFromCoordinates(latLng.latitude, latLng.longitude);
 
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
-        widget.onLocationPick = (val) {
-          val = place;
-        };
-
         setState(() {
-          _address =
-              '${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}';
-        });
-      } else {
-        setState(() {
-          _address = 'Address not found';
+          _currentPlacemark = place;
+          _address = [
+            place.street,
+            place.locality,
+            place.administrativeArea,
+            place.country
+          ].where((part) => part?.isNotEmpty ?? false).join(', ');
         });
       }
     } catch (e) {
-      setState(() {
-        _address = 'Failed to fetch address';
-      });
+      setState(() => _address = 'Failed to fetch address');
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -94,7 +117,22 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Pick Location")),
+      appBar: AppBar(
+        title: Text("Pick Location"),
+        actions: [
+          if (_selectedLocation != null && !_isLoading)
+            IconButton(
+              icon: Icon(Icons.check),
+              onPressed: () {
+                if (_selectedLocation != null && _currentPlacemark != null) {
+                  widget.onLocationSelected
+                      ?.call(_selectedLocation!, _currentPlacemark!);
+                  Navigator.pop(context);
+                }
+              },
+            ),
+        ],
+      ),
       body: Stack(
         children: [
           FlutterMap(
@@ -127,37 +165,98 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                 ),
             ],
           ),
-          if (_selectedLocation != null)
+          if (_isLoading) Center(child: CircularProgressIndicator()),
+          if (_selectedLocation != null && !_isLoading)
             Positioned(
               bottom: 20,
               left: 20,
               right: 20,
-              child: Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white70,
-                  borderRadius: BorderRadius.circular(8),
+              child: Card(
+                elevation: 2,
+                color: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: InkWell(
-                  onTap: (){
-                    Navigator.pop(context);
-                    setState(() {
-widget.onLocationPick = (val) {
-  val = _selectedLocation;
-};
-                    });
-                  },
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Lat: ${_selectedLocation!.latitude.toStringAsFixed(5)}, '
-                        'Lng: ${_selectedLocation!.longitude.toStringAsFixed(5)}',
-                        style: TextStyle(fontWeight: FontWeight.bold),
+                      Row(
+                        children: [
+                          Icon(Icons.location_pin, color: Colors.red, size: 24),
+                          SizedBox(width: 8),
+                          Text(
+                            'Selected Location',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ],
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        _address,
-                        textAlign: TextAlign.center,
+                      SizedBox(height: 12),
+                      Container(
+                        padding: EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColor.PrimaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildDetailRow('Latitude:',
+                                _selectedLocation!.latitude.toStringAsFixed(6)),
+                            SizedBox(height: 6),
+                            _buildDetailRow(
+                                'Longitude:',
+                                _selectedLocation!.longitude
+                                    .toStringAsFixed(6)),
+                            SizedBox(height: 8),
+                            Divider(height: 1),
+                            SizedBox(height: 8),
+                            Text(
+                              'Address:',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              _address,
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColor.PrimaryColor,
+                            padding: EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (_selectedLocation != null &&
+                                _currentPlacemark != null) {
+                              widget.onLocationSelected?.call(
+                                  _selectedLocation!, _currentPlacemark!);
+                              Navigator.pop(context);
+                            }
+                          },
+                          child: Text(
+                            'Use This Location',
+                            style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -168,4 +267,27 @@ widget.onLocationPick = (val) {
       ),
     );
   }
+}
+
+Widget _buildDetailRow(String label, String value) {
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          color: Colors.grey[700],
+          fontSize: 14,
+        ),
+      ),
+      SizedBox(width: 8),
+      Expanded(
+        child: Text(
+          value,
+          style: TextStyle(fontSize: 14),
+        ),
+      ),
+    ],
+  );
 }

@@ -53,9 +53,10 @@ class Content {
         required this.description,
         required this.price,
         required this.available,
+        required this.shopifyProductId,
+        required this.shopifyVariantId,
         required this.businessId,
         required this.categoryId,
-        required this.categoryName,
         required this.media,
         required this.attributes,
     });
@@ -68,10 +69,11 @@ class Content {
     final String? description;
     final double? price;
     final bool? available;
+    final String? shopifyProductId;
+    final String? shopifyVariantId;
     final int? businessId;
     final int? categoryId;
-    final String? categoryName;
-    final List<dynamic> media;
+    final List<Media> media;
     final List<Attribute> attributes;
 
     factory Content.fromJson(Map<String, dynamic> json){ 
@@ -84,10 +86,12 @@ class Content {
             description: json["description"],
             price: json["price"],
             available: json["available"],
+            shopifyProductId: json["shopifyProductId"],
+
+            shopifyVariantId: json["shopifyVariantId"],
             businessId: json["businessId"],
             categoryId: json["categoryId"],
-            categoryName: json["categoryName"],
-            media: json["media"] == null ? [] : List<dynamic>.from(json["media"]!.map((x) => x)),
+            media: json["media"] == null ? [] : List<Media>.from(json["media"]!.map((x) => Media.fromJson(x))),
             attributes: json["attributes"] == null ? [] : List<Attribute>.from(json["attributes"]!.map((x) => Attribute.fromJson(x))),
         );
     }
@@ -110,6 +114,24 @@ class Attribute {
             id: json["id"],
             attributeName: json["attributeName"],
             attributeValue: json["attributeValue"],
+        );
+    }
+
+}
+
+class Media {
+    Media({
+        required this.mediaType,
+        required this.url,
+    });
+
+    final String? mediaType;
+    final String? url;
+
+    factory Media.fromJson(Map<String, dynamic> json){ 
+        return Media(
+            mediaType: json["mediaType"],
+            url: json["url"],
         );
     }
 

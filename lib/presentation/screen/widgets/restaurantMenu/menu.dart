@@ -34,14 +34,12 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
       quantity = newQty;
     });
     widget.onQuantityChanged(quantity);
-    
   }
 
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
-    final mediaUrl =
-        item.media.isNotEmpty ? item.media.first : null;
+    final mediaUrl = item.media.isNotEmpty ? item.media.first.url : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16.0),

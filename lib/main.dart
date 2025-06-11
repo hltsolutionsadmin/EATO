@@ -1,9 +1,11 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/firebase_options.dart';
+import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
-import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signUp/signup_cubit.dart';
@@ -90,6 +92,8 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<OrderHistoryCubit>()),
         BlocProvider(create: (_) => di.sl<ClearCartCubit>()),
         BlocProvider(create: (_) => di.sl<ReOrderCubit>()),
+        BlocProvider(create: (_) => di.sl<DeleteAddressCubit>()),
+        BlocProvider(create: (_) => di.sl<UpdateCurrentCustomerCubit>()),
       ],
       child: MaterialApp(
         title: 'Eato',
