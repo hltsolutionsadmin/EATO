@@ -138,27 +138,6 @@ class _LoginScreenState extends State<LoginScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 20),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SignUpScreen(),
-                              ),
-                            );
-                          },
-                          child:  Text(
-                            "Can't register? Sign Up",
-                            style: TextStyle(
-                              color: AppColor.BgWhite,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 30),
                       BlocBuilder<TriggerOtpCubit, TriggerOtpState>(
                         builder: (context, state) {

@@ -28,6 +28,7 @@ Future<bool?> ShowReplaceCartDialog({
         TextButton(
           onPressed: () async {
             await context.read<ClearCartCubit>().clearCart();
+
             Navigator.pop(context, true);
           },
           child: const Text('Yes'),
@@ -63,7 +64,6 @@ Widget BuildOrderItem({
     ),
     child: Column(
       children: [
-        // Header section remains the same...
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -72,7 +72,6 @@ Widget BuildOrderItem({
           ),
           child: Row(
             children: [
-              // Restaurant image and info...
               Container(
                 width: 50,
                 height: 50,
@@ -143,7 +142,7 @@ Widget BuildOrderItem({
                 final itemKey = '${item.productId}_${item.productName}';
                 final isInCart = itemInCartStatus[itemKey] ?? false;
                 final quantity = itemQuantities[itemKey] ?? 1;
-                
+
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 6),
                   child: Column(
@@ -170,7 +169,7 @@ Widget BuildOrderItem({
                             GestureDetector(
                               onTap: () {
                                 setState(() {
-                                  if (quantity > 1) {
+                                  if (quantity > 0) {
                                     itemQuantities[itemKey] = quantity - 1;
                                     updateItemInCart(item, quantity - 1);
                                   } else {
@@ -194,7 +193,8 @@ Widget BuildOrderItem({
                               ),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
                               child: Text(
                                 '$quantity',
                                 style: const TextStyle(fontSize: 14),
@@ -207,23 +207,34 @@ Widget BuildOrderItem({
                               if (state is GetCartLoaded) {
                                 final cartItems = state.cart.cartItems;
                                 final currentBusinessId = state.cart.businessId;
-                                if (cartItems.isNotEmpty && currentBusinessId != order.businessId) {
-                                  final shouldReplace = await ShowReplaceCartDialog(
+
+                                if (cartItems.isNotEmpty &&
+                                    currentBusinessId != order.businessId) {
+                                  final shouldReplace =
+                                      await ShowReplaceCartDialog(
                                     context: context,
                                     order: order,
                                   );
                                   if (shouldReplace != true) {
-                                    return; // User cancelled
+                                    return;
                                   }
+                                  setState(() {
+                                    itemInCartStatus.clear();
+                                    itemQuantities.clear();
+                                  });
                                 }
-                                
-                                // Add the item with proper quantity
-                                final newQuantity = (isInCart ? quantity : 1) + 1;
+
+                                final newQuantity =
+                                    (isInCart ? quantity : 1) + 1;
+
                                 setState(() {
                                   itemInCartStatus[itemKey] = true;
                                   itemQuantities[itemKey] = newQuantity;
                                 });
+
                                 addNewItemToCart(item, newQuantity, itemKey);
+                              } else{
+                                print('else');
                               }
                             },
                             child: Container(
