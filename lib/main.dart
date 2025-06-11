@@ -1,6 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/firebase_options.dart';
+import 'package:eato/presentation/cubit/address/defaultAddress/get/getDefaultAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/defaultAddress/post/defaultAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
@@ -94,6 +96,8 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<ReOrderCubit>()),
         BlocProvider(create: (_) => di.sl<DeleteAddressCubit>()),
         BlocProvider(create: (_) => di.sl<UpdateCurrentCustomerCubit>()),
+        BlocProvider(create: (_) => di.sl<DefaultAddressCubit>()),
+        BlocProvider(create: (_) => di.sl<AddressSavetoCartCubit>()),
       ],
       child: MaterialApp(
         title: 'Eato',

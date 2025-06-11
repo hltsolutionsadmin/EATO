@@ -17,6 +17,7 @@ class ProfileScreen extends StatefulWidget {
 
 @override
 class _ProfileScreenState extends State<ProfileScreen> {
+  @override
   void initState() {
     super.initState();
     BlocProvider.of<CurrentCustomerCubit>(context).GetCurrentCustomer(context);

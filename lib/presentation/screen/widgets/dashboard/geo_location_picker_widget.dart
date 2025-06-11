@@ -8,8 +8,7 @@ import 'package:geocoding/geocoding.dart';
 class LocationPickerPage extends StatefulWidget {
   final void Function(LatLng, Placemark)? onLocationSelected;
 
-  const LocationPickerPage({Key? key, this.onLocationSelected})
-      : super(key: key);
+  const LocationPickerPage({super.key, this.onLocationSelected});
 
   @override
   _LocationPickerPageState createState() => _LocationPickerPageState();

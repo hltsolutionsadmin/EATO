@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 import 'package:eato/core/network/dio_client.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/core/network/network_service.dart';
+import 'package:eato/data/datasource/address/defaultAddress/get/getDefaultAddress_dataSource.dart';
+import 'package:eato/data/datasource/address/defaultAddress/post/defaultAddress_dataSource.dart';
 import 'package:eato/data/datasource/address/deleteAddress/deleteAddress_dataSource.dart';
 import 'package:eato/data/datasource/address/getAddress/getAddress_dataSource.dart';
 import 'package:eato/data/datasource/address/saveAddress/saveAddress_dataSource.dart';
@@ -24,6 +26,8 @@ import 'package:eato/data/datasource/payment/payment_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getNearbyRestaurants/getNearByrestarants_dataSource.dart';
 import 'package:eato/data/datasource/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_dataSource.dart';
+import 'package:eato/data/repositoryImpl/address/defaultAddress/get/getDefaultAddress_repoImpl.dart';
+import 'package:eato/data/repositoryImpl/address/defaultAddress/post/defaultAddress_dataSource.dart';
 import 'package:eato/data/repositoryImpl/address/deleteAddress/deleteAddress_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/address/getAddress/getAddress_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/address/saveAddress/saveAddress_repoImpl.dart';
@@ -46,6 +50,8 @@ import 'package:eato/data/repositoryImpl/payment/payment_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getNearbyRestaurants/getNearByrestarants_repoImpl.dart';
 import 'package:eato/data/repositoryImpl/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_repoImpl.dart';
+import 'package:eato/domain/repository/address/defaultAddress/get/getDefaultAddress_repository.dart';
+import 'package:eato/domain/repository/address/defaultAddress/post/defaultAddress_repository.dart';
 import 'package:eato/domain/repository/address/deleteAddress/deleteAddress_repository.dart';
 import 'package:eato/domain/repository/address/getAddress/getAddress_repository.dart';
 import 'package:eato/domain/repository/address/saveAddress/saveAddress_repository.dart';
@@ -68,6 +74,8 @@ import 'package:eato/domain/repository/payment/payment_repository.dart';
 import 'package:eato/domain/repository/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_repository.dart';
 import 'package:eato/domain/repository/restaurants/getNearbyRestaurants/getNearByrestarants_repository.dart';
 import 'package:eato/domain/repository/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_repository.dart';
+import 'package:eato/domain/usecase/address/defaultAddress/get/getDefaultAddress_usecase.dart';
+import 'package:eato/domain/usecase/address/defaultAddress/post/defaultAddress_usecase.dart';
 import 'package:eato/domain/usecase/address/deleteAddress/deleteAddress_usecase.dart';
 import 'package:eato/domain/usecase/address/getAddress/getAddress_usecase.dart';
 import 'package:eato/domain/usecase/address/saveAddress/saveAddress_usecase.dart';
@@ -90,6 +98,8 @@ import 'package:eato/domain/usecase/payment/payment_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getNearbyRestaurants/getNearByrestarants_usecase.dart';
 import 'package:eato/domain/usecase/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_usecase.dart';
+import 'package:eato/presentation/cubit/address/defaultAddress/get/getDefaultAddress_cubit.dart';
+import 'package:eato/presentation/cubit/address/defaultAddress/post/defaultAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
@@ -408,26 +418,28 @@ void init() {
         sl<OrderHistoryUseCase>(),
       ));
 
-      //ClearCart
+  //ClearCart
   sl.registerLazySingleton<ClearCartRemoteDataSource>(
     () => ClearCartRemoteDataSourceImpl(client: sl<DioClient>().dio),
   );
   sl.registerLazySingleton<ClearCartRepository>(
-    () => ClearCartRepositoryImpl(remoteDataSource: sl<ClearCartRemoteDataSource>()),
+    () => ClearCartRepositoryImpl(
+        remoteDataSource: sl<ClearCartRemoteDataSource>()),
   );
   sl.registerLazySingleton(
     () => ClearCartUseCase(repository: sl<ClearCartRepository>()),
   );
   sl.registerFactory(() => ClearCartCubit(
-      sl<ClearCartUseCase>(),
-    ));
+        sl<ClearCartUseCase>(),
+      ));
 
-    //ReOrder
+  //ReOrder
   sl.registerLazySingleton<ReOrderRemoteDataSource>(
     () => ReOrderRemoteDataSourceImpl(client: sl<DioClient>().dio),
   );
   sl.registerLazySingleton<ReOrderRepository>(
-    () => ReOrderRepositoryImpl(remoteDataSource: sl<ReOrderRemoteDataSource>()),
+    () =>
+        ReOrderRepositoryImpl(remoteDataSource: sl<ReOrderRemoteDataSource>()),
   );
   sl.registerLazySingleton(
     () => ReOrderUseCase(repository: sl<ReOrderRepository>()),
@@ -436,23 +448,24 @@ void init() {
         sl<ReOrderUseCase>(),
       ));
 
-      //DeleteAddress
+  //DeleteAddress
   sl.registerLazySingleton<DeleteAddressRemoteDataSource>(
     () => DeleteAddressRemoteDataSourceImpl(client: sl<DioClient>().dio),
   );
   sl.registerLazySingleton<DeleteAddressRepository>(
-    () => DeleteAddressRepositoryImpl(remoteDataSource: sl<DeleteAddressRemoteDataSource>()),
+    () => DeleteAddressRepositoryImpl(
+        remoteDataSource: sl<DeleteAddressRemoteDataSource>()),
   );
   sl.registerLazySingleton(
     () => DeleteAddressUseCase(repository: sl<DeleteAddressRepository>()),
   );
   sl.registerFactory(() => DeleteAddressCubit(
-      sl<DeleteAddressUseCase>(),
-    ));
+        sl<DeleteAddressUseCase>(),
+      ));
 
-    //UpdateCurrentCustomer
+  //UpdateCurrentCustomer
 
-      sl.registerLazySingleton<UpdateCurrentCustomerRemoteDatasource>(
+  sl.registerLazySingleton<UpdateCurrentCustomerRemoteDatasource>(
     () =>
         UpdateCurrentCustomerRemoteDataSourceImpl(client: sl<DioClient>().dio),
   );
@@ -468,4 +481,34 @@ void init() {
         useCase: sl<UpdateCurrentCustomerUseCase>(),
       ));
 
+  //DefaultAddress
+
+  sl.registerLazySingleton<DefaultAddressRemoteDataSource>(
+    () => DefaultAddressRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<DefaultAddressRepository>(
+    () => DefaultAddressRepositoryImpl(
+        remoteDataSource: sl<DefaultAddressRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => DefaultAddressUseCase(repository: sl<DefaultAddressRepository>()),
+  );
+  sl.registerFactory(() => DefaultAddressCubit(
+        sl<DefaultAddressUseCase>(),
+      ));
+
+  //AddressSavetoCart
+  sl.registerLazySingleton<AddressSavetoCartRemoteDataSource>(
+    () => AddressSavetoCartRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  );
+  sl.registerLazySingleton<AddressSavetoCartRepository>(
+    () => AddressSavetoCartRepositoryImpl(
+        remoteDataSource: sl<AddressSavetoCartRemoteDataSource>()),
+  );
+  sl.registerLazySingleton(
+    () => AddressSavetoCartUseCase(repository: sl<AddressSavetoCartRepository>()),
+  );
+  sl.registerFactory(() => AddressSavetoCartCubit(
+        sl<AddressSavetoCartUseCase>(),
+      ));
 }

@@ -314,10 +314,12 @@ class _AddressScreenState extends State<AddressScreen> {
                           FilteringTextInputFormatter.digitsOnly
                         ],
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty)
+                          if (v == null || v.trim().isEmpty) {
                             return 'Please enter phone number';
-                          if (v.trim().length != 10)
+                          }
+                          if (v.trim().length != 10) {
                             return 'Please enter a valid 10-digit phone number';
+                          }
                           return null;
                         },
                       ),
@@ -416,10 +418,12 @@ class _AddressScreenState extends State<AddressScreen> {
                           FilteringTextInputFormatter.digitsOnly
                         ],
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty)
+                          if (v == null || v.trim().isEmpty) {
                             return 'Please enter pincode';
-                          if (v.trim().length != 6)
+                          }
+                          if (v.trim().length != 6) {
                             return 'Please enter a valid 6-digit pincode';
+                          }
                           return null;
                         },
                       ),

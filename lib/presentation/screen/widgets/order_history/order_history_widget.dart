@@ -251,7 +251,7 @@ Widget BuildOrderItem({
                     ],
                   ),
                 );
-              }).toList(),
+              }),
             ],
           ),
         ),

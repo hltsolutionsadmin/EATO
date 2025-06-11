@@ -14,12 +14,12 @@ import 'package:eato/presentation/cubit/payment/payment_state.dart';
 import 'package:eato/presentation/screen/address/address_screen.dart';
 import 'package:eato/presentation/screen/order/orderSuccess_screen.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart.dart';
-import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class CartScreen extends StatefulWidget {
   final int? orderId;
@@ -58,6 +58,7 @@ class _CartScreenState extends State<CartScreen> {
     super.initState();
     print(widget.cartItems);
     context.read<GetCartCubit>().fetchCart();
+    _loadSavedAddress(); // Load saved address when widget initializes
 
     _razorpay = Razorpay();
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess);
@@ -330,6 +331,18 @@ class _CartScreenState extends State<CartScreen> {
     }).toList();
   }
 
+    Future<void> _loadSavedAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      selectedAddress = prefs.getString('delivery_address') ?? "Add Address";
+    });
+  }
+
+  Future<void> _saveAddress(String address) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('delivery_address', address);
+  }
+
   void handleCheckout(BuildContext context) {
     final payload = getCartPayload();
     context.read<ProductsAddToCartCubit>().addToCart(payload);
@@ -441,13 +454,13 @@ class _CartScreenState extends State<CartScreen> {
                                     fontSize: 14, color: Colors.black54),
                               ),
                               Text(
-                                selectedAddress.isEmpty
+                                selectedAddress == "Add Address"
                                     ? "Select delivery address"
                                     : selectedAddress,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w400,
-                                  color: selectedAddress.isEmpty
+                                  color: selectedAddress == "Add Address"
                                       ? Colors.grey
                                       : Colors.black,
                                 ),
@@ -467,6 +480,8 @@ class _CartScreenState extends State<CartScreen> {
                             );
 
                             if (selectedAddress != null) {
+                              await _saveAddress(
+                                  selectedAddress); // Save the new address
                               setState(() {
                                 this.selectedAddress = selectedAddress;
                               });
