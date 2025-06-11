@@ -79,6 +79,7 @@ class Content {
   final List<Media> media;
   final List<Attribute> attributes;
 
+
   factory Content.fromJson(Map<String, dynamic> json) {
     return Content(
       id: json["id"],
@@ -124,22 +125,21 @@ class Attribute {
 }
 
 class Media {
-  String? mediaType;
-  String? url;
+    Media({
+        required this.mediaType,
+        required this.url,
+    });
 
-  Media({this.mediaType, this.url});
+    final String? mediaType;
+    final String? url;
 
-  Media.fromJson(Map<String, dynamic> json) {
-    mediaType = json['mediaType'];
-    url = json['url'];
-  }
+    factory Media.fromJson(Map<String, dynamic> json){ 
+        return Media(
+            mediaType: json["mediaType"],
+            url: json["url"],
+        );
+    }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['mediaType'] = this.mediaType;
-    data['url'] = this.url;
-    return data;
-  }
 }
 
 class Pageable {

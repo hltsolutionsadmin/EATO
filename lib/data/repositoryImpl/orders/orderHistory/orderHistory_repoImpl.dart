@@ -8,7 +8,7 @@ class OrderHistoryRepositoryImpl implements OrderHistoryRepository {
   OrderHistoryRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<OrderHistoryModel> orderHistory() {
-    return remoteDataSource.orderHistory();
+  Future<OrderHistoryModel> orderHistory(int page, int size, String searchQuery) {
+    return remoteDataSource.orderHistory(page, size, searchQuery);
   }
 }

@@ -40,6 +40,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   @override
   void initState() {
     super.initState();
+    print('initState: Loading menu for restaurantId = ${widget.restaurantId}');
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GetMenuByRestaurantIdCubit>().fetchMenu({
         'restaurantId': widget.restaurantId,
@@ -56,7 +58,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   Future<void> _loadCart() async {
     final cartState = context.read<GetCartCubit>().state;
-    
     if (cartState is GetCartLoaded) {
       _processCartData(cartState);
     } else {
@@ -88,9 +89,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           description: '',
           price: 0,
           available: false,
+          shopifyProductId: '',
+          shopifyVariantId: '',
           businessId: 0,
           categoryId: 0,
-          categoryName: '',
           media: [],
           attributes: [],
         ),
@@ -122,6 +124,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   }
 
   Future<void> _loadMenu() async {
+    print('Loading menu with search: "$searchText", filterType: "$filterType"');
     await context.read<GetMenuByRestaurantIdCubit>().fetchMenu({
       'restaurantId': widget.restaurantId,
       'search': searchText,
@@ -191,7 +194,15 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                           'price': item.price,
                           'name': item.name,
                           'description': item.description,
-                          'categoryName': item.categoryName,
+                          'categoryName': item.attributes
+                              .firstWhere(
+                                (a) => a.attributeName?.toLowerCase() == 'type',
+                                orElse: () => Attribute(
+                                    id: 0,
+                                    attributeName: '',
+                                    attributeValue: ''),
+                              )
+                              .attributeValue,
                           'media': item.media,
                         })
                     .toList(),
@@ -323,7 +334,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
-                children: ['All', 'Veg', 'Non-Veg'].map((filter) {
+                children: ['All', 'Veg', 'NonVeg'].map((filter) {
                   final isSelected = filter == filterType;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
@@ -351,6 +362,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   GetMenuByRestaurantIdState>(
                 listener: (context, state) {
                   if (state is GetMenuByRestaurantIdLoaded) {
+                    print('Menu Loaded: ${state.model.content.length} items');
                     setState(() {
                       menuItems = state.model.content;
                       _isMenuLoaded = true;
@@ -358,6 +370,9 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                     if (!_isCartLoaded) {
                       _loadCart();
                     }
+                  } else if (state is GetMenuByRestaurantIdError) {
+                    print(
+                        'Error loading menu: ${state.message}'); // Add .message in your state class if missing
                   }
                 },
                 builder: (context, state) {
@@ -369,10 +384,18 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                               ?.toLowerCase()
                               .contains(searchText.toLowerCase()) ??
                           false;
+                      final foodType = item.attributes
+                          .firstWhere(
+                              (a) => a.attributeName?.toLowerCase() == 'type',
+                              orElse: () => Attribute(
+                                  id: 0, attributeName: '', attributeValue: ''))
+                          .attributeValue;
                       final matchesFilter = filterType == 'All' ||
-                          (filterType == 'Veg' && item.categoryName == 'Veg') ||
-                          (filterType == 'Non-Veg' &&
-                              item.categoryName == 'Non-Veg');
+                          (filterType.toLowerCase() == 'veg' &&
+                              foodType?.toLowerCase() == 'veg') ||
+                          (filterType.toLowerCase() == 'nonveg' &&
+                              foodType?.toLowerCase() == 'nonveg');
+
                       return matchesSearch && matchesFilter;
                     }).toList();
 
@@ -396,9 +419,11 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       },
                     );
                   } else if (state is GetMenuByRestaurantIdError) {
+                    print("Menu load failed with error");
                     return Center(
-                        child: Text("Error Loading Menu",
-                            style: GoogleFonts.poppins(color: Colors.red)));
+                      child: Text("Error Loading Menu",
+                          style: GoogleFonts.poppins(color: Colors.red)),
+                    );
                   } else {
                     return const Center(child: Text("Initial state"));
                   }

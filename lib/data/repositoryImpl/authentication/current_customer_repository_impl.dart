@@ -9,15 +9,8 @@ class CurrentCustomerRepositoryImpl implements CurrentCustomerRepository {
   CurrentCustomerRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<CurrentCustomerModel> getCurrentCustomer() async {
-    final model = await remoteDataSource.currentCustomer();
-    return CurrentCustomerModel(
-      id: model.id,
-      roles: model.roles,
-      primaryContact: model.primaryContact,
-      creationTime: model.creationTime,
-      version: model.version,
-      registered: model.registered,
-    );
+  Future<CurrentCustomerModel> getCurrentCustomer() {
+    return remoteDataSource.currentCustomer();
   }
 }
+

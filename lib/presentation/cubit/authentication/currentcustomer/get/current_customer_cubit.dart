@@ -1,9 +1,9 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../../../core/network/network_helper.dart';
-import '../../../../core/network/network_service.dart';
-import '../../../../domain/usecase/authentication/current_customer_usecase.dart';
+import '../../../../../core/network/network_helper.dart';
+import '../../../../../core/network/network_service.dart';
+import '../../../../../domain/usecase/authentication/current_customer_usecase.dart';
 import 'current_customer_state.dart';
 
 class CurrentCustomerCubit extends Cubit<CurrentCustomerState> {

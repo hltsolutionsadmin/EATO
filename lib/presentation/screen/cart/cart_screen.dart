@@ -418,41 +418,63 @@ class _CartScreenState extends State<CartScreen> {
             Column(
               children: [
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.location_on, color: Colors.red),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text("Deliver to",
+                  padding: const EdgeInsets.all(16),
+                  child: Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: AppColor.PrimaryColor.withOpacity(0.1),
+                      border: Border.all(color: AppColor.PrimaryColor),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.location_on, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Deliver to",
                                 style: TextStyle(
-                                    fontSize: 14, color: Colors.black54)),
-                            Text(
-                              selectedAddress,
-                              style: const TextStyle(
+                                    fontSize: 14, color: Colors.black54),
+                              ),
+                              Text(
+                                selectedAddress.isEmpty
+                                    ? "Select delivery address"
+                                    : selectedAddress,
+                                style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black),
-                            ),
-                          ],
+                                  fontWeight: FontWeight.w400,
+                                  color: selectedAddress.isEmpty
+                                      ? Colors.grey
+                                      : Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => AddressScreen()),
-                          );
-                        },
-                        child: const Text("change"),
-                      )
-                    ],
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () async {
+                            final selectedAddress =
+                                await Navigator.push<String>(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddressScreen(),
+                              ),
+                            );
+
+                            if (selectedAddress != null) {
+                              setState(() {
+                                this.selectedAddress = selectedAddress;
+                              });
+                            }
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 Expanded(

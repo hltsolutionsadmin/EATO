@@ -3,20 +3,21 @@ import 'package:eato/core/constants/api_constants.dart';
 import 'package:eato/data/model/orders/orderHistory/orderHistory_model.dart';
 
 abstract class OrderHistoryRemoteDataSource {
-  Future<OrderHistoryModel> orderHistory();
+  Future<OrderHistoryModel> orderHistory(
+      int page, int size, String searchQuery);
 }
 
-class OrderHistoryRemoteDataSourceImpl
-    implements OrderHistoryRemoteDataSource {
+class OrderHistoryRemoteDataSourceImpl implements OrderHistoryRemoteDataSource {
   final Dio client;
 
   OrderHistoryRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<OrderHistoryModel> orderHistory() async {
+  Future<OrderHistoryModel> orderHistory(
+      int page, int size, String searchQuery) async {
     try {
       final response = await client.request(
-        '$baseUrl$orderHistoryUrl',
+        '$baseUrl${orderHistoryUrl(page, size, searchQuery)}',
         options: Options(method: 'GET'),
       );
       if (response.statusCode == 200) {

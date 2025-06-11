@@ -1,5 +1,5 @@
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/presentation/cubit/authentication/currentcustomer/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
 import 'package:eato/presentation/screen/authentication/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

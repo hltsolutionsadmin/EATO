@@ -1,62 +1,62 @@
 class CurrentCustomerModel {
-  int? id;
-  List<Roles>? roles;
-  String? primaryContact;
-  String? creationTime;
-  int? version;
-  bool? registered;
+    CurrentCustomerModel({
+        required this.id,
+        required this.fullName,
+        required this.roles,
+        required this.primaryContact,
+        required this.creationTime,
+        required this.version,
+        required this.skillrat,
+        required this.yardly,
+        required this.eato,
+        required this.sancharalakshmi,
+        required this.registered,
+    });
 
-  CurrentCustomerModel(
-      {this.id,
-      this.roles,
-      this.primaryContact,
-      this.creationTime,
-      this.version,
-      this.registered});
+    final int? id;
+    final String? fullName;
+    final List<Role> roles;
+    final String? primaryContact;
+    final DateTime? creationTime;
+    final int? version;
+    final bool? skillrat;
+    final bool? yardly;
+    final bool? eato;
+    final bool? sancharalakshmi;
+    final bool? registered;
 
-  CurrentCustomerModel.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    if (json['roles'] != null) {
-      roles = <Roles>[];
-      json['roles'].forEach((v) {
-        roles!.add(Roles.fromJson(v));
-      });
+    factory CurrentCustomerModel.fromJson(Map<String, dynamic> json){ 
+        return CurrentCustomerModel(
+            id: json["id"],
+            fullName: json["fullName"],
+            roles: json["roles"] == null ? [] : List<Role>.from(json["roles"]!.map((x) => Role.fromJson(x))),
+            primaryContact: json["primaryContact"],
+            creationTime: DateTime.tryParse(json["creationTime"] ?? ""),
+            version: json["version"],
+            skillrat: json["skillrat"],
+            yardly: json["yardly"],
+            eato: json["eato"],
+            sancharalakshmi: json["sancharalakshmi"],
+            registered: json["registered"],
+        );
     }
-    primaryContact = json['primaryContact'];
-    creationTime = json['creationTime'];
-    version = json['version'];
-    registered = json['registered'];
-  }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    if (roles != null) {
-      data['roles'] = roles!.map((v) => v.toJson()).toList();
-    }
-    data['primaryContact'] = primaryContact;
-    data['creationTime'] = creationTime;
-    data['version'] = version;
-    data['registered'] = registered;
-    return data;
-  }
 }
 
-class Roles {
-  String? name;
-  int? id;
+class Role {
+    Role({
+        required this.name,
+        required this.id,
+    });
 
-  Roles({this.name, this.id});
+    final String? name;
+    final int? id;
 
-  Roles.fromJson(Map<String, dynamic> json) {
-    name = json['name'];
-    id = json['id'];
-  }
+    factory Role.fromJson(Map<String, dynamic> json){ 
+        return Role(
+            name: json["name"],
+            id: json["id"],
+        );
+    }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['name'] = name;
-    data['id'] = id;
-    return data;
-  }
 }
