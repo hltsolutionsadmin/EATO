@@ -40,6 +40,7 @@ class CurrentCustomerCubit extends Cubit<CurrentCustomerState> {
       }
     } catch (e) {
       if (!isClosed) {
+debugPrint('Error loading customer: $e');
         emit(CurrentCustomerError(
             'Failed to fetch current customer data: ${e.toString()}'));
       }
