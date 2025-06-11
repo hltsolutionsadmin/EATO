@@ -6,6 +6,7 @@ import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.d
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_state.dart';
 import 'package:eato/presentation/cubit/authentication/signin/sigin_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signin/signin_state.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
@@ -16,10 +17,14 @@ class OtpScreen extends StatefulWidget {
   String otpValue = '';
   String otp;
   final String mobileNumber;
-    String fullName;
+  String fullName;
 
-
-  OtpScreen({super.key, required this.mobileNumber, required this.otp,required this.otpValue,required this.fullName});
+  OtpScreen(
+      {super.key,
+      required this.mobileNumber,
+      required this.otp,
+      required this.otpValue,
+      required this.fullName});
 
   @override
   _OtpScreenState createState() => _OtpScreenState();
@@ -64,11 +69,14 @@ class _OtpScreenState extends State<OtpScreen>
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (_) =>
-                      const Center(child: CircularProgressIndicator()),
+                  builder: (_) => Center(
+                      child: CupertinoActivityIndicator(
+                    color: AppColor.PrimaryColor,
+                  )),
                 );
               } else {
-                Navigator.of(context, rootNavigator: true).pop(); // Close dialog
+                Navigator.of(context, rootNavigator: true)
+                    .pop();
               }
 
               if (state is SignInLoaded) {
@@ -208,12 +216,14 @@ class _OtpScreenState extends State<OtpScreen>
       controller: otpFieldController,
       keyboardType: TextInputType.number,
       onCompleted: (val) {
-        context.read<SignInCubit>().signIn(context, widget.mobileNumber, val,widget.fullName);
+        context
+            .read<SignInCubit>()
+            .signIn(context, widget.mobileNumber, val, widget.fullName);
       },
       defaultPinTheme: PinTheme(
         width: 50,
         height: 50,
-        textStyle:  TextStyle(
+        textStyle: TextStyle(
           fontSize: 22,
           color: AppColor.White,
           fontWeight: FontWeight.bold,

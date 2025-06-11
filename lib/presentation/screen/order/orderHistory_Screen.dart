@@ -1,14 +1,16 @@
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/data/model/orders/orderHistory/orderHistory_model.dart';
-import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
+import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
+import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_state.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_state.dart';
+import 'package:eato/presentation/screen/widgets/order_history/order_history_widget.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
   const OrderHistoryScreen({super.key});
@@ -26,6 +28,8 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   String _searchQuery = '';
   bool _isLoadingMore = false;
   List<Content> _orders = [];
+  int? bussinessId = 0;
+
 
   @override
   void initState() {
@@ -64,6 +68,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   void _onSearchChanged(String query) {
     _searchQuery = query;
     _fetchInitialOrders();
+    context.read<OrderHistoryCubit>().fetchCart();
+    cartId();
+  }
+
+  void cartId() async {
+    final state = context.read<GetCartCubit>().state;
+    if (state is GetCartLoaded) {
+      bussinessId = state.cart.businessId;
+    } else {
+      bussinessId = 0;
+    }
+    print(bussinessId);
   }
 
   List<Map<String, dynamic>> _createPayload(OrderItem item, int quantity) => [
@@ -75,13 +91,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(title: "Order History", showBackButton: false),
-      body: BlocListener<ProductsAddToCartCubit, ProductsAddToCartState>(
+      body: BlocListener<ProductsAddToCartCubit, dynamic>(
         listener: (context, state) {
-          if (state is ProductsAddToCartFailure || state is ProductsAddToCartRejected) {
+          if (state is ProductsAddToCartFailure ||
+              state is ProductsAddToCartRejected) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state is ProductsAddToCartFailure ? 'Error: ${state.message}' : (state as ProductsAddToCartRejected).message),
-                backgroundColor: state is ProductsAddToCartFailure ? Colors.red : Colors.blue,
+                content: Text(state is ProductsAddToCartFailure
+                    ? 'Error: ${state.message}'
+                    : (state as ProductsAddToCartRejected).message),
+                backgroundColor: state is ProductsAddToCartFailure
+                    ? Colors.red
+                    : Colors.blue,
               ),
             );
           }
@@ -171,7 +192,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       ),
     );
 
-  // Rest of your existing methods (_buildOrderItem, _getStatusColor, etc.) remain the same
   Widget _buildOrderItem(Content order, BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -319,59 +339,20 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     );
   }
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'delivered':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      case 'placed':
-        return Colors.orange;
-      case 'preparing':
-        return Colors.blue;
-      default:
-        return Colors.orange;
-    }
-  }
+      await context
+          .read<ProductsAddToCartCubit>()
+          .addToCart(payload, context: context);
 
-  void _addItemToCart(OrderItem item) async {
-    final cartCubit = context.read<ProductsAddToCartCubit>();
-    final itemKey = '${item.productId}_${item.productName}';
-    final quantity = _itemQuantities[itemKey] ?? 0;
-    if (cartCubit.state is ProductsAddToCartSuccess && (cartCubit.state as ProductsAddToCartSuccess).cartModel.isNotEmpty) {
-      final shouldClearCart = await _showClearCartConfirmation(context);
-      if (!shouldClearCart) {
-        setState(() {
-          _itemQuantities[itemKey] = 0;
-          _itemInCartStatus[itemKey] = false;
-        });
-        return;
-      }
-      try {
-        context.read<ClearCartCubit>().clearCart();
-        if (cartCubit.state is ProductsAddToCartSuccess && (cartCubit.state as ProductsAddToCartSuccess).cartModel.isEmpty) {
-          await _addNewItemToCart(item, quantity, itemKey);
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to clear cart. Please try again.'), backgroundColor: Colors.red),
-          );
-        }
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error clearing cart: ${e.toString()}'), backgroundColor: Colors.red),
-        );
-      }
-    } else {
-      await _addNewItemToCart(item, quantity, itemKey);
-    }
-  }
+      setState(() {
+        _itemInCartStatus[itemKey] = true;
+        _itemQuantities[itemKey] = quantity;
+      });
 
-  Future<void> _addNewItemToCart(OrderItem item, int quantity, String itemKey) async {
-    try {
-      await context.read<ProductsAddToCartCubit>().addToCart(_createPayload(item, quantity), context: context);
-      setState(() => _itemInCartStatus[itemKey] = true);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Added ${item.productName} to cart'), duration: const Duration(seconds: 1)),
+        SnackBar(
+          content: Text('Added ${item.productName} to cart'),
+          duration: const Duration(seconds: 1),
+        ),
       );
     } catch (e) {
       if (e is ProductsAddToCartRejected) {
@@ -381,49 +362,51 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add item to cart'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Failed to add item to cart'),
+            backgroundColor: Colors.red,
+          ),
         );
       }
     }
-  }
-
-  Future<bool> _showClearCartConfirmation(BuildContext context) async {
-    return await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Clear Cart?'),
-            content: const Text('Your cart contains items from another restaurant. Would you like to clear the cart and add these items instead?'),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('No')),
-              TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Yes')),
-            ],
-          ),
-        ) ??
-        false;
   }
 
   void _updateItemInCart(OrderItem item, int newQuantity) async {
     final itemKey = '${item.productId}_${item.productName}';
     final previousQuantity = _itemQuantities[itemKey] ?? 1;
     try {
-      await context.read<ProductsAddToCartCubit>().addToCart(_createPayload(item, newQuantity), context: context);
+      await context
+          .read<ProductsAddToCartCubit>()
+          .addToCart(_createPayload(item, newQuantity), context: context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Updated ${item.productName} quantity to $newQuantity'), duration: const Duration(seconds: 1)),
+        SnackBar(
+            content:
+                Text('Updated ${item.productName} quantity to $newQuantity'),
+            duration: const Duration(seconds: 1)),
       );
     } catch (e) {
-      if (e is ProductsAddToCartRejected) setState(() => _itemQuantities[itemKey] = previousQuantity);
+      if (e is ProductsAddToCartRejected) {
+        setState(() => _itemQuantities[itemKey] = previousQuantity);
+      }
     }
   }
 
   void _removeItemFromCart(OrderItem item) {
     final itemKey = '${item.productId}_${item.productName}';
-    context.read<ProductsAddToCartCubit>().addToCart(_createPayload(item, 0), context: context).then((_) {
+    context
+        .read<ProductsAddToCartCubit>()
+        .addToCart(_createPayload(item, 0), context: context)
+        .then((_) {
       setState(() => _itemInCartStatus[itemKey] = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Removed ${item.productName} from cart'), duration: const Duration(seconds: 1)),
+        SnackBar(
+            content: Text('Removed ${item.productName} from cart'),
+            duration: const Duration(seconds: 1)),
       );
     }).catchError((error) {
-      if (error is ProductsAddToCartRejected) setState(() => _itemInCartStatus[itemKey] = true);
+      if (error is ProductsAddToCartRejected) {
+        setState(() => _itemInCartStatus[itemKey] = true);
+      }
     });
   }
 }

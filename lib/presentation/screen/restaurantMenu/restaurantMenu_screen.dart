@@ -49,6 +49,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         'page': page,
         'size': size,
       });
+      
       Future.delayed(const Duration(milliseconds: 300), () {
         _loadCart();
       });
@@ -404,7 +405,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                             style: GoogleFonts.poppins(color: Colors.grey)),
                       );
                     }
-
                     return ListView.builder(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: filteredItems.length,

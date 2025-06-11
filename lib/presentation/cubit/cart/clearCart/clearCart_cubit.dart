@@ -7,7 +7,7 @@ class ClearCartCubit extends Cubit<ClearCartState> {
 
   ClearCartCubit( this.clearCartUseCase) : super(ClearCartInitial());
 
-  void clearCart() async {
+   clearCart() async {
     emit(ClearCartLoading());
     try {
       final result = await clearCartUseCase();
