@@ -20,42 +20,14 @@ class ProductsAddToCartCubit extends Cubit<ProductsAddToCartState> {
     emit(ProductsAddToCartSuccess(result));
   } catch (e) {
     if (e.toString().contains('403') && context != null && context.mounted) {
-      final shouldReplace = await _showReplaceCartDialog(context);
-      if (shouldReplace == true) {
-        // If user selects Yes, proceed with forceReplace
+      // final shouldReplace = await _showReplaceCartDialog(context);
+     
         final result = await useCase(payload, forceReplace: true);
         emit(ProductsAddToCartSuccess(result));
-      } else {
-        // If user selects No, emit rejected state
-        emit(ProductsAddToCartRejected('Kept previous restaurant items'));
-      }
+     
       return;
     }
     emit(ProductsAddToCartFailure(e.toString()));
   }
 }
-
-  Future<bool?> _showReplaceCartDialog(BuildContext context) async {
-    return showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('Replace cart items?'),
-        content: const Text(
-          'Your cart contains dishes from a previous restaurant. '
-          'Do you want to discard the selection and add dishes from this restaurant?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('No'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Yes'),
-          ),
-        ],
-      ),
-    );
-  }
 }

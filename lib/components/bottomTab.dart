@@ -21,7 +21,6 @@ class _BottomTabState extends State<BottomTab> {
 OrderHistoryScreen(),   
     ProfileScreen()
   ];
-//   OrderTracker(orderId: '1234', status: 'preparing'), 
 
   @override
   void initState() {

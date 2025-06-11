@@ -8,6 +8,7 @@ class GetMenuByRestaurantIdCubit extends Cubit<GetMenuByRestaurantIdState> {
   GetMenuByRestaurantIdCubit(this.useCase) : super(GetMenuByRestaurantIdInitial());
 
   Future<void> fetchMenu(Map<String, dynamic> params) async {
+    print(params);
     emit(GetMenuByRestaurantIdLoading());
     try {
       final result = await useCase(params);

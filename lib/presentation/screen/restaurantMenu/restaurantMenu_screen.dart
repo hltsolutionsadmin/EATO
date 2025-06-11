@@ -41,7 +41,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Load menu first
       context.read<GetMenuByRestaurantIdCubit>().fetchMenu({
         'restaurantId': widget.restaurantId,
         'search': searchText,
@@ -49,7 +48,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         'size': size,
       });
       
-      // Then load cart after a small delay to ensure menu is loaded
       Future.delayed(const Duration(milliseconds: 300), () {
         _loadCart();
       });
@@ -62,7 +60,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     if (cartState is GetCartLoaded) {
       _processCartData(cartState);
     } else {
-      // If cart isn't loaded yet, wait for it
       await Future.delayed(const Duration(milliseconds: 100));
       final newCartState = context.read<GetCartCubit>().state;
       if (newCartState is GetCartLoaded) {
@@ -73,7 +70,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   void _processCartData(GetCartLoaded state) {
     if (state.cart.businessId.toString() != widget.restaurantId) return;
-    if (!_isMenuLoaded) return; // Don't process cart until menu is loaded
+    if (!_isMenuLoaded) return;
 
     int itemCounter = 0;
     Map<String, int> updatedCart = {};
@@ -385,7 +382,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                             style: GoogleFonts.poppins(color: Colors.grey)),
                       );
                     }
-
                     return ListView.builder(
                       padding: const EdgeInsets.all(16.0),
                       itemCount: filteredItems.length,
