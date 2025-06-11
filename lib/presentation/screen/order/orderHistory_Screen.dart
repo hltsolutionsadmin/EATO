@@ -132,48 +132,48 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         ),
       );
 
-Future<void> _addNewItemToCart(
-    OrderItem item, int quantity, String itemKey) async {
-  try {
-    final payload = [
-      {
-        'productId': item.productId,
-        'quantity': quantity,
-        'price': item.price,
-      }
-    ];
-    
-    await context
-        .read<ProductsAddToCartCubit>()
-        .addToCart(payload, context: context);
-    
-    setState(() {
-      _itemInCartStatus[itemKey] = true;
-      _itemQuantities[itemKey] = quantity;
-    });
-    
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Added ${item.productName} to cart'),
-        duration: const Duration(seconds: 1),
-      ),
-    );
-  } catch (e) {
-    if (e is ProductsAddToCartRejected) {
-      setState(() => _itemInCartStatus[itemKey] = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message), backgroundColor: Colors.blue),
-      );
-    } else {
+  Future<void> _addNewItemToCart(
+      OrderItem item, int quantity, String itemKey) async {
+    try {
+      final payload = [
+        {
+          'productId': item.productId,
+          'quantity': quantity,
+          'price': item.price,
+        }
+      ];
+
+      await context
+          .read<ProductsAddToCartCubit>()
+          .addToCart(payload, context: context);
+
+      setState(() {
+        _itemInCartStatus[itemKey] = true;
+        _itemQuantities[itemKey] = quantity;
+      });
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to add item to cart'),
-          backgroundColor: Colors.red,
+          content: Text('Added ${item.productName} to cart'),
+          duration: const Duration(seconds: 1),
         ),
       );
+    } catch (e) {
+      if (e is ProductsAddToCartRejected) {
+        setState(() => _itemInCartStatus[itemKey] = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(e.message), backgroundColor: Colors.blue),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to add item to cart'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
-}
 
   void _updateItemInCart(OrderItem item, int newQuantity) async {
     final itemKey = '${item.productId}_${item.productName}';

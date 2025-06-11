@@ -1,13 +1,9 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/data/model/orders/orderHistory/orderHistory_model.dart';
 import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
-import 'package:eato/presentation/cubit/cart/clearCart/clearCart_state.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
-import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
@@ -67,6 +63,7 @@ Widget BuildOrderItem({
     ),
     child: Column(
       children: [
+        // Header section remains the same...
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -75,6 +72,7 @@ Widget BuildOrderItem({
           ),
           child: Row(
             children: [
+              // Restaurant image and info...
               Container(
                 width: 50,
                 height: 50,
@@ -143,8 +141,6 @@ Widget BuildOrderItem({
               const SizedBox(height: 8),
               ...order.orderItems.map((item) {
                 final itemKey = '${item.productId}_${item.productName}';
-                itemInCartStatus.putIfAbsent(itemKey, () => false);
-                itemQuantities.putIfAbsent(itemKey, () => item.quantity ?? 1);
                 final isInCart = itemInCartStatus[itemKey] ?? false;
                 final quantity = itemQuantities[itemKey] ?? 1;
                 
@@ -178,7 +174,8 @@ Widget BuildOrderItem({
                                     itemQuantities[itemKey] = quantity - 1;
                                     updateItemInCart(item, quantity - 1);
                                   } else {
-                                    itemInCartStatus[itemKey] = false;
+                                    itemInCartStatus.remove(itemKey);
+                                    itemQuantities.remove(itemKey);
                                     removeItemFromCart(item);
                                   }
                                 });
@@ -209,21 +206,24 @@ Widget BuildOrderItem({
                               final state = context.read<GetCartCubit>().state;
                               if (state is GetCartLoaded) {
                                 final cartItems = state.cart.cartItems;
-                                if (cartItems.isNotEmpty) {
-                                  if (bussinessId != order.businessId) {
-                                    final shouldReplace = await ShowReplaceCartDialog(
-                                      context: context,
-                                      order: order,
-                                    );
-                                    if (shouldReplace == true) {
-                                      addNewItemToCart(item, quantity, itemKey);
-                                    }
-                                  } else {
-                                    addNewItemToCart(item, quantity, itemKey);
+                                final currentBusinessId = state.cart.businessId;
+                                if (cartItems.isNotEmpty && currentBusinessId != order.businessId) {
+                                  final shouldReplace = await ShowReplaceCartDialog(
+                                    context: context,
+                                    order: order,
+                                  );
+                                  if (shouldReplace != true) {
+                                    return; // User cancelled
                                   }
-                                } else {
-                                  addNewItemToCart(item, quantity, itemKey);
                                 }
+                                
+                                // Add the item with proper quantity
+                                final newQuantity = (isInCart ? quantity : 1) + 1;
+                                setState(() {
+                                  itemInCartStatus[itemKey] = true;
+                                  itemQuantities[itemKey] = newQuantity;
+                                });
+                                addNewItemToCart(item, newQuantity, itemKey);
                               }
                             },
                             child: Container(
@@ -274,17 +274,3 @@ Color GetStatusColor(String status) {
       return Colors.orange;
   }
 }
-  late Map<String, int> cart;
- List<Map<String, dynamic>> getCartPayload(selectedItems) {
-    return selectedItems.map((item) {
-      final name = item['name'] as String?;
-      final quantity = cart[name] ?? 0;
-      final price = item['price'];
-
-      return {
-        'productId': item['productId'],
-        'quantity': quantity,
-        'price': price,
-      };
-    }).toList();
-  }
