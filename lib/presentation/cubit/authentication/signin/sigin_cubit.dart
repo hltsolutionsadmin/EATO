@@ -1,5 +1,7 @@
 import 'package:bloc/bloc.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../domain/usecase/authentication/signin_usecase.dart';
 import 'signin_state.dart';
@@ -40,6 +42,7 @@ class SignInCubit extends Cubit<SignInState> {
         final prefs = await SharedPreferences.getInstance();
         prefs.setString('TOKEN', signEntity.token ?? '');
         prefs.setString('REFRESH_TOKEN', signEntity.refreshToken ?? '');
+        context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
       } else {
         showDialog(
           context: context,

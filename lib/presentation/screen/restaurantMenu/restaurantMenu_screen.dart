@@ -36,12 +36,12 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   Timer? _debounce;
   bool _isMenuLoaded = false;
   bool _isCartLoaded = false;
+  dynamic cartData = {};
 
   @override
   void initState() {
     super.initState();
     print('initState: Loading menu for restaurantId = ${widget.restaurantId}');
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GetMenuByRestaurantIdCubit>().fetchMenu({
         'restaurantId': widget.restaurantId,
@@ -49,11 +49,24 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         'page': page,
         'size': size,
       });
-      
+
       Future.delayed(const Duration(milliseconds: 300), () {
         _loadCart();
+            fetchCart();
+
       });
     });
+  }
+
+  void fetchCart() async {
+    await context.read<GetCartCubit>().fetchCart();
+    final state = await context.read<GetCartCubit>().state;
+    if (state is GetCartLoaded) {
+      cartData = state.cart;
+    } else {
+      cartData = {};
+    }
+    print(cartData);
   }
 
   Future<void> _loadCart() async {
@@ -179,7 +192,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   void showPersistentCart() {
     _bottomSheetController =
         _scaffoldKey.currentState!.showBottomSheet((context) {
-      return RestaurantCartBottomSheet(
+      return 
+      RestaurantCartBottomSheet(
         totalItems: totalItems,
         onViewCartPressed: () async {
           _bottomSheetController?.close();
@@ -362,7 +376,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                   GetMenuByRestaurantIdState>(
                 listener: (context, state) {
                   if (state is GetMenuByRestaurantIdLoaded) {
-                    print('Menu Loaded: ${state.model.content.length} items');
                     setState(() {
                       menuItems = state.model.content;
                       _isMenuLoaded = true;
@@ -372,7 +385,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                     }
                   } else if (state is GetMenuByRestaurantIdError) {
                     print(
-                        'Error loading menu: ${state.message}'); // Add .message in your state class if missing
+                        'Error loading menu: ${state.message}');
                   }
                 },
                 builder: (context, state) {
@@ -414,12 +427,14 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                         return MenuItemWidget(
                           item: item,
                           quantity: quantity,
-                          onQuantityChanged: (qty) => update_Cart(item, qty),
+                          cartData: cartData,
+                          restaurantId: widget.restaurantId,
+                          onQuantityChanged: (qty) => {
+                            update_Cart(item, qty)},
                         );
                       },
                     );
                   } else if (state is GetMenuByRestaurantIdError) {
-                    print("Menu load failed with error");
                     return Center(
                       child: Text("Error Loading Menu",
                           style: GoogleFonts.poppins(color: Colors.red)),

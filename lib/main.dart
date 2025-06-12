@@ -40,11 +40,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-  ]);
+      DeviceOrientation.portraitUp,
+    ]);
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );

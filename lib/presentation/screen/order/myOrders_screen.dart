@@ -203,7 +203,7 @@ class _MyOrdersState extends State<MyOrders> {
                 child: Image.network(
                   order.orderItems.isNotEmpty &&
                           order.orderItems.first.media != null
-                      ? order.orderItems.first.media
+                      ? (order.orderItems.first.media as String? ?? dish)
                       : dish,
                   width: 60,
                   height: 60,

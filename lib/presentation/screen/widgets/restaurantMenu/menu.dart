@@ -1,19 +1,25 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
+import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class MenuItemWidget extends StatefulWidget {
   final Content item;
   final int quantity;
+  dynamic cartData;
+  dynamic restaurantId;
   final Function(int) onQuantityChanged;
 
-  const MenuItemWidget({
+  MenuItemWidget({
     super.key,
     required this.item,
     required this.quantity,
     required this.onQuantityChanged,
+    this.cartData,
+    this.restaurantId,
   });
 
   @override
@@ -27,6 +33,7 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
   void initState() {
     super.initState();
     quantity = widget.quantity;
+        print(widget.cartData);
   }
 
   void updateQuantity(int newQty) {
@@ -115,7 +122,31 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
             children: [
               IconButton(
                 icon: Icon(Icons.add_circle, color: AppColor.PrimaryColor),
-                onPressed: () => updateQuantity(quantity + 1),
+                onPressed: () async {
+                  try {
+                    final cartItems = widget.cartData?.cartItems as List?;
+                    final businessId = widget.cartData?.businessId?.toString();
+                    final hasItems = cartItems != null && cartItems.isNotEmpty;
+                    final restaurantId = widget.restaurantId?.toString();
+
+                    if (hasItems &&
+                        businessId != null &&
+                        restaurantId != null &&
+                        businessId != restaurantId) {
+                      final shouldReplace =
+                          await ShowReplaceCartDialog(context: context);
+                      if (shouldReplace != true) return;
+
+                      await context.read<ClearCartCubit>().clearCart();
+                      updateQuantity(quantity + 1);
+                      return;
+                    }
+                    updateQuantity(quantity + 1);
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.toString()}')));
+                  }
+                },
               ),
               Text(
                 '$quantity',
@@ -133,4 +164,33 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
       ),
     );
   }
+}
+
+Future<bool?> ShowReplaceCartDialog({
+  required BuildContext context,
+}) async {
+  return showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      title: const Text('Replace cart items?'),
+      content: const Text(
+        'Your cart contains dishes from a previous restaurant. '
+        'Do you want to discard the selection and add dishes from this restaurant?',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('No'),
+        ),
+        TextButton(
+          onPressed: () async {
+            await context.read<ClearCartCubit>().clearCart();
+            Navigator.pop(context, true);
+          },
+          child: const Text('Yes'),
+        ),
+      ],
+    ),
+  );
 }
