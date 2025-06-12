@@ -2,10 +2,13 @@ import 'package:eato/components/bottomTab.dart';
 import 'package:eato/components/custom_button.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_state.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_state.dart';
 import 'package:eato/presentation/cubit/authentication/signin/sigin_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signin/signin_state.dart';
+import 'package:eato/presentation/screen/authentication/nameInput_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,6 +60,11 @@ class _OtpScreenState extends State<OtpScreen>
     super.dispose();
   }
 
+  void _navigateBasedOnCustomerStatus(BuildContext context) {
+    // After successful sign-in, fetch current customer data
+    context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,15 +83,11 @@ class _OtpScreenState extends State<OtpScreen>
                   )),
                 );
               } else {
-                Navigator.of(context, rootNavigator: true)
-                    .pop();
+                Navigator.of(context, rootNavigator: true).pop();
               }
 
               if (state is SignInLoaded) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => BottomTab()),
-                );
+                _navigateBasedOnCustomerStatus(context);
               } else if (state is SignInError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -110,6 +114,28 @@ class _OtpScreenState extends State<OtpScreen>
               }
             },
           ),
+          BlocListener<CurrentCustomerCubit, CurrentCustomerState>(
+            listener: (context, state) {
+              if (state is CurrentCustomerLoaded) {
+                if (state.currentCustomerModel.eato == true) {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => BottomTab()),
+                  );
+                } else {
+                  // Navigate to CurrentUserFormScreen if eato is false
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => NameInputScreen()),
+                  );
+                }
+              } else if (state is CurrentCustomerError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(state.message)),
+                );
+              }
+            },
+          ),
         ],
         child: Stack(
           children: [
@@ -127,6 +153,7 @@ class _OtpScreenState extends State<OtpScreen>
     );
   }
 
+  // Rest of your existing methods remain the same...
   Widget _buildBackgroundImage() {
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.65,

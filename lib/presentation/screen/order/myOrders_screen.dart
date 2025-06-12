@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class MyOrders extends StatefulWidget {
+  const MyOrders({super.key});
+
   @override
   _MyOrdersState createState() => _MyOrdersState();
 }
