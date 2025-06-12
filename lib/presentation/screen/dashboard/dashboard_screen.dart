@@ -1,6 +1,6 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
-import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
+import 'package:eato/data/model/restaurants/getNearbyRestaurants/getNearByrestarants_model.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
@@ -8,12 +8,13 @@ import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNear
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_state.dart';
 import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_state.dart';
+import 'package:eato/presentation/screen/cart/cart_screen.dart';
 import 'package:eato/presentation/screen/restaurantMenu/restaurantMenu_screen.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/bottom_card_widget.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/foodCatagoryIcons.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/foodItemCard.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/locationHeader.dart';
 import 'package:eato/components/searchBar.dart';
-import 'package:eato/presentation/screen/widgets/restaurantMenu/bottomSheet.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -30,13 +31,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double? latitude;
   double? longitude;
   String searchQuery = '';
+  dynamic cartdata = {};
+  List<dynamic> cartList = [];
+  Map<String, int> cart = {};
+  final ScrollController _scrollController = ScrollController();
+  bool _showBottomCart = true;
+  bool _isScrollingDown = false;
+  double _scrollPosition = 0;
+  int totalItems = 0, page = 0, size = 10;
 
   @override
   void initState() {
     super.initState();
     context.read<CreateCartCubit>().createCart();
-    context.read<GetCartCubit>().fetchCart();
     _loadCoordinatesAndFetch();
+    fetchCart();
+    _scrollController.addListener(_scrollListener);
+  }
+
+  void fetchCart() async {
+    await context.read<GetCartCubit>().fetchCart();
+    final state = await context.read<GetCartCubit>().state;
+    if (state is GetCartLoaded) {
+      cartList = state.cart.cartItems;
+      cartdata = state.cart;
+    } else {
+      cartList = [];
+      cartdata = {};
+    }
+    print(cartList);
+    print(cartdata);
   }
 
   void onLocationChanged() {
@@ -69,7 +93,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           restaurantId: restaurantId,
         ),
       ),
-    );
+  ).then((value) {
+    fetchCart();
+  });
   }
 
   Widget _buildNearbyRestaurants() {
@@ -124,7 +150,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             return const Center(child: Text("No restaurants found"));
           }
           return Column(
-            // <-- Changed from ListView.builder to Column
             children: restaurants.map((restaurant) {
               final data = {
                 "Restaurant": restaurant.businessName ?? "Unknown",
@@ -150,6 +175,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _scrollListener() {
+    final currentPosition = _scrollController.position.pixels;
+    if (currentPosition > _scrollPosition) {
+      if (!_isScrollingDown) {
+        _isScrollingDown = true;
+        if (_showBottomCart) {
+          setState(() => _showBottomCart = false);
+        }
+      }
+    } else if (currentPosition < _scrollPosition) {
+      if (_isScrollingDown) {
+        _isScrollingDown = false;
+        if (!_showBottomCart) {
+          setState(() => _showBottomCart = true);
+        }
+      }
+      if (currentPosition < 100 && !_showBottomCart) {
+        setState(() => _showBottomCart = true);
+      }
+    }
+
+    _scrollPosition = currentPosition;
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_scrollListener);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<SharedPreferences>(
@@ -157,27 +213,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return Scaffold(
-              body: Center(
-                  child: CupertinoActivityIndicator(
-            color: AppColor.PrimaryColor,
-          )));
+            body: Center(
+                child: CupertinoActivityIndicator(
+              color: AppColor.PrimaryColor,
+            )),
+          );
         }
 
         return BlocListener<GetCartCubit, GetCartState>(
           listener: (context, state) {
             if (state is GetCartLoaded) {
-              final hasItems = state.cart.cartItems.isNotEmpty;
-              print(hasItems ? 'true' : 'false');
-              if (hasItems) {
-                Text(
-                  'hello',
-                  style: TextStyle(fontSize: 34),
-                );
-              } else {
-                Text('hello');
-              }
-            } else if (state is GetCartError) {
-              print("Cart load error: ${state.message}");
+              setState(() {
+                cartList = state.cart.cartItems;
+                cartdata = state.cart;
+              });
             }
           },
           child: Scaffold(
@@ -231,62 +280,132 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             backgroundColor: AppColor.White,
-            body: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: SingleChildScrollView(
-                  // <-- Wrap everything in SingleChildScrollView
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      FoodCategoryIcons(
-                        onCategoryTap: (label) async {
-                          if (label.isNotEmpty) {
-                            setState(() {
-                              searchQuery = label;
-                            });
-                            final prefs = await SharedPreferences.getInstance();
-                            final latitude =
-                                prefs.getDouble('saved_latitude') ?? 17.385044;
-                            final longitude =
-                                prefs.getDouble('saved_longitude') ?? 78.486671;
-
-                            context
-                                .read<GetRestaurantsByProductNameCubit>()
-                                .fetchRestaurantsByProductName({
-                              "productName": label,
-                              "latitude": latitude,
-                              "longitude": longitude,
-                              "postalCode": "531001",
-                              "page": 0,
-                              "size": 10,
-                            });
-                          } else {
-                            setState(() {
-                              searchQuery = '';
-                            });
+            body: Stack(
+              children: [
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                    ),
+                    child: SingleChildScrollView(
+                      controller: _scrollController,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 20),
+                          FoodCategoryIcons(
+                            onCategoryTap: (label) async {
+                              if (label.isNotEmpty) {
+                                setState(() {
+                                  searchQuery = label;
+                                });
+                                final prefs =
+                                    await SharedPreferences.getInstance();
+                                final latitude =
+                                    prefs.getDouble('saved_latitude') ??
+                                        17.385044;
+                                final longitude =
+                                    prefs.getDouble('saved_longitude') ??
+                                        78.486671;
+                                context
+                                    .read<GetRestaurantsByProductNameCubit>()
+                                    .fetchRestaurantsByProductName({
+                                  "productName": label,
+                                  "latitude": latitude,
+                                  "longitude": longitude,
+                                  "postalCode": "531001",
+                                  "page": 0,
+                                  "size": 10,
+                                });
+                              } else {
+                                setState(() {
+                                  searchQuery = '';
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Restaurants to Explore",
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                              color: AppColor.Black,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          searchQuery.isEmpty
+                              ? _buildNearbyRestaurants()
+                              : _buildSearchResults(),
+                          SizedBox(height: cartList.isNotEmpty ? 80 : 0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                if (cartList.isNotEmpty)
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: AnimatedSlide(
+                      duration: const Duration(milliseconds: 300),
+                      offset:
+                          _showBottomCart ? Offset.zero : const Offset(0, 1),
+                      child: BottomCartCard(
+                        itemCount: cartdata.totalCount,
+                        onTap: () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => CartScreen(
+                                cartItems: cartList
+                    .map((item) => {
+                          'productId': item.id,
+                          'quantity': item.quantity ?? 0,
+                          'price': item.price,
+                          'name': item.productName,
+                          'description': item.productName,
+                          // 'categoryName': item.attributes
+                          //     .firstWhere(
+                          //       (a) => a.attributeName?.toLowerCase() == 'type',
+                          //       orElse: () => Attribute(
+                          //           id: 0,
+                          //           attributeName: '',
+                          //           attributeValue: ''),
+                          //     )
+                          //     .attributeValue,
+                          // 'media': item.media,
+                        })
+                    .toList(),
+                              ),
+                            ),
+                          );
+                          if (!mounted) return;
+                          if (result != null &&
+                              result is Map<String, dynamic>) {
+                            final updatedCart =
+                                result['updatedCart'] as Map<String, int>?;
+                            final updatedCartLength =
+                                result['cartItemsLength'] ?? 0;
+                            if (updatedCart != null) {
+                              setState(() {
+                                cart = Map<String, int>.from(updatedCart);
+                                totalItems = updatedCartLength;
+                                cartList = cartList
+                                    .where((item) =>
+                                        cart.containsKey(item.name) &&
+                                        cart[item.name]! > 0)
+                                    .toList();
+                              });
+                            }
                           }
                         },
                       ),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Restaurants to Explore",
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColor.Black,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Remove the Expanded widget since we're using SingleChildScrollView
-                      searchQuery.isEmpty
-                          ? _buildNearbyRestaurants()
-                          : _buildSearchResults(),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+              ],
             ),
           ),
         );

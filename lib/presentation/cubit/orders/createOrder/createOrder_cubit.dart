@@ -13,6 +13,7 @@ class CreateOrderCubit extends Cubit<CreateOrderState> {
       final Order = await useCase();
       emit(CreateOrderLoaded(Order));
     } catch (e) {
+      print(e);
       emit(CreateOrderError(e.toString()));
     }
   }

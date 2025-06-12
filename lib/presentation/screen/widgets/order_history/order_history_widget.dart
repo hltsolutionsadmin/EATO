@@ -75,16 +75,16 @@ Widget BuildOrderItem({
               Container(
                 width: 50,
                 height: 50,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                  image: order.orderItems.isNotEmpty &&
-                          order.orderItems[0].media != null
-                      ? DecorationImage(
-                          image: NetworkImage(order.orderItems[0].media!),
-                          fit: BoxFit.cover)
-                      : null,
-                ),
+                // decoration: BoxDecoration(
+                //   borderRadius: BorderRadius.circular(8),
+                //   color: Colors.white,
+                //   image: order.orderItems.isNotEmpty &&
+                //           order.orderItems[0].media != null
+                //       ? DecorationImage(
+                //           image: NetworkImage(order.orderItems[0].media!),
+                //           fit: BoxFit.cover)
+                //       : null,
+                // ),
                 child: order.orderItems.isEmpty ||
                         order.orderItems[0].media == null
                     ? Icon(Icons.restaurant, color: Colors.grey[400], size: 24)
