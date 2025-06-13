@@ -140,6 +140,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     if (qty == 0) {
       updatedCart.remove(item.name);
       updatedSelectedItems.removeWhere((i) => i.name == item.name);
+      context.read<GetCartCubit>().fetchCart(context);
     } else {
       updatedCart[item.name ?? ""] = qty;
       if (!updatedSelectedItems.any((i) => i.name == item.name)) {
@@ -150,7 +151,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     int newTotalItems = updatedCart.values.fold(0, (sum, qty) => sum + qty);
 
     if (!mounted) return;
-    setState(() {
+    setState(()  {
       cart = updatedCart;
       selectedItems = updatedSelectedItems;
       totalItems = newTotalItems;
@@ -164,6 +165,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       "price": item.price ?? 0
     };
     context.read<ProductsAddToCartCubit>().addToCart([payload]);
+        context.read<GetCartCubit>().fetchCart(context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (totalItems > 0 && !isBottomSheetVisible) {
