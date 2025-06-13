@@ -49,7 +49,7 @@ class SavedAddressesView extends StatelessWidget {
     }
     
     return RefreshIndicator(
-      onRefresh: () async => context.read<GetAddressCubit>().fetchAddress(),
+      onRefresh: () async => context.read<GetAddressCubit>().fetchAddress(context),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: sortedAddresses.length,
@@ -93,7 +93,7 @@ class SavedAddressesView extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.red.shade700)),
           const SizedBox(height: 8),
           ElevatedButton(
-            onPressed: () => context.read<GetAddressCubit>().fetchAddress(),
+            onPressed: () => context.read<GetAddressCubit>().fetchAddress(context),
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.PrimaryColor),
             child: const Text("Retry",style: TextStyle(fontSize: 16, color: Colors.white)),
@@ -124,8 +124,8 @@ class SavedAddressesView extends StatelessWidget {
           } else {
             final addressId = address.id!;
             final addressString = '${address.addressLine1}, ${address.city}';
-            context.read<DefaultAddressCubit>().setDefaultAddress(addressId);
-            context.read<AddressSavetoCartCubit>().addressSavetoCart(addressId);
+            context.read<DefaultAddressCubit>().setDefaultAddress(addressId, context);
+            context.read<AddressSavetoCartCubit>().addressSavetoCart(addressId, context);
             Navigator.pop(context,addressString);
           }
         },
@@ -232,7 +232,7 @@ class SavedAddressesView extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              context.read<DeleteAddressCubit>().deleteAddress(addressId);
+              context.read<DeleteAddressCubit>().deleteAddress(addressId, context);
             },
             child: const Text("DELETE", style: TextStyle(color: Colors.red)),
           ),

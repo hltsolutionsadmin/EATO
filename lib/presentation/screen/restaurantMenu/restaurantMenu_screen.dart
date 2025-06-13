@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:eato/components/custom_topbar.dart';
+import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
@@ -36,7 +37,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   Timer? _debounce;
   bool _isMenuLoaded = false;
   bool _isCartLoaded = false;
-  dynamic cartData = {};
 
   @override
   void initState() {
@@ -52,21 +52,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
       Future.delayed(const Duration(milliseconds: 300), () {
         _loadCart();
-            fetchCart();
-
       });
     });
-  }
-
-  void fetchCart() async {
-    await context.read<GetCartCubit>().fetchCart();
-    final state = await context.read<GetCartCubit>().state;
-    if (state is GetCartLoaded) {
-      cartData = state.cart;
-    } else {
-      cartData = {};
-    }
-    print(cartData);
   }
 
   Future<void> _loadCart() async {
@@ -90,7 +77,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     Map<String, int> updatedCart = {};
     List<Content> updatedSelectedItems = [];
 
-    for (var cartItem in state.cart.cartItems) {
+    for (var cartItem in state.cart.cartItems as List<CartItems>) {
       final menuItem = menuItems.firstWhere(
         (item) => item.id == cartItem.productId,
         orElse: () => Content(
@@ -192,8 +179,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   void showPersistentCart() {
     _bottomSheetController =
         _scaffoldKey.currentState!.showBottomSheet((context) {
-      return 
-      RestaurantCartBottomSheet(
+      return RestaurantCartBottomSheet(
         totalItems: totalItems,
         onViewCartPressed: () async {
           _bottomSheetController?.close();
@@ -384,8 +370,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                       _loadCart();
                     }
                   } else if (state is GetMenuByRestaurantIdError) {
-                    print(
-                        'Error loading menu: ${state.message}');
+                    print('Error loading menu: ${state.message}');
                   }
                 },
                 builder: (context, state) {
@@ -427,10 +412,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                         return MenuItemWidget(
                           item: item,
                           quantity: quantity,
-                          cartData: cartData,
                           restaurantId: widget.restaurantId,
-                          onQuantityChanged: (qty) => {
-                            update_Cart(item, qty)},
+                          onQuantityChanged: (qty) => {update_Cart(item, qty)},
                         );
                       },
                     );

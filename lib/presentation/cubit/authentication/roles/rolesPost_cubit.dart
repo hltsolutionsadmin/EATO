@@ -1,13 +1,27 @@
+import 'package:eato/components/custom_snackbar.dart';
+import 'package:eato/core/network/network_service.dart';
 import 'package:eato/domain/usecase/authentication/rolesPost_usecase.dart';
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class RolePostCubit extends Cubit<RolePostState> {
   final RolePostUsecase rolePostUsecase;
+  final NetworkService networkService;
 
-  RolePostCubit(this.rolePostUsecase) : super(RolePostInitial());
+  RolePostCubit(this.rolePostUsecase, this.networkService) : super(RolePostInitial());
 
-  Future<void> postRole({String? role}) async {
+  Future<void> postRole({String? role, context} ) async {
+     bool isConnected = await networkService.hasInternetConnection();
+    print(isConnected);
+    if (!isConnected) {
+      print("No Internet Connection");
+      CustomSnackbars.showErrorSnack(
+        context: context,
+        title: 'Alert',
+        message: 'Please check Internet Connection',
+      );
+      return;
+    }
     emit(RolePostLoading());
     try {
       final result = await rolePostUsecase.call(role);

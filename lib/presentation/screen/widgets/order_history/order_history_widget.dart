@@ -27,7 +27,7 @@ Future<bool?> ShowReplaceCartDialog({
         ),
         TextButton(
           onPressed: () async {
-            await context.read<ClearCartCubit>().clearCart();
+            await context.read<ClearCartCubit>().clearCart(context);
 
             Navigator.pop(context, true);
           },
@@ -208,7 +208,7 @@ Widget BuildOrderItem({
                                 final cartItems = state.cart.cartItems;
                                 final currentBusinessId = state.cart.businessId;
 
-                                if (cartItems.isNotEmpty &&
+                                if (cartItems != null && cartItems.length > 0 &&
                                     currentBusinessId != order.businessId) {
                                   final shouldReplace =
                                       await ShowReplaceCartDialog(

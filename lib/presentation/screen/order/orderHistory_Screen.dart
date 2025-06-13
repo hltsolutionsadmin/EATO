@@ -34,7 +34,7 @@ final TextEditingController _searchController = TextEditingController();
   @override
   void initState() {
     super.initState();
-    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery);
+    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
     cartId();
   }
 
@@ -42,14 +42,14 @@ final TextEditingController _searchController = TextEditingController();
   void _fetchInitialOrders() {
     _currentPage = 0;
     _orders.clear();
-    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery);
+    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery,context);
   }
  
   void _fetchMoreOrders() {
     if (!_isLoadingMore) {
       setState(() => _isLoadingMore = true);
       _currentPage++;
-      context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery);
+      context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
     }
   }
 

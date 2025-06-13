@@ -8,6 +8,7 @@ import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_state.da
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/screen/address/savedAddress_screen.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/geo_location_picker_widget.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -56,7 +57,7 @@ class _AddressScreenState extends State<AddressScreen> {
     super.dispose();
   }
 
-  void _fetchAddresses() => context.read<GetAddressCubit>().fetchAddress();
+  void _fetchAddresses() => context.read<GetAddressCubit>().fetchAddress(context);
 
   void _saveAddress() {
     if (!_formKey.currentState!.validate() || !_isLocationPicked) {
@@ -80,7 +81,7 @@ class _AddressScreenState extends State<AddressScreen> {
       "name": nameController.text.trim(),
       "phone": phoneController.text.trim(),
     };
-    context.read<SaveAddressCubit>().saveAddress(payload);
+    context.read<SaveAddressCubit>().saveAddress(payload, context);
   }
 
   void _fillAddressFields(Placemark placemark, LatLng? latLng) {
@@ -448,8 +449,7 @@ class _AddressScreenState extends State<AddressScreen> {
                                 ? const SizedBox(
                                     width: 20,
                                     height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                                    child: CupertinoActivityIndicator(
                                       color: Colors.white,
                                     ),
                                   )

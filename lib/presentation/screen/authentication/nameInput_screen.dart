@@ -3,6 +3,7 @@ import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_state.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,7 +50,6 @@ class _NameInputScreenState extends State<NameInputScreen> {
             SnackBar(content: Text(state.error!)),
           );
         } else if (state.data != null) {
-          // Success - navigate back
           Navigator.push(context, MaterialPageRoute(builder: (context) => BottomTab()));
         }
       },
@@ -66,7 +66,6 @@ class _NameInputScreenState extends State<NameInputScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // First Name Field
                 const Text(
                   'First Name',
                   style: TextStyle(
@@ -107,8 +106,6 @@ class _NameInputScreenState extends State<NameInputScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-                // Last Name Field
                 const Text(
                   'Last Name',
                   style: TextStyle(
@@ -147,10 +144,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
                     },
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
-                // Email Field
                 const Text(
                   'Email',
                   style: TextStyle(
@@ -191,8 +185,6 @@ class _NameInputScreenState extends State<NameInputScreen> {
                 ),
 
                 const SizedBox(height: 24),
-
-                // Info Text
                 Container(
                   padding: const EdgeInsets.all(12),
                   width: double.infinity,
@@ -211,8 +203,6 @@ class _NameInputScreenState extends State<NameInputScreen> {
                 ),
 
                 const SizedBox(height: 30),
-
-                // Save Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -230,9 +220,8 @@ class _NameInputScreenState extends State<NameInputScreen> {
                           return const SizedBox(
                             height: 24,
                             width: 24,
-                            child: CircularProgressIndicator(
+                            child: CupertinoActivityIndicator(
                               color: Colors.white,
-                              strokeWidth: 2,
                             ),
                           );
                         }
@@ -265,7 +254,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
         'eato': true,
       };
       
-      context.read<UpdateCurrentCustomerCubit>().updateCustomer(payload);
+      context.read<UpdateCurrentCustomerCubit>().updateCustomer(payload, context);
     }
   }
 }

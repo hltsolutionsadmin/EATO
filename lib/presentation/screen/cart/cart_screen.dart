@@ -39,12 +39,12 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  late Razorpay _razorpay;
-  final razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
-  final razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
+  late final Razorpay _razorpay;
+  static const razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
+  static const razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
   bool loading = false;
-  late Map<String, int> cart;
-  late List<Map<String, dynamic>> selectedItems;
+  final Map<String, int> cart = {};
+  final List<Map<String, dynamic>> selectedItems = [];
   int? cartId;
   static const double gstPercentage = 0.05;
   static const double deliveryCharge = 30.0;
@@ -53,13 +53,12 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<GetCartCubit>().fetchCart();
-    _loadSavedAddress(); // Load saved address when widget initializes
-
-    _razorpay = Razorpay();
-    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess);
-    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure);
-    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
+    context.read<GetCartCubit>().fetchCart(context);
+    _loadSavedAddress();
+    _razorpay = Razorpay()
+      ..on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess)
+      ..on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure)
+      ..on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
     _initializeCartAndSelectedItems();
   }
 
@@ -75,31 +74,31 @@ class _CartScreenState extends State<CartScreen> {
         "status": "SUCCESS"
       };
       setState(() => loading = true);
-      print(payload);
-      await context.read<PaymentCubit>().makePayment(payload);
-      await context.read<CreateOrderCubit>().createOrder();
-      context.read<ClearCartCubit>().clearCart();
+      await context.read<PaymentCubit>().makePayment(payload, context);
+      await context.read<CreateOrderCubit>().createOrder(context);
+      context.read<ClearCartCubit>().clearCart(context);
       setState(() => loading = false);
-      Navigator.push(context, MaterialPageRoute(builder: (_) => OrderSuccessScreen()));
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const OrderSuccessScreen()),
+      );
     } catch (e) {
       setState(() => loading = false);
-      // CustomSnackbars.showErrorSnack(
-      //   context: context,
-      //   title: 'ERROR',
-      //   message: 'Payment or order creation failed: ${e.toString()}',
-      // );
+      CustomSnackbars.showErrorSnack(
+        context: context,
+        title: 'ERROR',
+        message: 'Payment or order creation failed: ${e.toString()}',
+      );
     }
   }
 
   void handlePaymentFailure(PaymentFailureResponse response) {
-    // CustomSnackbars.showErrorSnack(
-    //   context: context,
-    //   title: 'ERROR',
-    //   message: 'payment failed, please try after some time',
-    // );
-    setState(() {
-      loading = false;
-    });
+    CustomSnackbars.showErrorSnack(
+      context: context,
+      title: 'ERROR',
+      message: 'payment failed, please try after some time',
+    );
+    setState(() => loading = false);
   }
 
   void handleExternalWallet(ExternalWalletResponse response) {
@@ -108,12 +107,10 @@ class _CartScreenState extends State<CartScreen> {
       title: 'Info',
       message: 'Transaction under process, please check after some time',
     );
-    setState(() {
-      loading = false;
-    });
+    setState(() => loading = false);
   }
 
-  void openCheckOut() async {
+  Future<void> openCheckOut() async {
     if (cartId == null) {
       CustomSnackbars.showErrorSnack(
         context: context,
@@ -122,14 +119,12 @@ class _CartScreenState extends State<CartScreen> {
       );
       return;
     }
-    setState(() {
-      loading = true;
-    });
+    setState(() => loading = true);
     try {
       final exactAmount = getTotalAmount();
       final amountInPaise = (exactAmount * 100).toInt();
-      String orderId = await createOrder(amount: amountInPaise);
-      var options = {
+      final orderId = await createOrder(amount: amountInPaise);
+      final options = {
         'key': razorPayKey,
         'amount': amountInPaise,
         'name': 'EATO',
@@ -146,35 +141,34 @@ class _CartScreenState extends State<CartScreen> {
         }
       };
       _razorpay.open(options);
-      // handleCheckout(context);
     } catch (e) {
-      setState(() {
-        loading = false;
-      });
-      // CustomSnackbars.showErrorSnack(
-      //   context: context,
-      //   title: 'ERROR',
-      //   message: 'Failed to process payment: ${e.toString()}',
-      // );
+      setState(() => loading = false);
+      CustomSnackbars.showErrorSnack(
+        context: context,
+        title: 'ERROR',
+        message: 'Failed to process payment: ${e.toString()}',
+      );
     }
   }
 
-  razorPayApi(num amount, String recieptId) async {
-    var auth = 'Basic ${base64Encode(utf8.encode('$razorPayKey:$razorPaySecret'))}';
-    var headers = {
+  Future<Map<String, dynamic>> razorPayApi(num amount, String recieptId) async {
+    final auth =
+        'Basic ${base64Encode(utf8.encode('$razorPayKey:$razorPaySecret'))}';
+    final headers = {
       'content-type': 'application/json',
       "Access-Control_Allow_Origin": "*",
       'Authorization': auth
     };
-    var data = {
+    final data = {
       "amount": amount.toInt(),
       "currency": "INR",
       "receipt": recieptId
     };
-    var request = http.Request('POST', Uri.parse('https://api.razorpay.com/v1/orders'));
-    request.body = json.encode(data);
-    request.headers.addAll(headers);
-    http.StreamedResponse response = await request.send();
+    final request =
+        http.Request('POST', Uri.parse('https://api.razorpay.com/v1/orders'))
+          ..body = json.encode(data)
+          ..headers.addAll(headers);
+    final response = await request.send();
     if (response.statusCode == 200) {
       return {
         "status": "success",
@@ -187,18 +181,12 @@ class _CartScreenState extends State<CartScreen> {
 
   Future<String> createOrder({required num amount}) async {
     final myData = await razorPayApi(amount, "rcp_id_2");
-    if (myData["status"] == "success") {
-      return myData["body"]["id"];
-    } else {
-      return "";
-    }
+    return myData["status"] == "success" ? myData["body"]["id"] : "";
   }
 
   void _initializeCartAndSelectedItems() {
-    cart = {};
-    selectedItems = [];
     if (widget.cartItems != null) {
-      for (var item in widget.cartItems!) {
+      for (final item in widget.cartItems!) {
         final productId = item['productId'] as int?;
         final quantity = item['quantity'] as int?;
         final name = item['name'] as String?;
@@ -211,24 +199,22 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   void updateCartItemQuantity(String itemName, int newQuantity) {
-    setState(() {
-      if (newQuantity <= 0) {
-        removeCartItem(itemName);
-      } else {
+    if (newQuantity <= 0) {
+      removeCartItem(itemName);
+    } else {
+      setState(() {
         cart[itemName] = newQuantity;
         if (!selectedItems.any((item) => item['name'] == itemName)) {
-          final foundItem = widget.cartItems != null
-              ? widget.cartItems!.firstWhere(
-                  (item) => item['name'] == itemName,
-                  orElse: () => {},
-                )
-              : {};
-          if (foundItem.isNotEmpty) {
+          final foundItem = widget.cartItems?.firstWhere(
+            (item) => item['name'] == itemName,
+            orElse: () => {},
+          );
+          if (foundItem != null && foundItem.isNotEmpty) {
             selectedItems.add(foundItem as Map<String, dynamic>);
           }
         }
-      }
-    });
+      });
+    }
     widget.onBottomSheetVisibilityChanged?.call(cart.isNotEmpty);
   }
 
@@ -240,44 +226,39 @@ class _CartScreenState extends State<CartScreen> {
     widget.onBottomSheetVisibilityChanged?.call(cart.isNotEmpty);
   }
 
-  double getSubtotal() {
-    return selectedItems.fold(0.0, (subtotal, item) {
-      final name = item['name'] as String?;
-      final price = item['price'];
-      final quantity = cart[name] ?? 0;
-      if (name == null || quantity == 0) return subtotal;
-      double itemPrice = price is String
-          ? double.tryParse(price.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0
-          : price is double
-              ? price
-              : 0.0;
-      return subtotal + (itemPrice * quantity);
-    });
-  }
+  double getSubtotal() => selectedItems.fold(0.0, (subtotal, item) {
+        final name = item['name'] as String?;
+        final price = item['price'];
+        final quantity = cart[name] ?? 0;
+        if (name == null || quantity == 0) return subtotal;
+        final itemPrice = price is String
+            ? double.tryParse(price.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0
+            : price is double
+                ? price
+                : 0.0;
+        return subtotal + (itemPrice * quantity);
+      });
 
   int getCartItemCount() => cart.values.fold(0, (sum, qty) => sum + qty);
   double getGSTAmount() => getSubtotal() * gstPercentage;
   double getTotalAmount() {
     final subtotal = getSubtotal();
-    final gst = subtotal * 0.05;
-    final total = subtotal + gst + deliveryCharge;
-    return total.floorToDouble();
+    final gst = subtotal * gstPercentage;
+    return (subtotal + gst + deliveryCharge).floorToDouble();
   }
 
-  List<Map<String, dynamic>> getCartPayload() {
-    return selectedItems.map((item) {
-      final name = item['name'] as String?;
-      final quantity = cart[name] ?? 0;
-      final price = item['price'];
-      return {
-        'productId': item['productId'],
-        'quantity': quantity,
-        'price': price,
-      };
-    }).toList();
-  }
+  List<Map<String, dynamic>> getCartPayload() => selectedItems.map((item) {
+        final name = item['name'] as String?;
+        final quantity = cart[name] ?? 0;
+        final price = item['price'];
+        return {
+          'productId': item['productId'],
+          'quantity': quantity,
+          'price': price,
+        };
+      }).toList();
 
-    Future<void> _loadSavedAddress() async {
+  Future<void> _loadSavedAddress() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       selectedAddress = prefs.getString('delivery_address') ?? "Add Address";
@@ -289,23 +270,14 @@ class _CartScreenState extends State<CartScreen> {
     await prefs.setString('delivery_address', address);
   }
 
-  void handleCheckout(BuildContext context) {
-    final payload = getCartPayload();
-    context.read<ProductsAddToCartCubit>().addToCart(payload);
-  }
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocListener(
       listeners: [
         BlocListener<ProductsAddToCartCubit, ProductsAddToCartState>(
           listener: (context, state) {
-            if (state is ProductsAddToCartSuccess) {
-              // openCheckOut();
-            } else if (state is ProductsAddToCartFailure) {
-              setState(() {
-                loading = false;
-              });
+            if (state is ProductsAddToCartFailure) {
+              setState(() => loading = false);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Error: ${state.message}')),
               );
@@ -315,9 +287,7 @@ class _CartScreenState extends State<CartScreen> {
         BlocListener<GetCartCubit, GetCartState>(
           listener: (context, state) {
             if (state is GetCartLoaded) {
-              setState(() {
-                cartId = state.cart.id;
-              });
+              setState(() => cartId = state.cart.id);
             }
           },
         ),
@@ -344,7 +314,7 @@ class _CartScreenState extends State<CartScreen> {
           title: "Cart (${getCartItemCount()} items)",
           onBackPressed: () {
             final updatedCart = <String, int>{};
-            for (var item in selectedItems) {
+            for (final item in selectedItems) {
               final name = item['name'] as String?;
               if (name != null && cart.containsKey(name)) {
                 updatedCart[name] = cart[name]!;
@@ -360,7 +330,7 @@ class _CartScreenState extends State<CartScreen> {
         body: Stack(
           children: [
             Container(
-              decoration: BoxDecoration(
+              decoration:  BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColor.White, Colors.white],
                   begin: Alignment.topCenter,
@@ -411,19 +381,15 @@ class _CartScreenState extends State<CartScreen> {
                         IconButton(
                           icon: const Icon(Icons.edit),
                           onPressed: () async {
-                            final selectedAddress =
-                                await Navigator.push<String>(
+                            final address = await Navigator.push<String>(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => AddressScreen(),
+                                builder: (context) => const AddressScreen(),
                               ),
                             );
-                            if (selectedAddress != null) {
-                              await _saveAddress(
-                                  selectedAddress); // Save the new address
-                              setState(() {
-                                this.selectedAddress = selectedAddress;
-                              });
+                            if (address != null) {
+                              await _saveAddress(address);
+                              setState(() => selectedAddress = address);
                             }
                           },
                         ),
@@ -499,9 +465,7 @@ class _CartScreenState extends State<CartScreen> {
                             return eato_button.CustomButton(
                               buttonText: "Checkout",
                               onPressed: () {
-                                setState(() {
-                                  loading = true;
-                                });
+                                setState(() => loading = true);
                                 openCheckOut();
                               },
                             );

@@ -1,5 +1,6 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
+import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 import 'package:eato/data/model/restaurants/getNearbyRestaurants/getNearByrestarants_model.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
@@ -43,17 +44,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<CreateCartCubit>().createCart();
+    context.read<CreateCartCubit>().createCart(context);
     _loadCoordinatesAndFetch();
     fetchCart();
     _scrollController.addListener(_scrollListener);
   }
 
   void fetchCart() async {
-    await context.read<GetCartCubit>().fetchCart();
+    await context.read<GetCartCubit>().fetchCart(context);
     final state = await context.read<GetCartCubit>().state;
     if (state is GetCartLoaded) {
-      cartList = state.cart.cartItems;
+      cartList = state.cart.cartItems as List<CartItems>;
       cartdata = state.cart;
     } else {
       cartList = [];
@@ -127,7 +128,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           );
         } else if (state is GetNearbyRestaurantsError) {
           print("Error: ${state.message}");
-          return const Center(child: Text("Error fetching restaurants"));
+          return const Center(child: Text("Something went wrong, Please try after sometime"));
         } else {
           return const SizedBox();
         }
@@ -224,7 +225,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           listener: (context, state) {
             if (state is GetCartLoaded) {
               setState(() {
-                cartList = state.cart.cartItems;
+                cartList = state.cart.cartItems as List<CartItems>;
                 cartdata = state.cart;
               });
             }
@@ -367,16 +368,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           'price': item.price,
                           'name': item.productName,
                           'description': item.productName,
-                          // 'categoryName': item.attributes
-                          //     .firstWhere(
-                          //       (a) => a.attributeName?.toLowerCase() == 'type',
-                          //       orElse: () => Attribute(
-                          //           id: 0,
-                          //           attributeName: '',
-                          //           attributeValue: ''),
-                          //     )
-                          //     .attributeValue,
-                          // 'media': item.media,
                         })
                     .toList(),
                               ),
@@ -390,14 +381,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             final updatedCartLength =
                                 result['cartItemsLength'] ?? 0;
                             if (updatedCart != null) {
+                              print(updatedCartLength);
                               setState(() {
                                 cart = Map<String, int>.from(updatedCart);
                                 totalItems = updatedCartLength;
-                                cartList = cartList
-                                    .where((item) =>
-                                        cart.containsKey(item.name) &&
-                                        cart[item.name]! > 0)
-                                    .toList();
+                                cartdata.totalCount = updatedCartLength;
+                                
                               });
                             }
                           }

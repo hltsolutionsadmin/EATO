@@ -1,7 +1,10 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
+import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
 import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
+import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
+import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 class MenuItemWidget extends StatefulWidget {
   final Content item;
   final int quantity;
-  dynamic cartData;
+  // final GetCartModel cartData;
   dynamic restaurantId;
   final Function(int) onQuantityChanged;
 
@@ -18,7 +21,6 @@ class MenuItemWidget extends StatefulWidget {
     required this.item,
     required this.quantity,
     required this.onQuantityChanged,
-    this.cartData,
     this.restaurantId,
   });
 
@@ -33,7 +35,18 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
   void initState() {
     super.initState();
     quantity = widget.quantity;
-        print(widget.cartData);
+    fetchCart();
+  }
+  late GetCartModel cartData;
+  void fetchCart() async {
+    await context.read<GetCartCubit>().fetchCart(context);
+    final state = await context.read<GetCartCubit>().state;
+    if (state is GetCartLoaded) {
+      cartData = state.cart;
+    } else {
+      cartData = cartData;
+    }
+    print(cartData);
   }
 
   void updateQuantity(int newQty) {
@@ -123,28 +136,29 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
               IconButton(
                 icon: Icon(Icons.add_circle, color: AppColor.PrimaryColor),
                 onPressed: () async {
-                  try {
-                    final cartItems = widget.cartData?.cartItems as List?;
-                    final businessId = widget.cartData?.businessId?.toString();
-                    final hasItems = cartItems != null && cartItems.isNotEmpty;
-                    final restaurantId = widget.restaurantId?.toString();
-
-                    if (hasItems &&
-                        businessId != null &&
-                        restaurantId != null &&
-                        businessId != restaurantId) {
-                      final shouldReplace =
-                          await ShowReplaceCartDialog(context: context);
-                      if (shouldReplace != true) return;
-
-                      await context.read<ClearCartCubit>().clearCart();
+                  print(cartData.cartItems?.length);
+                  if ((cartData.cartItems?.isNotEmpty ?? false) &&
+                      widget.restaurantId !=
+                          cartData.businessId.toString()) {
+                    final shouldReplace =
+                        await ShowReplaceCartDialog(context: context);
+                    if (shouldReplace != true) return;
+                    try {
+                      await context.read<ClearCartCubit>().clearCart(context);
                       updateQuantity(quantity + 1);
-                      return;
+                      await context.read<GetCartCubit>().fetchCart(context);
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content:
+                              Text('Failed to clear cart: ${e.toString()}')));
                     }
+                    return;
+                  } else if (widget.restaurantId ==
+                      cartData.businessId.toString()) {
                     updateQuantity(quantity + 1);
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Error: ${e.toString()}')));
+                  } else {
+                    print('object');
+                    updateQuantity(quantity + 1);
                   }
                 },
               ),
@@ -185,7 +199,7 @@ Future<bool?> ShowReplaceCartDialog({
         ),
         TextButton(
           onPressed: () async {
-            await context.read<ClearCartCubit>().clearCart();
+            await context.read<ClearCartCubit>().clearCart(context);
             Navigator.pop(context, true);
           },
           child: const Text('Yes'),

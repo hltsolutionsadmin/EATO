@@ -19,10 +19,25 @@ class UpdateCurrentCustomerRemoteDataSourceImpl
     dynamic payload,
   }) async {
     try {
-      final response = await client.request(
+      print(payload);
+      print(payload['fullName']);
+
+FormData formData = FormData.fromMap({
+        "fullName": payload['fullName'],
+        "email": payload['email'],
+        // "fcmToken": '',
+        // "gender": '',
+        "eato": payload['eato'],
+      });
+      print(formData);
+      final response = await client.put(
         '$baseUrl$updateCurrentCustomerUrl',
-        data: payload,
-        options: Options(method: 'PUT'),
+        data: formData,
+       options: Options(
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
       );
 
       print('Response: ${response.data}');
