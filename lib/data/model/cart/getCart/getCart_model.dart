@@ -1,132 +1,96 @@
 class GetCartModel {
-  GetCartModel({
-    required this.id,
-    required this.userId,
-    required this.status,
-    required this.cartItems,
-    required this.businessId,
-    required this.businessName,
-    required this.totalCount,
-    required this.createdAt,
-    required this.updatedAt,
-    this.shippingAddressId, // Make shippingAddressId nullable
-  });
+  int? id;
+  int? userId;
+  String? status;
+  List<CartItems>? cartItems;
+  int? businessId;
+  String? businessName;
+  int? totalCount;
+  String? createdAt;
+  String? updatedAt;
 
-  final int? id;
-  final int? userId;
-  final String? status;
-  final List<CartItem> cartItems;
-  final int? businessId;
-  final String? businessName;
-  final int? totalCount;
-  final DateTime? createdAt;
-  final DateTime? updatedAt;
-  final int? shippingAddressId; // Add shippingAddressId
+  GetCartModel(
+      {this.id,
+      this.userId,
+      this.status,
+      this.cartItems,
+      this.businessId,
+      this.businessName,
+      this.totalCount,
+      this.createdAt,
+      this.updatedAt});
 
-  factory GetCartModel.fromJson(Map<String, dynamic> json) {
-    return GetCartModel(
-      id: json["id"],
-      userId: json["userId"],
-      status: json["status"],
-      cartItems: json["cartItems"] == null
-          ? []
-          : List<CartItem>.from(
-              json["cartItems"]!.map((x) => CartItem.fromJson(x))),
-      businessId: json["businessId"],
-      businessName: json["businessName"],
-      totalCount: json["totalCount"],
-      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
-      updatedAt: DateTime.tryParse(json["updatedAt"] ?? ""),
-      shippingAddressId: json["shippingAddressId"], // Parse shippingAddressId
-    );
+  GetCartModel.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    userId = json['userId'];
+    status = json['status'];
+    cartItems = <CartItems>[];
+  if (json['cartItems'] != null) {
+    json['cartItems']?.forEach((v) {
+      cartItems?.add(new CartItems.fromJson(v));
+    });
+  }
+    businessId = json['businessId'];
+    businessName = json['businessName'];
+    totalCount = json['totalCount'];
+    createdAt = json['createdAt'];
+    updatedAt = json['updatedAt'];
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "userId": userId,
-      "status": status,
-      "cartItems": cartItems.map((x) => x.toJson()).toList(),
-      "businessId": businessId,
-      "businessName": businessName,
-      "totalCount": totalCount,
-      "createdAt": createdAt?.toIso8601String(),
-      "updatedAt": updatedAt?.toIso8601String(),
-      "shippingAddressId": shippingAddressId,
-    };
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['userId'] = this.userId;
+    data['status'] = this.status;
+    if (this.cartItems != null) {
+      data['cartItems'] = this.cartItems!.map((v) => v.toJson()).toList();
+    }
+    data['businessId'] = this.businessId;
+    data['businessName'] = this.businessName;
+    data['totalCount'] = this.totalCount;
+    data['createdAt'] = this.createdAt;
+    data['updatedAt'] = this.updatedAt;
+    return data;
   }
 }
 
-class CartItem {
-  CartItem({
-    required this.id,
-    required this.productId,
-    required this.quantity,
-    required this.price,
-    required this.cartId,
-    required this.createdAt,
-    required this.productName,
-    this.media,
-  });
+class CartItems {
+  int? id;
+  int? productId;
+  String? productName;
+  int? quantity;
+  double? price;
+  int? cartId;
+  String? createdAt;
 
-  final int? id;
-  final int? productId;
-  final int? quantity;
-  final double? price;
-  final int? cartId;
-  final DateTime? createdAt;
-  final String? productName;
-  final List<Media>? media; // List of Media for a cart item
+  CartItems(
+      {this.id,
+      this.productId,
+      this.productName,
+      this.quantity,
+      this.price,
+      this.cartId,
+      this.createdAt});
 
-  factory CartItem.fromJson(Map<String, dynamic> json) {
-    return CartItem(
-      id: json["id"],
-      productId: json["productId"],
-      quantity: json["quantity"],
-      price: json["price"]?.toDouble(), // Ensure price is double
-      cartId: json["cartId"],
-      productName: json["productName"],
-      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
-      media: json["media"] == null
-          ? []
-          : List<Media>.from(json["media"]!.map((x) => Media.fromJson(x))),
-    );
+  CartItems.fromJson(Map<String, dynamic> json) {
+    id = json['id'];
+    productId = json['productId'];
+    productName = json['productName'];
+    quantity = json['quantity'];
+    price = json['price'];
+    cartId = json['cartId'];
+    createdAt = json['createdAt'];
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "productId": productId,
-      "quantity": quantity,
-      "price": price,
-      "cartId": cartId,
-      "createdAt": createdAt?.toIso8601String(),
-      "productName": productName,
-      "media": media?.map((x) => x.toJson()).toList(),
-    };
-  }
-}
-
-class Media {
-  Media({
-    this.mediaType,
-    this.url,
-  });
-
-  final String? mediaType;
-  final String? url;
-
-  factory Media.fromJson(Map<String, dynamic> json) {
-    return Media(
-      mediaType: json["mediaType"],
-      url: json["url"],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "mediaType": mediaType,
-      "url": url,
-    };
+    final Map<String, dynamic> data = new Map<String, dynamic>();
+    data['id'] = this.id;
+    data['productId'] = this.productId;
+    data['productName'] = this.productName;
+    data['quantity'] = this.quantity;
+    data['price'] = this.price;
+    data['cartId'] = this.cartId;
+    data['createdAt'] = this.createdAt;
+    return data;
   }
 }

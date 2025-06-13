@@ -4,6 +4,7 @@ import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/data/model/orders/orderHistory/orderHistory_model.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_state.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -44,7 +45,7 @@ class _MyOrdersState extends State<MyOrders> {
     _allOrders.clear();
     context
         .read<OrderHistoryCubit>()
-        .fetchCart(_currentPage, _pageSize, _currentSearchQuery);
+        .fetchCart(_currentPage, _pageSize, _currentSearchQuery, context);
   }
 
   void _fetchMoreOrders() {
@@ -55,7 +56,7 @@ class _MyOrdersState extends State<MyOrders> {
       _currentPage++;
       context
           .read<OrderHistoryCubit>()
-          .fetchCart(_currentPage, _pageSize, _currentSearchQuery);
+          .fetchCart(_currentPage, _pageSize, _currentSearchQuery, context);
     }
   }
 
@@ -129,7 +130,9 @@ class _MyOrdersState extends State<MyOrders> {
               },
               builder: (context, state) {
                 if (state is OrderHistoryLoading && _currentPage == 0) {
-                  return Center(child: CircularProgressIndicator());
+                  return Center(child: CupertinoActivityIndicator(
+            color: AppColor.PrimaryColor,
+          ));
                 } else if (state is OrderHistoryError && _currentPage == 0) {
                   return Center(child: Text("Error loading orders."));
                 }
@@ -153,7 +156,7 @@ class _MyOrdersState extends State<MyOrders> {
                       return Center(
                         child: Padding(
                           padding: EdgeInsets.all(16),
-                          child: CircularProgressIndicator(),
+                          child: CupertinoActivityIndicator(),
                         ),
                       );
                     }
@@ -190,7 +193,7 @@ class _MyOrdersState extends State<MyOrders> {
   Widget buildOrderCard(Content order) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColor.White, // Add background color here
+        color: AppColor.White,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -200,11 +203,12 @@ class _MyOrdersState extends State<MyOrders> {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  order.orderItems.isNotEmpty &&
-                          order.orderItems.first.media != null
-                      ? (order.orderItems.first.media as String? ?? dish)
-                      : dish,
+                child: Image.asset(
+                  // order.orderItems.isNotEmpty &&
+                  //         order.orderItems.first.media != null
+                  //     ? (order.orderItems.first.media as String? ?? dish)
+                      // : 
+                      dish,
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,

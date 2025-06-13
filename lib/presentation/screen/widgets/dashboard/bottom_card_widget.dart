@@ -13,6 +13,7 @@ class BottomCartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(itemCount);
     return GestureDetector(
       onTap: onTap,
       child: Container(

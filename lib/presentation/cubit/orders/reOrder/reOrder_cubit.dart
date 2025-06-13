@@ -1,19 +1,34 @@
+import 'package:eato/components/custom_snackbar.dart';
+import 'package:eato/core/network/network_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:eato/domain/usecase/orders/reOrder/reOrder_usecase.dart';
 import 'reOrder_state.dart';
 
 class ReOrderCubit extends Cubit<ReOrderState> {
   final ReOrderUseCase usecase;
+  final NetworkService networkService;
 
-  ReOrderCubit( this.usecase) : super(ReOrderInitial());
+  ReOrderCubit(this.usecase, this.networkService) : super(ReOrderInitial());
 
-  Future<void> reOrder(int orderId) async {
-    emit(ReOrderLoading());
-    try {
-      final result = await usecase(orderId);
-      emit(ReOrderSuccess(reOrderModel: result));
-    } catch (e) {
-      emit(ReOrderFailure(message: e.toString()));
+  Future<void> reOrder(int orderId, context) async {
+    bool isConnected = await networkService.hasInternetConnection();
+    print(isConnected);
+    if (!isConnected) {
+      print("No Internet Connection");
+      CustomSnackbars.showErrorSnack(
+        context: context,
+        title: 'Alert',
+        message: 'Please check Internet Connection',
+      );
+      return;
+    } else {
+      emit(ReOrderLoading());
+      try {
+        final result = await usecase(orderId);
+        emit(ReOrderSuccess(reOrderModel: result));
+      } catch (e) {
+        emit(ReOrderFailure(message: e.toString()));
+      }
     }
   }
 }

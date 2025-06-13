@@ -166,7 +166,7 @@ void init() {
     () => SignInValidationUseCase(repository: sl<SignInRepository>()),
   );
   sl.registerFactory(() => SignInCubit(
-        useCase: sl<SignInValidationUseCase>(),
+        useCase: sl<SignInValidationUseCase>(), networkService: sl<NetworkService>(),
         // createCartCubit: sl(),
       ));
 
@@ -198,7 +198,7 @@ void init() {
     () => RolePostUsecase(sl<RolePostRepository>()),
   );
 
-  sl.registerFactory(() => RolePostCubit(sl<RolePostUsecase>()));
+  sl.registerFactory(() => RolePostCubit(sl<RolePostUsecase>(),sl<NetworkService>()));
 
   //currentcustomer
 
@@ -230,7 +230,7 @@ void init() {
         repository: sl<LocationRepository>(),
         latLongRepository: sl<LocationRepository>()),
   );
-  sl.registerFactory(() => LocationCubit(usecase: sl<LocationUsecase>()));
+  sl.registerFactory(() => LocationCubit(usecase: sl<LocationUsecase>(), networkService: sl<NetworkService>(),));
 
   //GetNearByRestaurants
 
@@ -278,7 +278,7 @@ void init() {
     () => CreateCartUseCase(repository: sl<CreateCartRepository>()),
   );
   sl.registerFactory(() => CreateCartCubit(
-        sl<CreateCartUseCase>(),
+        sl<CreateCartUseCase>(),sl<NetworkService>(),
       ));
 
   //GetCart
@@ -293,7 +293,7 @@ void init() {
     () => GetCartUseCase(repository: sl<GetCartRepository>()),
   );
   sl.registerFactory(() => GetCartCubit(
-        sl<GetCartUseCase>(),
+        sl<GetCartUseCase>(),sl<NetworkService>(),
       ));
 
   //ProductsAddToCart
@@ -308,7 +308,7 @@ void init() {
     () => ProductsAddToCartUseCase(sl<ProductsAddToCartRepository>()),
   );
   sl.registerFactory(() => ProductsAddToCartCubit(
-        sl<ProductsAddToCartUseCase>(),
+        sl<ProductsAddToCartUseCase>(), sl<NetworkService>(),
       ));
 
   //UpdateCartItems
@@ -323,7 +323,7 @@ void init() {
     () => UpdateCartItemsUseCase(repository: sl<UpdateCartItemsRepository>()),
   );
   sl.registerFactory(() => UpdateCartItemsCubit(
-        sl<UpdateCartItemsUseCase>(),
+        sl<UpdateCartItemsUseCase>(), sl<NetworkService>(),
       ));
 
   //SaveAddress
@@ -338,7 +338,7 @@ void init() {
     () => SaveAddressUseCase(repository: sl<SaveAddressRepository>()),
   );
   sl.registerFactory(() => SaveAddressCubit(
-        sl<SaveAddressUseCase>(),
+        sl<SaveAddressUseCase>(), sl<NetworkService>(),
       ));
 
   //GetAddress
@@ -353,7 +353,7 @@ void init() {
     () => GetAddressUseCase(repository: sl<GetAddressRepository>()),
   );
   sl.registerFactory(() => GetAddressCubit(
-        sl<GetAddressUseCase>(),
+        sl<GetAddressUseCase>(),sl<NetworkService>(),
       ));
 
   //Payment
@@ -368,7 +368,7 @@ void init() {
     () => PaymentUseCase(repository: sl<PaymentRepository>()),
   );
   sl.registerFactory(() => PaymentCubit(
-        sl<PaymentUseCase>(),
+        sl<PaymentUseCase>(), sl<NetworkService>(),
       ));
 
   //GetRestaurantsByProductName
@@ -400,7 +400,7 @@ void init() {
     () => CreateOrderUseCase(repository: sl<CreateOrderRepository>()),
   );
   sl.registerFactory(() => CreateOrderCubit(
-        sl<CreateOrderUseCase>(),
+        sl<CreateOrderUseCase>(), sl<NetworkService>(),
       ));
 
   //OrderHistory
@@ -415,7 +415,7 @@ void init() {
     () => OrderHistoryUseCase(repository: sl<OrderHistoryRepository>()),
   );
   sl.registerFactory(() => OrderHistoryCubit(
-        sl<OrderHistoryUseCase>(),
+        sl<OrderHistoryUseCase>(), sl<NetworkService>(),
       ));
 
   //ClearCart
@@ -430,7 +430,7 @@ void init() {
     () => ClearCartUseCase(repository: sl<ClearCartRepository>()),
   );
   sl.registerFactory(() => ClearCartCubit(
-        sl<ClearCartUseCase>(),
+        sl<ClearCartUseCase>(), sl<NetworkService>(),
       ));
 
   //ReOrder
@@ -445,7 +445,7 @@ void init() {
     () => ReOrderUseCase(repository: sl<ReOrderRepository>()),
   );
   sl.registerFactory(() => ReOrderCubit(
-        sl<ReOrderUseCase>(),
+        sl<ReOrderUseCase>(), sl<NetworkService>(),
       ));
 
   //DeleteAddress
@@ -460,7 +460,7 @@ void init() {
     () => DeleteAddressUseCase(repository: sl<DeleteAddressRepository>()),
   );
   sl.registerFactory(() => DeleteAddressCubit(
-        sl<DeleteAddressUseCase>(),
+        sl<DeleteAddressUseCase>(), sl<NetworkService>(),
       ));
 
   //UpdateCurrentCustomer
@@ -478,7 +478,7 @@ void init() {
         repository: sl<UpdateCurrentCustomerRepository>()),
   );
   sl.registerFactory(() => UpdateCurrentCustomerCubit(
-        useCase: sl<UpdateCurrentCustomerUseCase>(),
+        useCase: sl<UpdateCurrentCustomerUseCase>(), networkService: sl<NetworkService>(),
       ));
 
   //DefaultAddress
@@ -494,7 +494,7 @@ void init() {
     () => DefaultAddressUseCase(repository: sl<DefaultAddressRepository>()),
   );
   sl.registerFactory(() => DefaultAddressCubit(
-        sl<DefaultAddressUseCase>(),
+        sl<DefaultAddressUseCase>(),sl<NetworkService>(),
       ));
 
   //AddressSavetoCart
@@ -509,6 +509,6 @@ void init() {
     () => AddressSavetoCartUseCase(repository: sl<AddressSavetoCartRepository>()),
   );
   sl.registerFactory(() => AddressSavetoCartCubit(
-        sl<AddressSavetoCartUseCase>(),
+        sl<AddressSavetoCartUseCase>(),sl<NetworkService>(),
       ));
 }
