@@ -75,13 +75,7 @@ class _CartScreenState extends State<CartScreen> {
       };
       setState(() => loading = true);
       await context.read<PaymentCubit>().makePayment(payload, context);
-      await context.read<CreateOrderCubit>().createOrder(context);
-      context.read<ClearCartCubit>().clearCart(context);
       setState(() => loading = false);
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const OrderSuccessScreen()),
-      );
     } catch (e) {
       setState(() => loading = false);
       CustomSnackbars.showErrorSnack(

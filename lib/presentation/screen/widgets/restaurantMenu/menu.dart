@@ -1,6 +1,5 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
-import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
 import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
@@ -13,12 +12,14 @@ class MenuItemWidget extends StatefulWidget {
   final Content item;
   final int quantity;
   final dynamic restaurantId;
+  final String? restaurantName;
   final Function(int) onQuantityChanged;
 
   MenuItemWidget({
     super.key,
     required this.item,
     required this.quantity,
+    required this.restaurantName,
     required this.onQuantityChanged,
     this.restaurantId,
   });
@@ -50,7 +51,6 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
 
     return BlocBuilder<GetCartCubit, GetCartState>(
       builder: (context, state) {
-        // Get the current cart data from the state
         final cartData = state is GetCartLoaded ? state.cart : null;
         final businessId = cartData?.businessId?.toString();
 
@@ -129,21 +129,24 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
                   IconButton(
                     icon: Icon(Icons.add_circle, color: AppColor.PrimaryColor),
                     onPressed: () async {
-                      if (cartData != null && 
-                          cartData.cartItems?.isNotEmpty == true && 
+                      if (cartData != null &&
+                          cartData.cartItems?.isNotEmpty == true &&
                           widget.restaurantId != businessId) {
-                        final shouldReplace = await ShowReplaceCartDialog(context: context);
+                        final shouldReplace = await showReplaceCartDialog(
+                            context: context,
+                            currentRestaurant: cartData.businessName ?? '',
+                            newRestaurant: widget.restaurantName ?? '');
                         if (shouldReplace != true) return;
-                        
                         try {
-                          await context.read<ClearCartCubit>().clearCart(context);
-                          // After clearing, fetch the updated cart
+                          await context
+                              .read<ClearCartCubit>()
+                              .clearCart(context);
                           await context.read<GetCartCubit>().fetchCart(context);
                           updateQuantity(quantity + 1);
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Failed to clear cart: ${e.toString()}'))
-                          );
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  'Failed to clear cart: ${e.toString()}')));
                         }
                       } else {
                         updateQuantity(quantity + 1);
@@ -170,26 +173,82 @@ class __MenuItemWidgetState extends State<MenuItemWidget> {
   }
 }
 
-Future<bool?> ShowReplaceCartDialog({
+Future<bool?> showReplaceCartDialog({
   required BuildContext context,
+  required String currentRestaurant,
+  required String newRestaurant,
 }) async {
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
     builder: (context) => AlertDialog(
-      title: const Text('Replace cart items?'),
-      content: const Text(
-        'Your cart contains dishes from a previous restaurant. '
-        'Do you want to discard the selection and add dishes from this restaurant?',
+      title: const Text(
+        'Replace cart items?',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      content: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: 'Your cart contains dishes from '),
+            TextSpan(
+              text: currentRestaurant,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const TextSpan(text: '. Do you want to discard the selection and add dishes from '),
+            TextSpan(
+              text: newRestaurant,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const TextSpan(text: '?'),
+          ],
+        ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context, false),
-          child: const Text('No'),
-        ),
-        TextButton(
-          onPressed: () => Navigator.pop(context, true),
-          child: const Text('Yes'),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            // No Button
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.black,
+                    side: const BorderSide(color: Colors.grey),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('No'),
+                ),
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: AppColor.PrimaryColor,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Replace'),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     ),
