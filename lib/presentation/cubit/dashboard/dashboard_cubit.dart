@@ -1,6 +1,5 @@
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/core/network/network_service.dart';
-import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
 import 'package:eato/presentation/cubit/dashboard/dashboard_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:geocoding/geocoding.dart';

@@ -415,6 +415,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                           item: item,
                           quantity: quantity,
                           restaurantId: widget.restaurantId,
+                          restaurantName: widget.restaurantName,
                           onQuantityChanged: (qty) => {update_Cart(item, qty)},
                         );
                       },

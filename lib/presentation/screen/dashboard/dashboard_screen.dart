@@ -1,7 +1,6 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/data/model/cart/getCart/getCart_model.dart';
-import 'package:eato/data/model/restaurants/getNearbyRestaurants/getNearByrestarants_model.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
