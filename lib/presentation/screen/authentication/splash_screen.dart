@@ -71,9 +71,9 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              const CupertinoActivityIndicator(
-                color: Colors.white,
-              ),
+              // const CupertinoActivityIndicator(
+              //   color: Colors.white,
+              // ),
             ],
           ),
         ),

@@ -1,9 +1,9 @@
 //usermanagement
 const baseUrl2 = 'https://skillrat.com/usermgmt/';
 
-const TriggerOtp = 'auth/jtuserotp/trigger/otp?triggerOtp=false';
+const TriggerOtp = 'auth/jtuserotp/trigger/otp?triggerOtp=true';
 const SigninUrl = 'auth/login';
-const SignupUrl = 'auth/jtuserotp/trigger/sign-up?triggerOtp=false';
+const SignupUrl = 'auth/jtuserotp/trigger/sign-up?triggerOtp=true';
 const userDetails = 'user/userDetails';
 const updateCurrentCustomerUrl = 'usermgmt/user/userDetails';
 

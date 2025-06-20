@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:eato/components/bottomTab.dart';
 import 'package:eato/components/custom_button.dart' as eato_button;
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
@@ -18,7 +19,7 @@ import 'package:eato/presentation/screen/widgets/cart/cart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
+// import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -39,7 +40,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  late final Razorpay _razorpay;
+  // late final Razorpay _razorpay;
   static const razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
   static const razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
   bool loading = false;
@@ -55,54 +56,54 @@ class _CartScreenState extends State<CartScreen> {
     super.initState();
     context.read<GetCartCubit>().fetchCart(context);
     _loadSavedAddress();
-    _razorpay = Razorpay()
-      ..on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess)
-      ..on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure)
-      ..on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
+    // _razorpay = Razorpay()
+    //   ..on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess)
+    //   ..on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure)
+    //   ..on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
     _initializeCartAndSelectedItems();
   }
 
-  void handlePaymentSuccess(PaymentSuccessResponse response) async {
-    try {
-      final exactAmount = getTotalAmount();
-      final payload = {
-        "cartId": cartId ?? 0,
-        "amount": exactAmount.toStringAsFixed(2),
-        "paymentId": response.paymentId,
-        "razorpayOrderId": response.orderId,
-        "razorpaySignature": response.signature,
-        "status": "SUCCESS"
-      };
-      setState(() => loading = true);
-      await context.read<PaymentCubit>().makePayment(payload, context);
-      setState(() => loading = false);
-    } catch (e) {
-      setState(() => loading = false);
-      CustomSnackbars.showErrorSnack(
-        context: context,
-        title: 'ERROR',
-        message: 'Payment or order creation failed: ${e.toString()}',
-      );
-    }
-  }
+  // void handlePaymentSuccess(PaymentSuccessResponse response) async {
+  //   try {
+  //     final exactAmount = getTotalAmount();
+  //     final payload = {
+  //       "cartId": cartId ?? 0,
+  //       "amount": exactAmount.toStringAsFixed(2),
+  //       "paymentId": response.paymentId,
+  //       "razorpayOrderId": response.orderId,
+  //       "razorpaySignature": response.signature,
+  //       "status": "SUCCESS"
+  //     };
+  //     setState(() => loading = true);
+  //     await context.read<PaymentCubit>().makePayment(payload, context);
+  //     setState(() => loading = false);
+  //   } catch (e) {
+  //     setState(() => loading = false);
+  //     CustomSnackbars.showErrorSnack(
+  //       context: context,
+  //       title: 'ERROR',
+  //       message: 'Payment or order creation failed: ${e.toString()}',
+  //     );
+  //   }
+  // }
 
-  void handlePaymentFailure(PaymentFailureResponse response) {
-    CustomSnackbars.showErrorSnack(
-      context: context,
-      title: 'ERROR',
-      message: 'payment failed, please try after some time',
-    );
-    setState(() => loading = false);
-  }
+  // void handlePaymentFailure(PaymentFailureResponse response) {
+  //   CustomSnackbars.showErrorSnack(
+  //     context: context,
+  //     title: 'ERROR',
+  //     message: 'payment failed, please try after some time',
+  //   );
+  //   setState(() => loading = false);
+  // }
 
-  void handleExternalWallet(ExternalWalletResponse response) {
-    CustomSnackbars.showInfoSnack(
-      context: context,
-      title: 'Info',
-      message: 'Transaction under process, please check after some time',
-    );
-    setState(() => loading = false);
-  }
+  // void handleExternalWallet(ExternalWalletResponse response) {
+  //   CustomSnackbars.showInfoSnack(
+  //     context: context,
+  //     title: 'Info',
+  //     message: 'Transaction under process, please check after some time',
+  //   );
+  //   setState(() => loading = false);
+  // }
 
   Future<void> openCheckOut() async {
     if (cartId == null) {
@@ -134,7 +135,7 @@ class _CartScreenState extends State<CartScreen> {
           'backdrop_color': '#081724',
         }
       };
-      _razorpay.open(options);
+      // _razorpay.open(options);
     } catch (e) {
       setState(() => loading = false);
       CustomSnackbars.showErrorSnack(
@@ -460,7 +461,8 @@ class _CartScreenState extends State<CartScreen> {
                               buttonText: "Checkout",
                               onPressed: () {
                                 setState(() => loading = true);
-                                openCheckOut();
+                                Navigator.push(context, MaterialPageRoute(builder: (context) => BottomTab()));
+                                // openCheckOut();
                               },
                             );
                           },
@@ -477,9 +479,9 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _razorpay.clear();
-    super.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   _razorpay.clear();
+  //   super.dispose();
+  // }
 }
