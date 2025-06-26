@@ -23,34 +23,15 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final Map<String, int> _itemQuantities = {};
   int? bussinessId = 0;
 
-final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
-  final int _pageSize = 10; // Adjust as needed
+  final int _pageSize = 30;
   final String _searchQuery = '';
-  bool _isLoadingMore = false;
-  final List<Content> _orders = [];
 
   @override
   void initState() {
     super.initState();
     context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
     cartId();
-  }
-
-
-  void _fetchInitialOrders() {
-    _currentPage = 0;
-    _orders.clear();
-    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery,context);
-  }
- 
-  void _fetchMoreOrders() {
-    if (!_isLoadingMore) {
-      setState(() => _isLoadingMore = true);
-      _currentPage++;
-      context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
-    }
   }
 
   void cartId() async {

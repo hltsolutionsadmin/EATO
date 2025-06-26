@@ -38,8 +38,8 @@ class CustomSnackbars {
       context: context,
       title: title,
       message: message,
-      backgroundColor: Colors.white,
-      textColor: Colors.black,
+      backgroundColor: Colors.blueAccent,
+      textColor: Colors.white,
     );
   }
 
@@ -51,9 +51,10 @@ class CustomSnackbars {
     required Color textColor,
   }) {
     final overlay = Overlay.of(context);
+    if (overlay == null) return;
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: 50, // Position from top of the screen
+        top: 50,
         left: 10,
         right: 10,
         child: Material(
@@ -72,14 +73,10 @@ class CustomSnackbars {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.green, Colors.white],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: backgroundColor,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      const BoxShadow(
+                    boxShadow: const [
+                      BoxShadow(
                         color: Colors.black26,
                         blurRadius: 12,
                         offset: Offset(0, 4),
@@ -170,7 +167,7 @@ class _ShakeTransitionState extends State<ShakeTransition> with SingleTickerProv
   }
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     return SlideTransition(
       position: _shakeAnimation,
       child: widget.child,

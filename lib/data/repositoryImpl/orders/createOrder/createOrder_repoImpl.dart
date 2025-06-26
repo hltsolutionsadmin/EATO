@@ -8,7 +8,7 @@ class CreateOrderRepositoryImpl implements CreateOrderRepository {
   CreateOrderRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<CreateOrderModel> createOrder() {
-    return remoteDataSource.createOrder();
+  Future<CreateOrderModel> createOrder(dynamic body) {
+    return remoteDataSource.createOrder(body);
   }
 }

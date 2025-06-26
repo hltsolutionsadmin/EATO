@@ -252,6 +252,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
         'fullName': fullName,
         'email': _emailController.text.trim(),
         'eato': true,
+        "fcmToken": ''
       };
       
       context.read<UpdateCurrentCustomerCubit>().updateCustomer(payload, context);

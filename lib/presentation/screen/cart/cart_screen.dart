@@ -65,9 +65,10 @@ class _CartScreenState extends State<CartScreen> {
   void handlePaymentSuccess(PaymentSuccessResponse response) async {
     try {
       final exactAmount = getTotalAmount();
+      print(exactAmount);
       final payload = {
         "cartId": cartId ?? 0,
-        "amount": exactAmount.toStringAsFixed(2),
+        "amount": exactAmount,
         "paymentId": response.paymentId,
         "razorpayOrderId": response.orderId,
         "razorpaySignature": response.signature,
@@ -81,7 +82,7 @@ class _CartScreenState extends State<CartScreen> {
       CustomSnackbars.showErrorSnack(
         context: context,
         title: 'ERROR',
-        message: 'Payment or order creation failed: ${e.toString()}',
+        message: 'Payment or order creation failed:: ${e.toString()}',
       );
     }
   }
@@ -105,43 +106,53 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   Future<void> openCheckOut() async {
-    if (cartId == null) {
+    print(selectedAddress);
+    if (selectedAddress == "Add Address") {
       CustomSnackbars.showErrorSnack(
         context: context,
         title: 'ERROR',
-        message: 'Cart not loaded, please try again',
+        message: 'Please select a delivery address before proceeding',
       );
       return;
-    }
-    setState(() => loading = true);
-    try {
-      final exactAmount = getTotalAmount();
-      final amountInPaise = (exactAmount * 100).toInt();
-      final orderId = await createOrder(amount: amountInPaise);
-      final options = {
-        'key': razorPayKey,
-        'amount': amountInPaise,
-        'name': 'EATO',
-        'order_id': orderId,
-        'description': 'Order for cart $cartId',
-        'prefill': {
-          'contact': '9700020630',
-          'email': 'harishpeela03@gmail.com'
-        },
-        'theme': {
-          'color': '#081724',
-          'hide_topbar': false,
-          'backdrop_color': '#081724',
-        }
-      };
-      _razorpay.open(options);
-    } catch (e) {
-      setState(() => loading = false);
-      CustomSnackbars.showErrorSnack(
-        context: context,
-        title: 'ERROR',
-        message: 'Failed to process payment: ${e.toString()}',
-      );
+    } else {
+      if (cartId == null) {
+        CustomSnackbars.showErrorSnack(
+          context: context,
+          title: 'ERROR',
+          message: 'Cart not loaded, please try again',
+        );
+        return;
+      }
+      setState(() => loading = true);
+      try {
+        final exactAmount = getTotalAmount();
+        final amountInPaise = (exactAmount * 100).toInt();
+        final orderId = await createOrder(amount: amountInPaise);
+        final options = {
+          'key': razorPayKey,
+          'amount': amountInPaise,
+          'name': 'EATO',
+          'order_id': orderId,
+          'description': 'Order for cart $cartId',
+          'prefill': {
+            'contact': '9705047662',
+            'email': 'harishpeela03@gmail.com'
+          },
+          'theme': {
+            'color': '#081724',
+            'hide_topbar': false,
+            'backdrop_color': '#081724',
+          }
+        };
+        _razorpay.open(options);
+      } catch (e) {
+        setState(() => loading = false);
+        CustomSnackbars.showErrorSnack(
+          context: context,
+          title: 'ERROR',
+          message: 'Failed to process payment: ${e.toString()}',
+        );
+      }
     }
   }
 
@@ -184,7 +195,10 @@ class _CartScreenState extends State<CartScreen> {
         final productId = item['productId'] as int?;
         final quantity = item['quantity'] as int?;
         final name = item['name'] as String?;
-        if (productId != null && quantity != null && quantity > 0 && name != null) {
+        if (productId != null &&
+            quantity != null &&
+            quantity > 0 &&
+            name != null) {
           cart[name] = quantity;
           selectedItems.add(item);
         }
@@ -273,7 +287,7 @@ class _CartScreenState extends State<CartScreen> {
             if (state is ProductsAddToCartFailure) {
               setState(() => loading = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: ${state.message}')),
+                SnackBar(content: Text('Something went wrong please try after sometime')),
               );
             }
           },
@@ -287,11 +301,18 @@ class _CartScreenState extends State<CartScreen> {
         ),
         BlocListener<PaymentCubit, PaymentState>(
           listener: (context, state) {
-            if (state is PaymentSuccess) {
+            if (state is PaymentRefundSuccess) {
+              CustomSnackbars.showErrorSnack(
+                context: context,
+                title: 'FAILURE',
+                message:
+                    'Your order was not confirmed, if any amount was deducted, it will be refunded within 24 hours!',
+              );
+            } else if (state is PaymentSuccess) {
               CustomSnackbars.showSuccessSnack(
                 context: context,
                 title: 'SUCCESS',
-                message: 'Payment verified successfully!',
+                message: 'Payment successful, order created successfully!',
               );
             } else if (state is PaymentFailure) {
               CustomSnackbars.showErrorSnack(
@@ -324,7 +345,7 @@ class _CartScreenState extends State<CartScreen> {
         body: Stack(
           children: [
             Container(
-              decoration:  BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColor.White, Colors.white],
                   begin: Alignment.topCenter,

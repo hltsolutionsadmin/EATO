@@ -14,7 +14,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
 
-// ignore: must_be_immutable
 class OtpScreen extends StatefulWidget {
   final FocusNode focusNode = FocusNode();
   String otpValue = '';
@@ -61,7 +60,6 @@ class _OtpScreenState extends State<OtpScreen>
   }
 
   void _navigateBasedOnCustomerStatus(BuildContext context) {
-    // After successful sign-in, fetch current customer data
     context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
   }
 
@@ -123,7 +121,6 @@ class _OtpScreenState extends State<OtpScreen>
                     MaterialPageRoute(builder: (_) => BottomTab()),
                   );
                 } else {
-                  // Navigate to CurrentUserFormScreen if eato is false
                   Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(builder: (_) => NameInputScreen()),
@@ -153,7 +150,6 @@ class _OtpScreenState extends State<OtpScreen>
     );
   }
 
-  // Rest of your existing methods remain the same...
   Widget _buildBackgroundImage() {
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.65,
