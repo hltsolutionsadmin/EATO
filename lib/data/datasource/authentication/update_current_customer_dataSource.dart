@@ -19,14 +19,12 @@ class UpdateCurrentCustomerRemoteDataSourceImpl
     dynamic payload,
   }) async {
     try {
-      print(payload);
-      print(payload['fullName']);
+      print(payload['fcmToken']);
 
 FormData formData = FormData.fromMap({
         "fullName": payload['fullName'],
         "email": payload['email'],
-        // "fcmToken": '',
-        // "gender": '',
+        "fcmToken": payload['fcmToken'],
         "eato": payload['eato'],
       });
       print(formData);

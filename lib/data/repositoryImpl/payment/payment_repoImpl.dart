@@ -1,6 +1,7 @@
 import 'package:eato/data/datasource/payment/payment_dataSource.dart';
 import 'package:eato/data/model/payment/payment_model.dart';
-import 'package:eato/data/model/payments/refund_amount_model.dart';
+import 'package:eato/data/model/payments/payment_refund_model.dart';
+import 'package:eato/data/model/payments/refund_status_model.dart';
 import 'package:eato/domain/repository/payment/payment_repository.dart';
 
 class PaymentRepositoryImpl implements PaymentRepository {
@@ -15,5 +16,9 @@ class PaymentRepositoryImpl implements PaymentRepository {
 
   Future<PaymentStausModel> PaymentTracking(String paymentId) {
     return remoteDataSource.Payment_Tracking(paymentId);
+  }
+
+   Future<PaymentRefundModel> PaymentRefund(String paymentId) {
+    return remoteDataSource.Payment_Refund(paymentId);
   }
 }

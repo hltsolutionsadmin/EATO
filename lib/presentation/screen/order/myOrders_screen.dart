@@ -19,7 +19,7 @@ class _MyOrdersState extends State<MyOrders> {
   TextEditingController searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
-  final int _pageSize = 10; 
+  final int _pageSize = 10;
   bool _isLoadingMore = false;
   bool _hasMoreItems = true;
   List<Content> _allOrders = [];
@@ -130,9 +130,10 @@ class _MyOrdersState extends State<MyOrders> {
               },
               builder: (context, state) {
                 if (state is OrderHistoryLoading && _currentPage == 0) {
-                  return Center(child: CupertinoActivityIndicator(
-            color: AppColor.PrimaryColor,
-          ));
+                  return Center(
+                      child: CupertinoActivityIndicator(
+                    color: AppColor.PrimaryColor,
+                  ));
                 } else if (state is OrderHistoryError && _currentPage == 0) {
                   return Center(child: Text("Error loading orders."));
                 }
@@ -204,11 +205,7 @@ class _MyOrdersState extends State<MyOrders> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: Image.asset(
-                  // order.orderItems.isNotEmpty &&
-                  //         order.orderItems.first.media != null
-                  //     ? (order.orderItems.first.media as String? ?? dish)
-                      // : 
-                      dish,
+                  dish,
                   width: 60,
                   height: 60,
                   fit: BoxFit.cover,
@@ -222,10 +219,11 @@ class _MyOrdersState extends State<MyOrders> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(order.businessName ?? '',
-                        style:
-                            TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                     Text("Order ID: ${order.orderNumber}"),
-                    Text("Time: ${timeAgo(order.createdDate ?? DateTime.now())}"),
+                    Text(
+                        "Time: ${timeAgo(order.createdDate ?? DateTime.now())}"),
                   ],
                 ),
               ),
@@ -243,77 +241,105 @@ class _MyOrdersState extends State<MyOrders> {
                 color: getStatusColor(order.orderStatus ?? ''),
               )),
           SizedBox(height: 12),
-          buildTracker(getProgressIndex(order.orderStatus ?? '')),
+          order.orderStatus == 'REJECTED'
+              ? SizedBox()
+              : buildTracker(order.orderStatus ?? ''),
         ],
       ),
     );
   }
 
-  Widget buildTracker(int progress) {
-    final steps = ["Placed", "Preparing", "Out for delivery", "Delivered"];
-    final icons = [
-      Icons.shopping_cart,
-      Icons.kitchen,
-      Icons.delivery_dining,
-      Icons.check_circle
-    ];
+ Widget buildTracker(String status) {
+  final steps = ["Placed", "Preparing", "Out for delivery", "Delivered"];
+  final icons = [
+    Icons.shopping_cart,
+    Icons.kitchen,
+    Icons.delivery_dining,
+    Icons.check_circle,
+  ];
 
-    return Column(
-      children: [
-        Row(
-          children: List.generate(steps.length, (i) {
-            final isActive = i < progress;
-            final isCurrent = i == progress - 1;
+  final progress = getProgressIndex(status);
 
-            return Expanded(
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isActive
+  return Column(
+    children: [
+      Row(
+        children: List.generate(steps.length, (i) {
+          final isActive = i < progress;
+          final isCurrent = i == progress - 1;
+
+          return Expanded(
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    // Line before the icon (if not the first)
+                    if (i != 0)
+                      Expanded(
+                        child: Container(
+                          height: 2,
+                          color: i < progress
                               ? AppColor.PrimaryColor
                               : Colors.grey.shade300,
                         ),
-                        child: Icon(
-                          icons[i],
-                          size: 16,
-                          color: isActive ? Colors.white : Colors.grey.shade600,
-                        ),
                       ),
-                      if (i != steps.length - 1)
-                        Expanded(
-                          child: Container(
-                            height: 2,
-                            color: i < progress - 1
+
+                    // Icon + Text vertically stacked
+                    Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isActive
                                 ? AppColor.PrimaryColor
                                 : Colors.grey.shade300,
                           ),
+                          child: Icon(
+                            icons[i],
+                            size: 16,
+                            color: isActive
+                                ? Colors.white
+                                : Colors.grey.shade600,
+                          ),
                         ),
-                    ],
-                  ),
-                  SizedBox(height: 6),
-                  Text(
-                    steps[i],
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: isActive ? Colors.black87 : Colors.grey,
-                      fontWeight:
-                          isCurrent ? FontWeight.bold : FontWeight.normal,
+                        const SizedBox(height: 4),
+                        Text(
+                          steps[i],
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: isActive ? Colors.black87 : Colors.grey,
+                            fontWeight: isCurrent
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
-            );
-          }),
-        ),
-      ],
-    );
-  }
+
+                    if (i != steps.length - 1)
+                      Expanded(
+                        child: Container(
+                          height: 2,
+                          color: i < progress - 1
+                              ? AppColor.PrimaryColor
+                              : Colors.grey.shade300,
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        }),
+      ),
+    ],
+  );
+}
+
+
+
+
+
 
   Color getStatusColor(String status) {
     switch (status.toLowerCase()) {
@@ -331,14 +357,15 @@ class _MyOrdersState extends State<MyOrders> {
   }
 
   int getProgressIndex(String status) {
-    switch (status.toLowerCase()) {
-      case 'placed':
+    switch (status.toUpperCase()) {
+      case 'PLACED':
         return 1;
-      case 'preparing':
+      case 'CONFIRMED':
+      case 'ACCEPTED':
         return 2;
-      case 'out for delivery':
+      case 'OUT_FOR_DELIVERY':
         return 3;
-      case 'delivered':
+      case 'DELIVERED':
         return 4;
       default:
         return 0;

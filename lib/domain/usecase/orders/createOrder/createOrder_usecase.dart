@@ -6,7 +6,7 @@ class CreateOrderUseCase {
 
   CreateOrderUseCase({required this.repository});
 
-  Future<CreateOrderModel> call() async {
-    return await repository.createOrder();
+  Future<CreateOrderModel> call(dynamic body) async {
+    return await repository.createOrder(body);
   }
 }
