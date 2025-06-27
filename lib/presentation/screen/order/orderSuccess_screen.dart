@@ -1,3 +1,4 @@
+import 'package:eato/components/bottomTab.dart';
 import 'package:eato/components/custom_button.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/screen/order/orderTracking_screen.dart';
@@ -152,7 +153,11 @@ class OrderSuccessScreen extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 32.0, left: 32, right: 32),
               child: TextButton(
                 onPressed: () {
-                  Navigator.popUntil(context, (route) => route.isFirst);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => BottomTab()),
+                  );
+                  // Navigator.popUntil(context, (route) => route.isFirst);
                 },
                 child: Text(
                   'Back to Home',

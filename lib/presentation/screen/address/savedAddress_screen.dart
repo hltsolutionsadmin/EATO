@@ -5,6 +5,7 @@ import 'package:eato/presentation/cubit/address/defaultAddress/post/defaultAddre
 import 'package:eato/presentation/cubit/address/deleteAddress/deleteAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart';
 import 'package:eato/presentation/cubit/address/getAddress/getAddress_state.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -18,25 +19,30 @@ class SavedAddressesView extends StatelessWidget {
     return BlocBuilder<GetAddressCubit, GetAddressState>(
       builder: (context, state) {
         if (state is GetAddressLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(
+              child: CupertinoActivityIndicator(
+            color: AppColor.PrimaryColor,
+          ));
         }
-        
+
         if (state is GetAddressSuccess) {
           final addresses = state.addressModel.data?.content ?? [];
           return _buildAddressList(context, addresses);
         }
-        
+
         if (state is GetAddressFailure) {
           return _buildErrorView(context, state);
         }
-        
-        return const Center(child: CircularProgressIndicator());
+
+        return Center(
+            child: CupertinoActivityIndicator(
+          color: AppColor.PrimaryColor,
+        ));
       },
     );
   }
 
   Widget _buildAddressList(BuildContext context, List<Content> addresses) {
-    // Sort addresses - default address first
     final sortedAddresses = List<Content>.from(addresses)
       ..sort((a, b) {
         if (a.isDefault == true && b.isDefault != true) return -1;
@@ -47,14 +53,15 @@ class SavedAddressesView extends StatelessWidget {
     if (sortedAddresses.isEmpty) {
       return _buildEmptyView(context);
     }
-    
+
     return RefreshIndicator(
-      onRefresh: () async => context.read<GetAddressCubit>().fetchAddress(context),
+      onRefresh: () async =>
+          context.read<GetAddressCubit>().fetchAddress(context),
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: sortedAddresses.length,
         itemBuilder: (context, index) => _buildAddressCard(
-          context, 
+          context,
           sortedAddresses[index],
           isDefault: sortedAddresses[index].isDefault ?? false,
         ),
@@ -93,26 +100,27 @@ class SavedAddressesView extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.red.shade700)),
           const SizedBox(height: 8),
           ElevatedButton(
-            onPressed: () => context.read<GetAddressCubit>().fetchAddress(context),
+            onPressed: () =>
+                context.read<GetAddressCubit>().fetchAddress(context),
             style: ElevatedButton.styleFrom(
                 backgroundColor: AppColor.PrimaryColor),
-            child: const Text("Retry",style: TextStyle(fontSize: 16, color: Colors.white)),
+            child: const Text("Retry",
+                style: TextStyle(fontSize: 16, color: Colors.white)),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAddressCard(BuildContext context, Content address, {bool isDefault = false}) {
+  Widget _buildAddressCard(BuildContext context, Content address,
+      {bool isDefault = false}) {
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       elevation: 1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: isDefault 
-            ? AppColor.PrimaryColor 
-            : Colors.grey.shade200, 
+          color: isDefault ? AppColor.PrimaryColor : Colors.grey.shade200,
           width: isDefault ? 2 : 1,
         ),
       ),
@@ -124,12 +132,15 @@ class SavedAddressesView extends StatelessWidget {
           } else {
             final addressId = address.id!;
             final addressString = '${address.addressLine1}, ${address.city}';
-            context.read<DefaultAddressCubit>().setDefaultAddress(addressId, context);
-            context.read<AddressSavetoCartCubit>().addressSavetoCart(addressId, context);
-            Navigator.pop(context,addressString);
+            context
+                .read<DefaultAddressCubit>()
+                .setDefaultAddress(addressId, context);
+            context
+                .read<AddressSavetoCartCubit>()
+                .addressSavetoCart(addressId, context);
+            Navigator.pop(context, addressString);
           }
         },
-
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -137,29 +148,26 @@ class SavedAddressesView extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.location_on, color: AppColor.PrimaryColor, size: 20),
+                  Icon(Icons.location_on,
+                      color: AppColor.PrimaryColor, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     isDefault ? "Default Address" : "Saved Address",
                     style: TextStyle(
-                      color: isDefault 
-                        ? AppColor.PrimaryColor 
-                        : Colors.grey.shade600,
+                      color: isDefault
+                          ? AppColor.PrimaryColor
+                          : Colors.grey.shade600,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   if (isDefault) ...[
                     const SizedBox(width: 8),
-                    Icon(Icons.check_circle, 
-                      color: AppColor.PrimaryColor, 
-                      size: 18
-                    ),
+                    Icon(Icons.check_circle,
+                        color: AppColor.PrimaryColor, size: 18),
                   ],
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Address details with better spacing
               if (address.addressLine1?.isNotEmpty ?? false)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
@@ -190,7 +198,6 @@ class SavedAddressesView extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  
                   OutlinedButton.icon(
                     icon: Icon(Icons.delete, size: 18, color: Colors.red),
                     label: const Text("DELETE",
@@ -229,7 +236,9 @@ class SavedAddressesView extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context);
-              context.read<DeleteAddressCubit>().deleteAddress(addressId, context);
+              context
+                  .read<DeleteAddressCubit>()
+                  .deleteAddress(addressId, context);
             },
             child: const Text("DELETE", style: TextStyle(color: Colors.red)),
           ),

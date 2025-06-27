@@ -1,10 +1,12 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/utils/push_notication_services.dart';
 import 'package:eato/presentation/screen/authentication/login_screen.dart';
+import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
 import 'package:eato/presentation/screen/dashboard/dashboard_screen.dart';
 import 'package:eato/presentation/screen/order/orderHistory_Screen.dart';
 import 'package:eato/presentation/screen/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class BottomTab extends StatefulWidget {
   final bool isGuest;
@@ -33,19 +35,26 @@ class _BottomTabState extends State<BottomTab> {
     ];
   }
 
-  Future<void> _initNotifications() async {
-    await _notificationServices.requestNotificationPermissions();
-    await _notificationServices.forgroundMessage();
-    await _notificationServices.firebaseInit(context);
-    await _notificationServices.setupInteractMessage(context);
-    await _notificationServices.isRefreshToken();
+Future<void> _initNotifications() async {
+  await _notificationServices.requestNotificationPermissions();
+  await _notificationServices.forgroundMessage();
+  await _notificationServices.firebaseInit(context);
+  await _notificationServices.setupInteractMessage(context);
+  await _notificationServices.isRefreshToken();
 
-    _notificationServices.getDeviceToken().then((fcmToken) {
-      if (fcmToken != null) {
-        print("FCM Token: $fcmToken");
-      }
-    });
-  }
+  _notificationServices.getDeviceToken().then((fcmToken) {
+    if (fcmToken != null) {
+      print("FCM Token: $fcmToken");
+      final payload = {
+        'fullName': '',
+        'email': '',
+        'eato': true,
+        "fcmToken" : fcmToken,
+      };
+      context.read<UpdateCurrentCustomerCubit>().updateCustomer(payload, context);
+    }
+  });
+}
 
   void _onItemTapped(int index) {
     if (widget.isGuest && (index == 1 || index == 2)) {

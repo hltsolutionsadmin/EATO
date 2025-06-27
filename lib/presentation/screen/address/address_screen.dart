@@ -467,7 +467,6 @@ class _AddressScreenState extends State<AddressScreen> {
                   ),
                 ),
               ),
-              // Saved Addresses Tab
             ],
           ),
         ),

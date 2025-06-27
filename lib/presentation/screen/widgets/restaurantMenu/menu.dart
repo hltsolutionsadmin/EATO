@@ -232,7 +232,6 @@ Future<bool?> showReplaceCartDialog({
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // No Button
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 4.0),

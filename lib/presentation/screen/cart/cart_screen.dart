@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:eato/components/bottomTab.dart';
 import 'package:eato/components/custom_button.dart' as eato_button;
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
@@ -19,7 +18,7 @@ import 'package:eato/presentation/screen/widgets/cart/cart.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -40,7 +39,7 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  // late final Razorpay _razorpay;
+  late final Razorpay _razorpay;
   static const razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
   static const razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
   bool loading = false;
@@ -56,93 +55,104 @@ class _CartScreenState extends State<CartScreen> {
     super.initState();
     context.read<GetCartCubit>().fetchCart(context);
     _loadSavedAddress();
-    // _razorpay = Razorpay()
-    //   ..on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess)
-    //   ..on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure)
-    //   ..on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
+    _razorpay = Razorpay()
+      ..on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess)
+      ..on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure)
+      ..on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
     _initializeCartAndSelectedItems();
   }
 
-  // void handlePaymentSuccess(PaymentSuccessResponse response) async {
-  //   try {
-  //     final exactAmount = getTotalAmount();
-  //     final payload = {
-  //       "cartId": cartId ?? 0,
-  //       "amount": exactAmount.toStringAsFixed(2),
-  //       "paymentId": response.paymentId,
-  //       "razorpayOrderId": response.orderId,
-  //       "razorpaySignature": response.signature,
-  //       "status": "SUCCESS"
-  //     };
-  //     setState(() => loading = true);
-  //     await context.read<PaymentCubit>().makePayment(payload, context);
-  //     setState(() => loading = false);
-  //   } catch (e) {
-  //     setState(() => loading = false);
-  //     CustomSnackbars.showErrorSnack(
-  //       context: context,
-  //       title: 'ERROR',
-  //       message: 'Payment or order creation failed: ${e.toString()}',
-  //     );
-  //   }
-  // }
-
-  // void handlePaymentFailure(PaymentFailureResponse response) {
-  //   CustomSnackbars.showErrorSnack(
-  //     context: context,
-  //     title: 'ERROR',
-  //     message: 'payment failed, please try after some time',
-  //   );
-  //   setState(() => loading = false);
-  // }
-
-  // void handleExternalWallet(ExternalWalletResponse response) {
-  //   CustomSnackbars.showInfoSnack(
-  //     context: context,
-  //     title: 'Info',
-  //     message: 'Transaction under process, please check after some time',
-  //   );
-  //   setState(() => loading = false);
-  // }
-
-  Future<void> openCheckOut() async {
-    if (cartId == null) {
-      CustomSnackbars.showErrorSnack(
-        context: context,
-        title: 'ERROR',
-        message: 'Cart not loaded, please try again',
-      );
-      return;
-    }
-    setState(() => loading = true);
+  void handlePaymentSuccess(PaymentSuccessResponse response) async {
     try {
       final exactAmount = getTotalAmount();
-      final amountInPaise = (exactAmount * 100).toInt();
-      final orderId = await createOrder(amount: amountInPaise);
-      final options = {
-        'key': razorPayKey,
-        'amount': amountInPaise,
-        'name': 'EATO',
-        'order_id': orderId,
-        'description': 'Order for cart $cartId',
-        'prefill': {
-          'contact': '9700020630',
-          'email': 'harishpeela03@gmail.com'
-        },
-        'theme': {
-          'color': '#081724',
-          'hide_topbar': false,
-          'backdrop_color': '#081724',
-        }
+      print(exactAmount);
+      final payload = {
+        "cartId": cartId ?? 0,
+        "amount": exactAmount,
+        "paymentId": response.paymentId,
+        "razorpayOrderId": response.orderId,
+        "razorpaySignature": response.signature,
+        "status": "SUCCESS"
       };
-      // _razorpay.open(options);
+      setState(() => loading = true);
+      await context.read<PaymentCubit>().makePayment(payload, context);
+      setState(() => loading = false);
     } catch (e) {
       setState(() => loading = false);
       CustomSnackbars.showErrorSnack(
         context: context,
         title: 'ERROR',
-        message: 'Failed to process payment: ${e.toString()}',
+        message: 'Payment or order creation failed:: ${e.toString()}',
       );
+    }
+  }
+
+  void handlePaymentFailure(PaymentFailureResponse response) {
+    CustomSnackbars.showErrorSnack(
+      context: context,
+      title: 'ERROR',
+      message: 'payment failed, please try after some time',
+    );
+    setState(() => loading = false);
+  }
+
+  void handleExternalWallet(ExternalWalletResponse response) {
+    CustomSnackbars.showInfoSnack(
+      context: context,
+      title: 'Info',
+      message: 'Transaction under process, please check after some time',
+    );
+    setState(() => loading = false);
+  }
+
+  Future<void> openCheckOut() async {
+    print(selectedAddress);
+    if (selectedAddress == "Add Address") {
+      CustomSnackbars.showErrorSnack(
+        context: context,
+        title: 'ERROR',
+        message: 'Please select a delivery address before proceeding',
+      );
+      return;
+    } else {
+      if (cartId == null) {
+        CustomSnackbars.showErrorSnack(
+          context: context,
+          title: 'ERROR',
+          message: 'Cart not loaded, please try again',
+        );
+        return;
+      }
+      setState(() => loading = true);
+      try {
+        final exactAmount = getTotalAmount();
+        final amountInPaise = (exactAmount * 100).toInt();
+        final orderId = await createOrder(amount: amountInPaise);
+        final options = {
+          'key': razorPayKey,
+          'amount': amountInPaise,
+          'name': 'EATO',
+          'order_id': orderId,
+          'description': 'Order for cart $cartId',
+          'prefill': {
+            'contact': '9705047662',
+            'email': 'harishpeela03@gmail.com'
+          },
+          'theme': {
+            'color': '#081724',
+            'hide_topbar': false,
+            'backdrop_color': '#081724',
+          }
+        };
+        _razorpay.open(options);
+      } catch (e) {
+        setState(() => loading = false);
+        CustomSnackbars.showErrorSnack(
+          context: context,
+          title: 'ERROR',
+          message: 'Failed to process payment: ${e.toString()}',
+        );
+      }
     }
   }
 
@@ -185,7 +195,10 @@ class _CartScreenState extends State<CartScreen> {
         final productId = item['productId'] as int?;
         final quantity = item['quantity'] as int?;
         final name = item['name'] as String?;
-        if (productId != null && quantity != null && quantity > 0 && name != null) {
+        if (productId != null &&
+            quantity != null &&
+            quantity > 0 &&
+            name != null) {
           cart[name] = quantity;
           selectedItems.add(item);
         }
@@ -205,7 +218,7 @@ class _CartScreenState extends State<CartScreen> {
             orElse: () => {},
           );
           if (foundItem != null && foundItem.isNotEmpty) {
-            selectedItems.add(foundItem);
+            selectedItems.add(foundItem as Map<String, dynamic>);
           }
         }
       });
@@ -274,7 +287,9 @@ class _CartScreenState extends State<CartScreen> {
             if (state is ProductsAddToCartFailure) {
               setState(() => loading = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Error: ${state.message}')),
+                SnackBar(
+                    content:
+                        Text('Something went wrong please try after sometime')),
               );
             }
           },
@@ -288,11 +303,18 @@ class _CartScreenState extends State<CartScreen> {
         ),
         BlocListener<PaymentCubit, PaymentState>(
           listener: (context, state) {
-            if (state is PaymentSuccess) {
+            if (state is PaymentRefundSuccess) {
+              CustomSnackbars.showErrorSnack(
+                context: context,
+                title: 'FAILURE',
+                message:
+                    'Your order was not confirmed, if any amount was deducted, it will be refunded within 24 hours!',
+              );
+            } else if (state is PaymentSuccess) {
               CustomSnackbars.showSuccessSnack(
                 context: context,
                 title: 'SUCCESS',
-                message: 'Payment verified successfully!',
+                message: 'Payment successful, order created successfully!',
               );
             } else if (state is PaymentFailure) {
               CustomSnackbars.showErrorSnack(
@@ -325,7 +347,7 @@ class _CartScreenState extends State<CartScreen> {
         body: Stack(
           children: [
             Container(
-              decoration:  BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [AppColor.White, Colors.white],
                   begin: Alignment.topCenter,
@@ -461,8 +483,7 @@ class _CartScreenState extends State<CartScreen> {
                               buttonText: "Checkout",
                               onPressed: () {
                                 setState(() => loading = true);
-                                Navigator.push(context, MaterialPageRoute(builder: (context) => BottomTab()));
-                                // openCheckOut();
+                                openCheckOut();
                               },
                             );
                           },
@@ -479,9 +500,9 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // @override
-  // void dispose() {
-  //   _razorpay.clear();
-  //   super.dispose();
-  // }
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
+  }
 }

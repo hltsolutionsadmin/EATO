@@ -25,7 +25,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   int? bussinessId = 0;
 
   int _currentPage = 0;
-  final int _pageSize = 10;
+  final int _pageSize = 30;
   final String _searchQuery = '';
 
   @override
@@ -36,8 +36,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
         .fetchCart(_currentPage, _pageSize, _searchQuery, context);
     cartId();
   }
-
-
 
   void cartId() async {
     final state = context.read<GetCartCubit>().state;

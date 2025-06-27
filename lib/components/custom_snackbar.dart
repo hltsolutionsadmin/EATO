@@ -51,6 +51,7 @@ class CustomSnackbars {
     required Color textColor,
   }) {
     final overlay = Overlay.of(context);
+    if (overlay == null) return;
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
         top: 50,
