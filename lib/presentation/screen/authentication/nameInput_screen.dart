@@ -1,4 +1,5 @@
 import 'package:eato/components/bottomTab.dart';
+import 'package:eato/components/custom_button.dart';
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
@@ -11,7 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 class NameInputScreen extends StatefulWidget {
   final String? initialEmail;
   
-  const NameInputScreen({Key? key, this.initialEmail}) : super(key: key);
+  const NameInputScreen({super.key, this.initialEmail});
 
   @override
   _NameInputScreenState createState() => _NameInputScreenState();
@@ -205,37 +206,20 @@ class _NameInputScreenState extends State<NameInputScreen> {
                 const SizedBox(height: 30),
                 SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveChanges,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColor.PrimaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: BlocBuilder<UpdateCurrentCustomerCubit, UpdateCurrentCustomerState>(
+                    child: BlocBuilder<UpdateCurrentCustomerCubit,
+                        UpdateCurrentCustomerState>(
                       builder: (context, state) {
-                        if (state.isLoading) {
-                          return const SizedBox(
-                            height: 24,
-                            width: 24,
-                            child: CupertinoActivityIndicator(
-                              color: Colors.white,
-                            ),
-                          );
-                        }
-                        return const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
+                        return SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            buttonText: "Save Changes",
+                            isLoading: state.isLoading,
+                            onPressed: _saveChanges,
                           ),
                         );
                       },
-                    ),
-                  ),
+                    )
+
                 ),
               ],
             ),

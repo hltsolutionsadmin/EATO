@@ -222,9 +222,6 @@ class SavedAddressesView extends StatelessWidget {
     );
   }
 
-  void _editAddress(BuildContext context, Content address) {
-    DefaultTabController.of(context).animateTo(0);
-  }
 
   void _showDeleteConfirmation(BuildContext context, int addressId) {
     showDialog(

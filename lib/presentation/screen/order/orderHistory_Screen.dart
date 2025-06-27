@@ -13,7 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
-  const OrderHistoryScreen({super.key});
+  final bool isGuest;
+  const OrderHistoryScreen({super.key, this.isGuest = false});
   @override
   _OrderHistoryScreenState createState() => _OrderHistoryScreenState();
 }
@@ -30,7 +31,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
+    context
+        .read<OrderHistoryCubit>()
+        .fetchCart(_currentPage, _pageSize, _searchQuery, context);
     cartId();
   }
 
@@ -52,7 +55,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(title: "Order History", showBackButton: false),
+      appBar: CustomAppBar(
+        title: "Order History",
+      ),
       body: BlocListener<ProductsAddToCartCubit, dynamic>(
         listener: (context, state) {
           if (state is ProductsAddToCartFailure ||
@@ -218,4 +223,3 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     });
   }
 }
-

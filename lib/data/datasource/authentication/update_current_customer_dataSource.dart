@@ -31,7 +31,7 @@ FormData formData = FormData.fromMap({
       final response = await client.put(
         '$baseUrl$updateCurrentCustomerUrl',
         data: formData,
-       options: Options(
+        options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',
           },

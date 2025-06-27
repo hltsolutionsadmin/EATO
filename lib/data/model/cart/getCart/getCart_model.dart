@@ -27,7 +27,7 @@ class GetCartModel {
     cartItems = <CartItems>[];
   if (json['cartItems'] != null) {
     json['cartItems']?.forEach((v) {
-      cartItems?.add(new CartItems.fromJson(v));
+      cartItems?.add(CartItems.fromJson(v));
     });
   }
     businessId = json['businessId'];
@@ -38,18 +38,18 @@ class GetCartModel {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['userId'] = this.userId;
-    data['status'] = this.status;
-    if (this.cartItems != null) {
-      data['cartItems'] = this.cartItems!.map((v) => v.toJson()).toList();
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['userId'] = userId;
+    data['status'] = status;
+    if (cartItems != null) {
+      data['cartItems'] = cartItems!.map((v) => v.toJson()).toList();
     }
-    data['businessId'] = this.businessId;
-    data['businessName'] = this.businessName;
-    data['totalCount'] = this.totalCount;
-    data['createdAt'] = this.createdAt;
-    data['updatedAt'] = this.updatedAt;
+    data['businessId'] = businessId;
+    data['businessName'] = businessName;
+    data['totalCount'] = totalCount;
+    data['createdAt'] = createdAt;
+    data['updatedAt'] = updatedAt;
     return data;
   }
 }
@@ -83,14 +83,14 @@ class CartItems {
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['id'] = this.id;
-    data['productId'] = this.productId;
-    data['productName'] = this.productName;
-    data['quantity'] = this.quantity;
-    data['price'] = this.price;
-    data['cartId'] = this.cartId;
-    data['createdAt'] = this.createdAt;
+    final Map<String, dynamic> data = <String, dynamic>{};
+    data['id'] = id;
+    data['productId'] = productId;
+    data['productName'] = productName;
+    data['quantity'] = quantity;
+    data['price'] = price;
+    data['cartId'] = cartId;
+    data['createdAt'] = createdAt;
     return data;
   }
 }

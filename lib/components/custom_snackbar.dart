@@ -60,18 +60,21 @@ class CustomSnackbars {
         child: Material(
           color: Colors.transparent,
           child: FadeTransition(
-            opacity: _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
+            opacity:
+                _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
             child: SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, -1),
                 end: Offset.zero,
               ).animate(CurvedAnimation(
-                parent: _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
+                parent:
+                    _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
                 curve: Curves.easeOut,
               )),
               child: ShakeTransition(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   decoration: BoxDecoration(
                     color: backgroundColor,
                     borderRadius: BorderRadius.circular(20),
@@ -145,7 +148,8 @@ class ShakeTransition extends StatefulWidget {
   _ShakeTransitionState createState() => _ShakeTransitionState();
 }
 
-class _ShakeTransitionState extends State<ShakeTransition> with SingleTickerProviderStateMixin {
+class _ShakeTransitionState extends State<ShakeTransition>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _shakeAnimation;
 

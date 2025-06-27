@@ -287,7 +287,9 @@ class _CartScreenState extends State<CartScreen> {
             if (state is ProductsAddToCartFailure) {
               setState(() => loading = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Something went wrong please try after sometime')),
+                SnackBar(
+                    content:
+                        Text('Something went wrong please try after sometime')),
               );
             }
           },
