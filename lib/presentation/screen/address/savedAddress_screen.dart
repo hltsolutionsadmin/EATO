@@ -43,7 +43,6 @@ class SavedAddressesView extends StatelessWidget {
   }
 
   Widget _buildAddressList(BuildContext context, List<Content> addresses) {
-    // Sort addresses - default address first
     final sortedAddresses = List<Content>.from(addresses)
       ..sort((a, b) {
         if (a.isDefault == true && b.isDefault != true) return -1;
@@ -169,8 +168,6 @@ class SavedAddressesView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-
-              // Address details with better spacing
               if (address.addressLine1?.isNotEmpty ?? false)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),

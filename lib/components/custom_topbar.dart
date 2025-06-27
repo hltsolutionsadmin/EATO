@@ -10,23 +10,23 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     this.onBackPressed,
-    this.showBackButton = true, // default to true
+    this.showBackButton = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
       backgroundColor: AppColor.PrimaryColor,
-      leading: showBackButton
-          ? IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: AppColor.White,
-                size: 24,
-              ),
-              onPressed: onBackPressed,
-            )
-          : null,
+      leading: showBackButton == true
+    ? IconButton(
+        icon: Icon(
+          Icons.arrow_back_ios,
+          color: AppColor.White,
+          size: 24,
+        ),
+        onPressed: onBackPressed,
+      )
+    : null,
       title: Text(
         title,
         style: TextStyle(

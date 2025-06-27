@@ -27,15 +27,6 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     super.initState();
     _speech = stt.SpeechToText();
     _controller = TextEditingController();
-    // _initializeSpeech();
-  }
-
-  // ignore: unused_element
-  void _initializeSpeech() async {
-    bool available = await _speech.initialize();
-    if (!available) {
-      print("Speech recognition not available.");
-    }
   }
 
   void _toggleMic() async {

@@ -250,7 +250,7 @@ class _MyOrdersState extends State<MyOrders> {
   }
 
  Widget buildTracker(String status) {
-  final steps = ["Placed", "Preparing", "Out for delivery", "Delivered"];
+  final steps = ["Placed", "Preparing", "On the Way", "Delivered"];
   final icons = [
     Icons.shopping_cart,
     Icons.kitchen,
@@ -272,7 +272,6 @@ class _MyOrdersState extends State<MyOrders> {
               children: [
                 Row(
                   children: [
-                    // Line before the icon (if not the first)
                     if (i != 0)
                       Expanded(
                         child: Container(
@@ -283,7 +282,6 @@ class _MyOrdersState extends State<MyOrders> {
                         ),
                       ),
 
-                    // Icon + Text vertically stacked
                     Column(
                       children: [
                         Container(
@@ -335,10 +333,6 @@ class _MyOrdersState extends State<MyOrders> {
     ],
   );
 }
-
-
-
-
 
 
   Color getStatusColor(String status) {
