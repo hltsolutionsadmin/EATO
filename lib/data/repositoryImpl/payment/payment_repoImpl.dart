@@ -13,6 +13,7 @@ class PaymentRepositoryImpl implements PaymentRepository {
     return remoteDataSource.Payment(payload);
   }
 
+  @override
   Future<PaymentStausModel> PaymentTracking(String paymentId) {
     return remoteDataSource.Payment_Tracking(paymentId);
   }

@@ -13,7 +13,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class OrderHistoryScreen extends StatefulWidget {
-  const OrderHistoryScreen({super.key});
+  final bool isGuest;
+  const OrderHistoryScreen({super.key, this.isGuest = false});
   @override
   _OrderHistoryScreenState createState() => _OrderHistoryScreenState();
 }
@@ -23,35 +24,20 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final Map<String, int> _itemQuantities = {};
   int? bussinessId = 0;
 
-final TextEditingController _searchController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
-  final int _pageSize = 10; // Adjust as needed
+  final int _pageSize = 10;
   final String _searchQuery = '';
-  bool _isLoadingMore = false;
-  final List<Content> _orders = [];
 
   @override
   void initState() {
     super.initState();
-    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
+    context
+        .read<OrderHistoryCubit>()
+        .fetchCart(_currentPage, _pageSize, _searchQuery, context);
     cartId();
   }
 
 
-  void _fetchInitialOrders() {
-    _currentPage = 0;
-    _orders.clear();
-    context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery,context);
-  }
- 
-  void _fetchMoreOrders() {
-    if (!_isLoadingMore) {
-      setState(() => _isLoadingMore = true);
-      _currentPage++;
-      context.read<OrderHistoryCubit>().fetchCart(_currentPage, _pageSize, _searchQuery, context);
-    }
-  }
 
   void cartId() async {
     final state = context.read<GetCartCubit>().state;
@@ -71,7 +57,9 @@ final TextEditingController _searchController = TextEditingController();
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(title: "Order History", showBackButton: false),
+      appBar: CustomAppBar(
+        title: "Order History",
+      ),
       body: BlocListener<ProductsAddToCartCubit, dynamic>(
         listener: (context, state) {
           if (state is ProductsAddToCartFailure ||
@@ -237,4 +225,3 @@ final TextEditingController _searchController = TextEditingController();
     });
   }
 }
-

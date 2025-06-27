@@ -8,67 +8,52 @@ import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.d
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_state.dart';
 import 'package:eato/presentation/cubit/authentication/signin/sigin_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signin/signin_state.dart';
+import 'package:eato/presentation/screen/authentication/login_screen.dart';
 import 'package:eato/presentation/screen/authentication/nameInput_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 // ignore: must_be_immutable
 class OtpScreen extends StatefulWidget {
-  final FocusNode focusNode = FocusNode();
-  String otpValue = '';
-  String otp;
   final String mobileNumber;
+  String otp;
   String fullName;
+  String otpValue;
 
-  OtpScreen(
-      {super.key,
-      required this.mobileNumber,
-      required this.otp,
-      required this.otpValue,
-      required this.fullName});
+  OtpScreen({
+    super.key,
+    required this.mobileNumber,
+    required this.otp,
+    required this.otpValue,
+    required this.fullName,
+  });
 
   @override
-  _OtpScreenState createState() => _OtpScreenState();
+  State<OtpScreen> createState() => _OtpScreenState();
 }
 
-class _OtpScreenState extends State<OtpScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _fadeAnimation;
-  final TextEditingController otpFieldController = TextEditingController();
-  final FocusNode focusNode = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-    _fadeAnimation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    otpFieldController.dispose();
-    focusNode.dispose();
-    super.dispose();
-  }
+class _OtpScreenState extends State<OtpScreen> {
+  final TextEditingController otpController = TextEditingController();
 
   void _navigateBasedOnCustomerStatus(BuildContext context) {
-    // After successful sign-in, fetch current customer data
     context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
   }
 
   @override
+  void dispose() {
+    otpController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.white,
       body: MultiBlocListener(
         listeners: [
           BlocListener<SignInCubit, SignInState>(
@@ -77,10 +62,8 @@ class _OtpScreenState extends State<OtpScreen>
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (_) => Center(
-                      child: CupertinoActivityIndicator(
-                    color: AppColor.PrimaryColor,
-                  )),
+                  builder: (_) =>
+                      const Center(child: CupertinoActivityIndicator()),
                 );
               } else {
                 Navigator.of(context, rootNavigator: true).pop();
@@ -89,9 +72,14 @@ class _OtpScreenState extends State<OtpScreen>
               if (state is SignInLoaded) {
                 _navigateBasedOnCustomerStatus(context);
               } else if (state is SignInError) {
+                String errorMessage =
+                    state.message.toLowerCase().contains('otp')
+                        ? "The OTP you entered is incorrect. Please try again."
+                        : state.message;
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(state.message),
+                    content: Text(errorMessage),
                     backgroundColor: Colors.red,
                   ),
                 );
@@ -104,13 +92,6 @@ class _OtpScreenState extends State<OtpScreen>
                 setState(() {
                   widget.otp = state.resendOtp.otp ?? '';
                 });
-              } else if (state is TriggerOtpError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: Colors.red,
-                  ),
-                );
               }
             },
           ),
@@ -120,13 +101,12 @@ class _OtpScreenState extends State<OtpScreen>
                 if (state.currentCustomerModel.eato == true) {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => BottomTab()),
+                    MaterialPageRoute(builder: (_) => const BottomTab()),
                   );
                 } else {
-                  // Navigate to CurrentUserFormScreen if eato is false
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => NameInputScreen()),
+                    MaterialPageRoute(builder: (_) => const NameInputScreen()),
                   );
                 }
               } else if (state is CurrentCustomerError) {
@@ -137,172 +117,199 @@ class _OtpScreenState extends State<OtpScreen>
             },
           ),
         ],
-        child: Stack(
+        child: Column(
           children: [
-            _buildBackgroundImage(),
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: FadeTransition(
-                opacity: _fadeAnimation,
-                child: _buildOtpContainer(context),
+            // Top Image
+            SizedBox(
+              height: size.height * 0.45,
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Image.asset(
+                      dish,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.black.withOpacity(0.6),
+                          Colors.transparent,
+                        ],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
 
-  // Rest of your existing methods remain the same...
-  Widget _buildBackgroundImage() {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.65,
-      child: Image.asset(
-        dish,
-        fit: BoxFit.cover,
-        width: double.infinity,
-      ),
-    );
-  }
+            // Bottom Box
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(30),
+                    topRight: Radius.circular(30),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: const Offset(0, -4),
+                    ),
+                  ],
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "OTP Verification",
+                      style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppColor.PrimaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
 
-  Widget _buildOtpContainer(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-      height: MediaQuery.of(context).size.height * 0.52,
-      decoration: BoxDecoration(
-        color: AppColor.PrimaryColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(30),
-          topRight: Radius.circular(30),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Text(
-            "Enter OTP",
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-              color: AppColor.White,
-            ),
-          ),
-          const SizedBox(height: 20),
-          _buildSubtitle(),
-          const SizedBox(height: 30),
-          if (widget.otp != 'true') _buildOtpDisplay(),
-          const SizedBox(height: 20),
-          _buildOtpInput(),
-          const SizedBox(height: 30),
-          BlocBuilder<TriggerOtpCubit, TriggerOtpState>(
-            builder: (context, state) {
-              return _buildVerifyButton(context, state);
-            },
-          ),
-          const SizedBox(height: 20),
-          _buildResendOtp(context),
-        ],
-      ),
-    );
-  }
+                    // Subheading with number and "change"
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Sending tasty updates to +91 ${widget.mobileNumber}",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (_) => const LoginScreen()),
+                            );
+                          },
+                          child: Text(
+                            "Change",
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: AppColor.PrimaryColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
 
-  Widget _buildSubtitle() {
-    return Text(
-      "We've sent a verification code to your phone",
-      style: TextStyle(
-        color: AppColor.White,
-        fontSize: 16,
-      ),
-      textAlign: TextAlign.center,
-    );
-  }
+                    const SizedBox(height: 24),
+                    // OTP Debug Text (if shown)
+                    if (widget.otp != 'true') ...[
+                      const SizedBox(height: 10),
+                      Center(
+                        child: Text(
+                          widget.otp,
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
 
-  Widget _buildOtpDisplay() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColor.White),
-      ),
-      child: Text(
-        'OTP: ${widget.otp}',
-        style: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          color: AppColor.White,
-        ),
-      ),
-    );
-  }
+                    // OTP field
+                    Center(
+                      child: Pinput(
+                        controller: otpController,
+                        length: 6,
+                        onCompleted: (value) {
+                          if (value.length == 6) {
+                            context.read<SignInCubit>().signIn(
+                                  context,
+                                  widget.mobileNumber,
+                                  value,
+                                  widget.fullName,
+                                );
+                          }
+                        },
+                        defaultPinTheme: PinTheme(
+                          width: 40,
+                          height: 40,
+                          textStyle: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: AppColor.PrimaryColor,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColor.PrimaryColor),
+                          ),
+                        ),
+                      ),
+                    ),
 
-  Widget _buildOtpInput() {
-    return Pinput(
-      length: 6,
-      focusNode: focusNode,
-      controller: otpFieldController,
-      keyboardType: TextInputType.number,
-      onCompleted: (val) {
-        context
-            .read<SignInCubit>()
-            .signIn(context, widget.mobileNumber, val, widget.fullName);
-      },
-      defaultPinTheme: PinTheme(
-        width: 50,
-        height: 50,
-        textStyle: TextStyle(
-          fontSize: 22,
-          color: AppColor.White,
-          fontWeight: FontWeight.bold,
-        ),
-        decoration: BoxDecoration(
-          color: AppColor.PrimaryColor,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColor.White),
-        ),
-      ),
-    );
-  }
+                    const SizedBox(height: 30),
 
-  Widget _buildVerifyButton(BuildContext context, TriggerOtpState state) {
-    return CustomButton(
-      buttonText: 'Verify & Continue',
-      isLoading: state is SignInLoading,
-      onPressed: () {
-        if (otpFieldController.text.length == 6) {
-          context.read<SignInCubit>().signIn(
-                context,
-                widget.mobileNumber,
-                otpFieldController.text,
-                widget.fullName,
-              );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Please enter a valid 6-digit OTP.'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-    );
-  }
+                    BlocBuilder<SignInCubit, SignInState>(
+                      builder: (context, state) {
+                        return SizedBox(
+                          width: double.infinity,
+                          child: CustomButton(
+                            buttonText: "Verify & Continue",
+                            isLoading: state is SignInLoading,
+                            onPressed: () {
+                              if (otpController.text.length == 6) {
+                                context.read<SignInCubit>().signIn(
+                                      context,
+                                      widget.mobileNumber,
+                                      otpController.text,
+                                      widget.fullName,
+                                    );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        "Please enter a valid 6-digit OTP."),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
 
-  Widget _buildResendOtp(BuildContext context) {
-    return InkWell(
-      onTap: () {
-        context.read<TriggerOtpCubit>().resendOtp(context, widget.mobileNumber);
-      },
-      child: Text.rich(
-        TextSpan(
-          text: "Didn't receive an OTP? ",
-          style: TextStyle(color: AppColor.White, fontSize: 16),
-          children: [
-            TextSpan(
-              text: 'Resend OTP',
-              style: TextStyle(
-                color: AppColor.White,
-                fontWeight: FontWeight.bold,
+                    const SizedBox(height: 18),
+
+                    // Resend
+                    Center(
+                      child: InkWell(
+                        onTap: () {
+                          context
+                              .read<TriggerOtpCubit>()
+                              .resendOtp(context, widget.mobileNumber);
+                        },
+                        child: Text(
+                          "Didn't receive it? Resend OTP",
+                          style: GoogleFonts.poppins(
+                            fontSize: 13.5,
+                            color: Colors.grey.shade700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

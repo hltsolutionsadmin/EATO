@@ -205,7 +205,7 @@ class _CartScreenState extends State<CartScreen> {
             orElse: () => {},
           );
           if (foundItem != null && foundItem.isNotEmpty) {
-            selectedItems.add(foundItem as Map<String, dynamic>);
+            selectedItems.add(foundItem);
           }
         }
       });

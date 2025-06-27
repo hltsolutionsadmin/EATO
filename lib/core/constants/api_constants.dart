@@ -1,16 +1,22 @@
 //usermanagement
 const baseUrl2 = 'https://skillrat.com/usermgmt/';
 
-const TriggerOtp = 'auth/jtuserotp/trigger/otp?triggerOtp=true';
+const TriggerOtp = 'auth/jtuserotp/trigger/otp?triggerOtp=false';
 const SigninUrl = 'auth/login';
 const SignupUrl = 'auth/jtuserotp/trigger/sign-up?triggerOtp=true';
 const userDetails = 'user/userDetails';
 const updateCurrentCustomerUrl = 'usermgmt/user/userDetails';
+const deleteAccountUrl = 'usermgmt/user/skillrat';
 
 const rolePostUrl = 'user/user';
 String getNearbyRestaurantsUrl(
     double latitude, double longitude, String postalCode, int page, int size) {
   return 'business/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&page=$page&size=$size';
+}
+
+String guestNearbyRestaurantsUrl(
+    double latitude, double longitude, String postalCode, int page, int size) {
+  return 'api/public/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&searchTerm=&page=$page&size=$size';
 }
 
 const addressSave = 'api/addresses/save';
@@ -23,12 +29,16 @@ String getMenuByRestaurantIdUrl(
   return 'product/api/products/filter?restaurantId=$restaurantId&attributeValue=Online&keyword=$search&page=$page&size=$size';
 }
 
+String guestMenuByRestaurantIdUrl(int restaurantId) {
+  return 'product/api/public/restaurant/$restaurantId';
+}
+
 String getRestaurantsByProductNameUrl(String productName, double latitude,
     double longitude, String postalcode, int page, int size) {
   return 'product/api/products/nearby-search?latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalcode&page=$page&size=$size&searchTerm=$productName';
 }
 
-String orderHistoryUrl(int page, int size,String searchQuery) {
+String orderHistoryUrl(int page, int size, String searchQuery) {
   return 'order/api/orders/history?page=$page&size=$size&sortBy=createdDate&direction=DESC&query=$searchQuery';
 }
 

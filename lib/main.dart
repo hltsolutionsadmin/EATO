@@ -8,6 +8,7 @@ import 'package:eato/presentation/cubit/address/getAddress/getAddress_cubit.dart
 import 'package:eato/presentation/cubit/address/saveAddress/saveAddress_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
+import 'package:eato/presentation/cubit/authentication/deleteAccount/deleteAccount_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/login/trigger_otp_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/roles/rolesPost_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/signUp/signup_cubit.dart';
@@ -25,6 +26,8 @@ import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getNearbyRestaurants/getNearByrestarants_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getRestaurantsByProductName/getRestaurantsByProductName_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/guestMenuByRestaurantId/guestMenuByRestaurantId_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/guestNearbyRestaurants/guestNearbyRestaurants_cubit.dart';
 import 'package:eato/presentation/screen/authentication/splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -103,6 +106,9 @@ class _MyAppState extends State<MyApp> {
         BlocProvider(create: (_) => di.sl<UpdateCurrentCustomerCubit>()),
         BlocProvider(create: (_) => di.sl<DefaultAddressCubit>()),
         BlocProvider(create: (_) => di.sl<AddressSavetoCartCubit>()),
+        BlocProvider(create: (_) => di.sl<GuestNearByRestaurantsCubit>()),
+        BlocProvider(create: (_) => di.sl<GuestMenuByRestaurantIdCubit>()),
+        BlocProvider(create: (_) => di.sl<DeleteAccountCubit>()),
       ],
       child: MaterialApp(
         title: 'Eato',

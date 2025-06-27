@@ -72,7 +72,7 @@ Widget BuildOrderItem({
           ),
           child: Row(
             children: [
-              Container(
+              SizedBox(
                 width: 50,
                 height: 50,
                 // decoration: BoxDecoration(
@@ -208,7 +208,8 @@ Widget BuildOrderItem({
                                 final cartItems = state.cart.cartItems;
                                 final currentBusinessId = state.cart.businessId;
 
-                                if (cartItems != null && cartItems.length > 0 &&
+                                if (cartItems != null &&
+                                    cartItems.isNotEmpty &&
                                     currentBusinessId != order.businessId) {
                                   final shouldReplace =
                                       await ShowReplaceCartDialog(
@@ -233,7 +234,7 @@ Widget BuildOrderItem({
                                 });
 
                                 addNewItemToCart(item, newQuantity, itemKey);
-                              } else{
+                              } else {
                                 print('else');
                               }
                             },

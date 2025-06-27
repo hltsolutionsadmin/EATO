@@ -4,6 +4,7 @@ import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
+import 'package:eato/presentation/screen/authentication/login_screen.dart';
 import 'package:eato/presentation/screen/widgets/restaurantMenu/searchBar.dart';
 import 'package:eato/presentation/screen/widgets/restaurantMenu/bottomSheet.dart';
 import 'package:eato/presentation/screen/widgets/restaurantMenu/menu.dart';
@@ -13,14 +14,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/screen/cart/cart_screen.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:eato/data/model/restaurants/guestMenuByRestaurantId/menu_content_model.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_cubit.dart';
 import 'package:eato/presentation/cubit/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_state.dart';
-import 'package:eato/data/model/restaurants/getMenuByRestaurantId/getMenuByRestaurantId_model.dart';
+import 'package:eato/presentation/cubit/restaurants/guestMenuByRestaurantId/guestMenuByRestaurantId_cubit.dart';
+import 'package:eato/presentation/cubit/restaurants/guestMenuByRestaurantId/guestMenuByRestaurantId_state.dart';
 
 class RestaurantMenuScreen extends StatefulWidget {
   final String restaurantName, restaurantId;
-  const RestaurantMenuScreen(
-      {super.key, required this.restaurantName, required this.restaurantId});
+  final bool isGuest;
+  const RestaurantMenuScreen({
+    super.key,
+    required this.restaurantName,
+    required this.restaurantId,
+    this.isGuest = false,
+  });
 
   @override
   _RestaurantMenuScreenState createState() => _RestaurantMenuScreenState();
@@ -41,20 +49,31 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   @override
   void initState() {
     super.initState();
-    print('initState: Loading menu for restaurantId = ${widget.restaurantId}');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GetMenuByRestaurantIdCubit>().fetchMenu({
-        'restaurantId': widget.restaurantId,
-        'search': searchText,
-        'page': page,
-        'size': size,
-      });
 
-      Future.delayed(const Duration(milliseconds: 300), () {
-        _loadCart();
-      });
+    // ✅ Print isGuest value
+    print("RestaurantMenuScreen - isGuest: ${widget.isGuest}");
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.isGuest) {
+        context
+            .read<GuestMenuByRestaurantIdCubit>()
+            .fetchGuestMenuByRestaurantId({
+          'restaurantId': int.tryParse(widget.restaurantId) ?? 0,
+        });
+      } else {
+        context.read<GetMenuByRestaurantIdCubit>().fetchMenu({
+          'restaurantId': widget.restaurantId,
+          'search': searchText,
+          'page': page,
+          'size': size,
+        });
+        Future.delayed(const Duration(milliseconds: 300), () {
+          _loadCart();
+        });
+      }
     });
   }
+
 
   Future<void> _loadCart() async {
     final cartState = context.read<GetCartCubit>().state;
@@ -151,7 +170,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     int newTotalItems = updatedCart.values.fold(0, (sum, qty) => sum + qty);
 
     if (!mounted) return;
-    setState(()  {
+    setState(() {
       cart = updatedCart;
       selectedItems = updatedSelectedItems;
       totalItems = newTotalItems;
@@ -165,7 +184,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       "price": item.price ?? 0
     };
     context.read<ProductsAddToCartCubit>().addToCart([payload]);
-        context.read<GetCartCubit>().fetchCart(context);
+    context.read<GetCartCubit>().fetchCart(context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (totalItems > 0 && !isBottomSheetVisible) {
@@ -230,7 +249,10 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                 }
               });
               _onBottomSheetVisibilityChanged(cart.isNotEmpty);
-              _loadMenu();
+              if (!widget.isGuest) {
+                _loadMenu();
+              }
+
             }
           }
         },
@@ -269,8 +291,78 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       setState(() {
         searchText = value;
       });
-      _loadMenu();
+      if (!widget.isGuest) {
+        _loadMenu(); // ✅ Only for logged-in users
+      }
     });
+  }
+
+  void showLoginPromptBottomSheet(BuildContext context, int qty, Content item) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.lock, size: 40, color: AppColor.PrimaryColor),
+              const SizedBox(height: 12),
+              Text(
+                "Login Required",
+                style: GoogleFonts.poppins(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Please login to add items to your cart.",
+                textAlign: TextAlign.center,
+                style:
+                    GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        setState(() {
+                          cart[item.name ?? ""] = qty;
+                          selectedItems.add(item);
+                          totalItems += qty;
+                        });
+                      },
+                      child: const Text("Cancel"),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColor.PrimaryColor,
+                      ),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (_) => LoginScreen()));
+                      },
+                      child: const Text("Login"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -292,147 +384,178 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           if (isBottomSheetVisible) _bottomSheetController?.close();
         },
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [AppColor.White, Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Column(
-          children: [
-            Container(
-              margin: const EdgeInsets.all(16),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: AppColor.PrimaryColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.restaurantName,
-                          style: GoogleFonts.poppins(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                      const SizedBox(height: 4),
-                      Text("Rating: ⭐ 4.5",
-                          style: GoogleFonts.poppins(
-                              fontSize: 14, color: Colors.white70)),
-                    ],
+      body: Column(
+        children: [
+          // top UI...
+          HomeSearchBar(hintText: "menu", onChanged: _onSearchChanged),
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Row(
+              children: ['All', 'Veg', 'NonVeg'].map((filter) {
+                final isSelected = filter == filterType;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(filter),
+                    selected: isSelected,
+                    onSelected: (_) {
+                      setState(() {
+                        filterType = filter;
+                      });
+                      if (!widget.isGuest) _loadMenu();
+                    },
+                    selectedColor: AppColor.PrimaryColor,
+                    labelStyle: GoogleFonts.poppins(
+                        color: isSelected ? Colors.white : Colors.black),
                   ),
-                  const Icon(Icons.restaurant_menu,
-                      color: Colors.white, size: 32),
-                ],
-              ),
+                );
+              }).toList(),
             ),
-            HomeSearchBar(hintText: "menu", onChanged: _onSearchChanged),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: ['All', 'Veg', 'NonVeg'].map((filter) {
-                  final isSelected = filter == filterType;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(filter),
-                      selected: isSelected,
-                      onSelected: (_) {
-                        if (!mounted) return;
-                        setState(() {
-                          filterType = filter;
-                        });
-                        _loadMenu();
-                      },
-                      selectedColor: AppColor.PrimaryColor,
-                      labelStyle: GoogleFonts.poppins(
-                          color: isSelected ? Colors.white : Colors.black),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: BlocConsumer<GetMenuByRestaurantIdCubit,
-                  GetMenuByRestaurantIdState>(
-                listener: (context, state) {
-                  if (state is GetMenuByRestaurantIdLoaded) {
-                    setState(() {
-                      menuItems = state.model.content;
-                      _isMenuLoaded = true;
-                    });
-                    if (!_isCartLoaded) {
-                      _loadCart();
-                    }
-                  } else if (state is GetMenuByRestaurantIdError) {
-                    print('Error loading menu: ${state.message}');
-                  }
-                },
-                builder: (context, state) {
-                  if (state is GetMenuByRestaurantIdLoading) {
-                    return const Center(child: CupertinoActivityIndicator());
-                  } else if (state is GetMenuByRestaurantIdLoaded) {
-                    final filteredItems = menuItems.where((item) {
-                      final matchesSearch = item.name
-                              ?.toLowerCase()
-                              .contains(searchText.toLowerCase()) ??
-                          false;
-                      final foodType = item.attributes
-                          .firstWhere(
-                              (a) => a.attributeName?.toLowerCase() == 'type',
-                              orElse: () => Attribute(
-                                  id: 0, attributeName: '', attributeValue: ''))
-                          .attributeValue;
-                      final matchesFilter = filterType == 'All' ||
-                          (filterType.toLowerCase() == 'veg' &&
-                              foodType?.toLowerCase() == 'veg') ||
-                          (filterType.toLowerCase() == 'nonveg' &&
-                              foodType?.toLowerCase() == 'nonveg');
+          ),
+          const SizedBox(height: 10),
+          Expanded(
+            child: widget.isGuest
+                ? BlocConsumer<GuestMenuByRestaurantIdCubit,
+                    GuestMenuByRestaurantIdState>(
+                    listener: (context, state) {
+                      if (state is GuestMenuByRestaurantIdSuccess) {
+                        _isMenuLoaded = true;
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is GuestMenuByRestaurantIdLoading) {
+                        return const Center(
+                            child: CupertinoActivityIndicator());
+                      } else if (state is GuestMenuByRestaurantIdSuccess) {
+                        final filteredItems = state.data.content.where((item) {
+                          final matchesSearch = (item.name ?? "")
+                              .toLowerCase()
+                              .contains(searchText.toLowerCase());
 
-                      return matchesSearch && matchesFilter;
-                    }).toList();
+                          final foodType = item.attributes
+                              .firstWhere(
+                                (a) =>
+                                    (a.attributeName ?? "").toLowerCase() ==
+                                    'type',
+                                orElse: () => Attribute(
+                                    id: 0,
+                                    attributeName: '',
+                                    attributeValue: ''),
+                              )
+                              .attributeValue
+                              ?.toLowerCase();
 
-                    if (filteredItems.isEmpty) {
-                      return Center(
-                        child: Text("No items match your filter.",
-                            style: GoogleFonts.poppins(color: Colors.grey)),
-                      );
-                    }
-                    return ListView.builder(
-                      padding: const EdgeInsets.all(16.0),
-                      itemCount: filteredItems.length,
-                      itemBuilder: (context, index) {
-                        final item = filteredItems[index];
-                        final quantity = cart[item.name ?? ""] ?? 0;
-                        return MenuItemWidget(
-                          item: item,
-                          quantity: quantity,
-                          restaurantId: widget.restaurantId,
-                          restaurantName: widget.restaurantName,
-                          onQuantityChanged: (qty) => {update_Cart(item, qty)},
+                          final matchesFilter = filterType == 'All' ||
+                              (filterType.toLowerCase() == 'veg' &&
+                                  foodType == 'veg') ||
+                              (filterType.toLowerCase() == 'nonveg' &&
+                                  foodType == 'nonveg');
+
+                          return matchesSearch && matchesFilter;
+                        }).toList();
+
+                        if (filteredItems.isEmpty) {
+                          return const Center(
+                              child: Text("No menu items available"));
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16.0),
+                          itemCount: filteredItems.length,
+                          itemBuilder: (context, index) {
+                            final item = filteredItems[index];
+                            return MenuItemWidget(
+                              item: item,
+                              quantity: 0,
+                              restaurantId: widget.restaurantId,
+                              restaurantName: widget.restaurantName,
+                              isGuest: true,
+                              onQuantityChanged: (_) {},
+                              onGuestAttempt: () {
+                                showLoginPromptBottomSheet(context, 0, item);
+                              },
+                            );
+                          },
                         );
-                      },
-                    );
-                  } else if (state is GetMenuByRestaurantIdError) {
-                    return Center(
-                      child: Text("Error Loading Menu",
-                          style: GoogleFonts.poppins(color: Colors.red)),
-                    );
-                  } else {
-                    return const Center(child: Text("Initial state"));
-                  }
-                },
-              ),
-            ),
-          ],
-        ),
+                      } else if (state is GuestMenuByRestaurantIdFailure) {
+                        return const Center(child: Text("Error loading menu"));
+                      }
+                      return const SizedBox();
+                    },
+                  )
+                : BlocConsumer<GetMenuByRestaurantIdCubit,
+                    GetMenuByRestaurantIdState>(
+                    listener: (context, state) {
+                      if (state is GetMenuByRestaurantIdLoaded) {
+                        setState(() {
+                          menuItems = state.model.content;
+                          _isMenuLoaded = true;
+                        });
+                        if (!_isCartLoaded) _loadCart();
+                      }
+                    },
+                    builder: (context, state) {
+                      if (state is GetMenuByRestaurantIdLoading) {
+                        return const Center(
+                            child: CupertinoActivityIndicator());
+                      } else if (state is GetMenuByRestaurantIdLoaded) {
+                        final filteredItems = menuItems.where((item) {
+                          final matchesSearch = (item.name ?? "")
+                              .toLowerCase()
+                              .contains(searchText.toLowerCase());
+
+                          final foodType = item.attributes
+                              .firstWhere(
+                                (a) =>
+                                    (a.attributeName ?? "").toLowerCase() ==
+                                    'type',
+                                orElse: () => Attribute(
+                                    id: 0,
+                                    attributeName: '',
+                                    attributeValue: ''),
+                              )
+                              .attributeValue
+                              ?.toLowerCase();
+
+                          final matchesFilter = filterType == 'All' ||
+                              (filterType.toLowerCase() == 'veg' &&
+                                  foodType == 'veg') ||
+                              (filterType.toLowerCase() == 'nonveg' &&
+                                  foodType == 'nonveg');
+
+                          return matchesSearch && matchesFilter;
+                        }).toList();
+
+                        if (filteredItems.isEmpty) {
+                          return const Center(
+                              child: Text("No menu items available"));
+                        }
+
+                        return ListView.builder(
+                          padding: const EdgeInsets.all(16.0),
+                          itemCount: filteredItems.length,
+                          itemBuilder: (context, index) {
+                            final item = filteredItems[index];
+                            final quantity = cart[item.name ?? ""] ?? 0;
+                            return MenuItemWidget(
+                              item: item,
+                              quantity: quantity,
+                              restaurantId: widget.restaurantId,
+                              restaurantName: widget.restaurantName,
+                              onQuantityChanged: (qty) =>
+                                  update_Cart(item, qty),
+                            );
+                          },
+                        );
+                      } else if (state is GetMenuByRestaurantIdError) {
+                        return const Center(child: Text("Error loading menu"));
+                      }
+                      return const Center(child: Text("Loading..."));
+                    },
+                  ),
+          )
+        ],
       ),
     );
   }

@@ -2,7 +2,6 @@ import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/core/network/network_service.dart';
 import 'package:eato/domain/usecase/cart/productsAddToCart/productsAddtoCart_usecase.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_state.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ProductsAddToCartCubit extends Cubit<ProductsAddToCartState> {

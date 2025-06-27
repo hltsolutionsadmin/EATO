@@ -1,4 +1,3 @@
-import 'package:bloc/bloc.dart';
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/core/network/network_service.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';

@@ -1,11 +1,9 @@
 import 'package:eato/components/bottomTab.dart';
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/core/injection.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_state.dart';
 import 'package:eato/presentation/screen/authentication/login_screen.dart';
 import 'package:eato/presentation/screen/authentication/nameInput_screen.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,14 +16,37 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _navigateManually = false;
+
   @override
   void initState() {
     super.initState();
-    _initializeApp();
+    _checkLoginFlow();
   }
 
-  Future<void> _initializeApp() async {
-   await context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
+  Future<void> _checkLoginFlow() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('TOKEN');
+    final isFirstTime = prefs.getBool('isFirstTime') ?? true;
+
+    // First launch: go to login
+    if (isFirstTime) {
+      await prefs.setBool('isFirstTime', false);
+      _navigateTo(const LoginScreen());
+      return;
+    }
+
+    // If token not found
+    if (token == null || token.isEmpty) {
+      _navigateTo(const LoginScreen());
+      return;
+    }
+
+    // If token exists, get customer data
+    await context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
+    setState(() {
+      _navigateManually = true; // Let BlocListener handle next steps
+    });
   }
 
   void _navigateTo(Widget screen) {
@@ -33,7 +54,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => screen),
+        MaterialPageRoute(builder: (_) => screen),
       );
     });
   }
@@ -41,19 +62,18 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<CurrentCustomerCubit, CurrentCustomerState>(
-      listener: (context, state) async {
-        final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('TOKEN') ?? '';
+      listener: (context, state) {
+        if (!_navigateManually) return;
+
         if (state is CurrentCustomerLoaded) {
-          final eatoStatus = state.currentCustomerModel.eato ?? false;
-          debugPrint('Eato status: $eatoStatus, Token: ${token.isNotEmpty}');
-          if (eatoStatus && token.isNotEmpty) {
-            _navigateTo(BottomTab());
+          final eato = state.currentCustomerModel.eato ?? false;
+          if (eato) {
+            _navigateTo(const BottomTab());
           } else {
-            _navigateTo(NameInputScreen());
+            _navigateTo(const NameInputScreen());
           }
         } else if (state is CurrentCustomerError) {
-          _navigateTo(LoginScreen());
+          _navigateTo(const LoginScreen());
         }
       },
       child: Scaffold(
@@ -71,9 +91,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              // const CupertinoActivityIndicator(
-              //   color: Colors.white,
-              // ),
+              const CircularProgressIndicator(color: Colors.white),
             ],
           ),
         ),

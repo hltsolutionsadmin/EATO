@@ -22,9 +22,10 @@ class UpdateCurrentCustomerRemoteDataSourceImpl
       print(payload);
       print(payload['fullName']);
 
-FormData formData = FormData.fromMap({
-        "fullName": payload['fullName'],
-        "email": payload['email'],
+      FormData formData = FormData.fromMap({
+        "fullName": payload['fullName'] ?? '',
+        "email": payload['email'] ?? '',
+
         // "fcmToken": '',
         // "gender": '',
         "eato": payload['eato'],
@@ -33,7 +34,7 @@ FormData formData = FormData.fromMap({
       final response = await client.put(
         '$baseUrl$updateCurrentCustomerUrl',
         data: formData,
-       options: Options(
+        options: Options(
           headers: {
             'Content-Type': 'multipart/form-data',
           },

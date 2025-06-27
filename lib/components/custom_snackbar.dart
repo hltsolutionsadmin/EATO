@@ -38,8 +38,8 @@ class CustomSnackbars {
       context: context,
       title: title,
       message: message,
-      backgroundColor: Colors.white,
-      textColor: Colors.black,
+      backgroundColor: Colors.blueAccent,
+      textColor: Colors.white,
     );
   }
 
@@ -53,33 +53,32 @@ class CustomSnackbars {
     final overlay = Overlay.of(context);
     final overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: 50, // Position from top of the screen
+        top: 50,
         left: 10,
         right: 10,
         child: Material(
           color: Colors.transparent,
           child: FadeTransition(
-            opacity: _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
+            opacity:
+                _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
             child: SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, -1),
                 end: Offset.zero,
               ).animate(CurvedAnimation(
-                parent: _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
+                parent:
+                    _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
                 curve: Curves.easeOut,
               )),
               child: ShakeTransition(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Colors.green, Colors.white],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: backgroundColor,
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      const BoxShadow(
+                    boxShadow: const [
+                      BoxShadow(
                         color: Colors.black26,
                         blurRadius: 12,
                         offset: Offset(0, 4),
@@ -148,7 +147,8 @@ class ShakeTransition extends StatefulWidget {
   _ShakeTransitionState createState() => _ShakeTransitionState();
 }
 
-class _ShakeTransitionState extends State<ShakeTransition> with SingleTickerProviderStateMixin {
+class _ShakeTransitionState extends State<ShakeTransition>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Offset> _shakeAnimation;
 
@@ -170,7 +170,7 @@ class _ShakeTransitionState extends State<ShakeTransition> with SingleTickerProv
   }
 
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     return SlideTransition(
       position: _shakeAnimation,
       child: widget.child,
