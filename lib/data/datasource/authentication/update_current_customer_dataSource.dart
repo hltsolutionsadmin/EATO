@@ -21,7 +21,7 @@ class UpdateCurrentCustomerRemoteDataSourceImpl
     try {
       print(payload['fcmToken']);
 
-FormData formData = FormData.fromMap({
+      FormData formData = FormData.fromMap({
         "fullName": payload['fullName'],
         "email": payload['email'],
         "fcmToken": payload['fcmToken'],

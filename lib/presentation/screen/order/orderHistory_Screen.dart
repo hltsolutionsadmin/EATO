@@ -55,9 +55,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      appBar: CustomAppBar(
-        title: "Order History",
-      ),
+      appBar: CustomAppBar(title: "Order History", showBackButton: false),
       body: BlocListener<ProductsAddToCartCubit, dynamic>(
         listener: (context, state) {
           if (state is ProductsAddToCartFailure ||
