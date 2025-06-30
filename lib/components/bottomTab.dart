@@ -5,6 +5,7 @@ import 'package:eato/presentation/cubit/authentication/currentcustomer/update/up
 import 'package:eato/presentation/screen/dashboard/dashboard_screen.dart';
 import 'package:eato/presentation/screen/order/orderHistory_Screen.dart';
 import 'package:eato/presentation/screen/profile/profile_screen.dart';
+import 'package:eato/presentation/screen/promotions/promotions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -30,7 +31,7 @@ class _BottomTabState extends State<BottomTab> {
 
     _pages = [
       DashboardScreen(isGuest: widget.isGuest),
-      OrderHistoryScreen(isGuest: widget.isGuest),
+      PromotionsScreen(),
       ProfileScreen(isGuest: widget.isGuest),
     ];
   }
@@ -58,7 +59,7 @@ Future<void> _initNotifications() async {
 
   void _onItemTapped(int index) {
     if (widget.isGuest && (index == 1 || index == 2)) {
-      _showLoginPromptSheet(); // Show premium login prompt
+      _showLoginPromptSheet();
       return;
     }
 
@@ -105,7 +106,7 @@ Future<void> _initNotifications() async {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // Close bottom sheet
+                    Navigator.pop(context);
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -160,8 +161,8 @@ Future<void> _initNotifications() async {
             label: 'Restaurants',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'Reorder',
+            icon: Icon(Icons.card_giftcard),
+            label: 'Offers',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
