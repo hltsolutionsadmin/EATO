@@ -15,7 +15,7 @@ class _PromotionsScreenState extends State<PromotionsScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(title: "Offers", showBackButton: false),
-      body: Center(child: Text('Offers under development'),)
+      body: Center(child: Text('No Offers Yet..!'),)
     );
   }
 }

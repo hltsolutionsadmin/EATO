@@ -29,23 +29,20 @@ class _SplashScreenState extends State<SplashScreen> {
     final token = prefs.getString('TOKEN');
     final isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
-    // First launch: go to login
     if (isFirstTime) {
       await prefs.setBool('isFirstTime', false);
       _navigateTo(const LoginScreen());
       return;
     }
 
-    // If token not found
     if (token == null || token.isEmpty) {
       _navigateTo(const LoginScreen());
       return;
     }
 
-    // If token exists, get customer data
     await context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
     setState(() {
-      _navigateManually = true; // Let BlocListener handle next steps
+      _navigateManually = true;
     });
   }
 
@@ -67,12 +64,16 @@ class _SplashScreenState extends State<SplashScreen> {
 
         if (state is CurrentCustomerLoaded) {
           final eato = state.currentCustomerModel.eato ?? false;
+          print(eato);
           if (eato) {
             _navigateTo(const BottomTab());
           } else {
+
             _navigateTo(const NameInputScreen());
           }
         } else if (state is CurrentCustomerError) {
+          _navigateTo(const LoginScreen());
+        } else{
           _navigateTo(const LoginScreen());
         }
       },
