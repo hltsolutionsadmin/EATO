@@ -10,14 +10,12 @@ class PromotionsScreen extends StatefulWidget {
 }
 
 class _PromotionsScreenState extends State<PromotionsScreen> {
-  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(title: "Offers", showBackButton: false),
-      body: Center(child: Text('Offers under development' ),)
-      
+      body: Center(child: Text('Offers under development'),)
     );
   }
 }
