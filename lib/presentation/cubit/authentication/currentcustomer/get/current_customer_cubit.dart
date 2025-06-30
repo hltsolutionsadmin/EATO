@@ -1,6 +1,6 @@
+import 'package:eato/core/constants/global_exception_handler.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../../core/network/network_helper.dart';
 import '../../../../../core/network/network_service.dart';
 import '../../../../../domain/usecase/authentication/current_customer_usecase.dart';
@@ -11,8 +11,9 @@ class CurrentCustomerCubit extends Cubit<CurrentCustomerState> {
   final NetworkService networkService;
 
   CurrentCustomerCubit(
-      this.currentCustomerValidationUseCase, this.networkService)
-      : super(CurrentCustomerInitial());
+    this.currentCustomerValidationUseCase,
+    this.networkService,
+  ) : super(CurrentCustomerInitial());
 
   void startTimer() {
     Future.delayed(const Duration(seconds: 3), () {
@@ -21,7 +22,8 @@ class CurrentCustomerCubit extends Cubit<CurrentCustomerState> {
       }
     });
   }
-   void reset() {
+
+  void reset() {
     emit(CurrentCustomerInitial());
   }
 
@@ -34,15 +36,21 @@ class CurrentCustomerCubit extends Cubit<CurrentCustomerState> {
 
     try {
       emit(CurrentCustomerLoading());
+
       final currentCustomerModel = await currentCustomerValidationUseCase();
+
       if (!isClosed) {
         emit(CurrentCustomerLoaded(currentCustomerModel));
       }
-    } catch (e) {
+    } on AppException catch (e) {
+      debugPrint('AppException: $e');
       if (!isClosed) {
-debugPrint('Error loading customer: $e');
-        emit(CurrentCustomerError(
-            'Failed to fetch current customer data: ${e.toString()}'));
+        emit(CurrentCustomerError(e.message)); // ✅ Use clean message
+      }
+    } catch (e) {
+      debugPrint('Unexpected error: $e');
+      if (!isClosed) {
+        emit(CurrentCustomerError("Something went wrong. Please try again."));
       }
     }
   }

@@ -10,7 +10,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     super.key,
     required this.title,
     this.onBackPressed,
-    this.showBackButton = true, 
+    this.showBackButton = true,
   });
 
   @override
@@ -18,15 +18,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       backgroundColor: AppColor.PrimaryColor,
       leading: showBackButton == true
-    ? IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios,
-          color: AppColor.White,
-          size: 24,
-        ),
-        onPressed: onBackPressed,
-      )
-    : null,
+          ? IconButton(
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: AppColor.White,
+                size: 24,
+              ),
+              onPressed: onBackPressed,
+            )
+          : null,
       title: Text(
         title,
         style: TextStyle(

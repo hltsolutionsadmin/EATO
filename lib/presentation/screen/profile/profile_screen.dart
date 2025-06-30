@@ -83,7 +83,41 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           );
         } else if (state is CurrentCustomerError) {
-          return const Text('Error fetching profile');
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 35,
+                    backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
+                    child:
+                        Icon(Icons.error_outline, size: 40, color: Colors.red),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      state.message, // ✅ show actual error message
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: () {
+                  context
+                      .read<CurrentCustomerCubit>()
+                      .GetCurrentCustomer(context);
+                },
+                icon: const Icon(Icons.refresh),
+                label: const Text("Retry"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColor.PrimaryColor,
+                ),
+              ),
+            ],
+          );
         } else if (state is CurrentCustomerLoading) {
           return const CupertinoActivityIndicator();
         }

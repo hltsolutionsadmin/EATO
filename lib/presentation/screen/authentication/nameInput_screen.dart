@@ -45,7 +45,6 @@ class _NameInputScreenState extends State<NameInputScreen> {
     return BlocListener<UpdateCurrentCustomerCubit, UpdateCurrentCustomerState>(
       listener: (context, state) {
         if (state.isLoading) {
-          // Show loading indicator if needed
         } else if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(state.error!)),

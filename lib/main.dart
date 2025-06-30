@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/firebase_options.dart';
 import 'package:eato/presentation/cubit/address/defaultAddress/get/getDefaultAddress_cubit.dart';
