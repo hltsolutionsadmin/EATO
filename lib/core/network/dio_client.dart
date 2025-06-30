@@ -57,7 +57,6 @@ class DioClient {
 
           if (refreshToken != null) {
             try {
-              // Call refresh token API
               final refreshResponse = await dio.post(
                 '${baseUrl2}auth/refreshToken',
                 data: {
@@ -68,11 +67,9 @@ class DioClient {
               final newToken = refreshResponse.data['token'];
               final newRefreshToken = refreshResponse.data['refreshToken'];
 
-              // Save new tokens
               await prefs.setString('TOKEN', newToken);
               await prefs.setString('REFRESH_TOKEN', newRefreshToken);
 
-              // Retry the failed request with the new token
               final RequestOptions requestOptions = error.requestOptions;
               requestOptions.headers["Authorization"] = "Bearer $newToken";
 
@@ -82,13 +79,12 @@ class DioClient {
               log('Token refresh failed: $e');
               await prefs.remove('TOKEN');
               await prefs.remove('REFRESH_TOKEN');
-              // Optionally, redirect to login screen here if needed
-              return handler.reject(error); // Don't retry again
+              return handler.reject(error);
             }
           }
         }
 
-        return handler.next(error); // forward the error
+        return handler.next(error);
       },
     ));
   }
