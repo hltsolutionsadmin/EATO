@@ -57,6 +57,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
       backgroundColor: Colors.grey[50],
       appBar: CustomAppBar(
         title: "Order History",
+        showBackButton: false,
       ),
       body: BlocListener<ProductsAddToCartCubit, dynamic>(
         listener: (context, state) {
@@ -65,7 +66,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state is ProductsAddToCartFailure
-                    ? 'Error: ${state.message}'
+                    ? 'Failed to add item to cart'
                     : (state as ProductsAddToCartRejected).message),
                 backgroundColor: state is ProductsAddToCartFailure
                     ? Colors.red
@@ -85,6 +86,9 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
               return const Center(child: Text("Failed to load orders"));
             }
             if (state is OrderHistoryLoaded) {
+              if (state.orders.data?.content.isEmpty ?? true) {
+                return const Center(child: Text("No orders found"));
+              }
               return _buildOrderList(context, state.orders);
             }
             return const Center(child: Text('No orders found'));

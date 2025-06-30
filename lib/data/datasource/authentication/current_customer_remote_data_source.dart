@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:eato/core/constants/global_exception_handler.dart';
 import 'package:eato/data/model/authentication/current_customer_model.dart';
 
 import '../../../core/constants/api_constants.dart';
@@ -20,15 +21,20 @@ class CurrentCustomerRemoteDataSourceImpl
         '$baseUrl2$userDetails',
         options: Options(method: 'GET'),
       );
+
       if (response.statusCode == 200) {
-        print('responce of current customer:: $response');
+        print('Response of current customer: $response');
         return CurrentCustomerModel.fromJson(response.data);
       } else {
-        throw Exception(
-            'Failed to load current customer data: ${response.statusCode}');
+        // if backend returns error with code/message
+        final code = response.data['code'] ?? response.statusCode;
+        final message = response.data['message'] ?? 'Unknown error occurred';
+        throw mapErrorCodeToException(code, message);
       }
+    } on DioError catch (e) {
+      throw handleDioError(e);
     } catch (e) {
-      throw Exception('Failed to load current customer data: ${e.toString()}');
+      throw UnknownBackendException('Unexpected error: ${e.toString()}');
     }
   }
 }

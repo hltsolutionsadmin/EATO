@@ -93,7 +93,7 @@ Future<void> _initNotifications() async {
               ),
               const SizedBox(height: 8),
               Text(
-                "Please login to access this feature and track your orders.",
+                "Please login to access this features",
                 style: TextStyle(
                   fontSize: 15,
                   color: Colors.grey.shade700,
