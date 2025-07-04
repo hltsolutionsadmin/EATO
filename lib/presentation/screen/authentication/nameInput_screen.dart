@@ -4,7 +4,6 @@ import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_state.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
