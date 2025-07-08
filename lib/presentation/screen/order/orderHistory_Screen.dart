@@ -24,7 +24,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
   final Map<String, int> _itemQuantities = {};
   int? bussinessId = 0;
 
-  int _currentPage = 0;
+  final int _currentPage = 0;
   final int _pageSize = 30;
   final String _searchQuery = '';
 

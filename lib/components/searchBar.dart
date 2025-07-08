@@ -83,7 +83,7 @@ class _CategorySearchBarState extends State<CategorySearchBar> {
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          margin: const EdgeInsets.symmetric(horizontal: 0, vertical: 10),
           decoration: BoxDecoration(
             color: AppColor.White,
             borderRadius: BorderRadius.circular(30),

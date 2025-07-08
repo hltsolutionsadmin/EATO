@@ -30,6 +30,7 @@ class GetCartCubit extends Cubit<GetCartState> {
         await prefs.setInt('cart_id', cart.id ?? 0);
         print("cart id is ${cart.id}");
         emit(GetCartLoaded(cart));
+
       } catch (e) {
         emit(GetCartError(e.toString()));
       }

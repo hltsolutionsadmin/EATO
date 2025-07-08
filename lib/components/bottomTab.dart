@@ -3,11 +3,10 @@ import 'package:eato/core/utils/push_notication_services.dart';
 import 'package:eato/presentation/screen/authentication/login_screen.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
 import 'package:eato/presentation/screen/dashboard/dashboard_screen.dart';
-import 'package:eato/presentation/screen/order/orderHistory_Screen.dart';
 import 'package:eato/presentation/screen/profile/profile_screen.dart';
-import 'package:eato/presentation/screen/promotions/promotions_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 
 class BottomTab extends StatefulWidget {
   final bool isGuest;
@@ -15,50 +14,65 @@ class BottomTab extends StatefulWidget {
   const BottomTab({super.key, this.isGuest = false});
 
   @override
-  _BottomTabState createState() => _BottomTabState();
+  State<BottomTab> createState() => _BottomTabState();
 }
 
 class _BottomTabState extends State<BottomTab> {
   int _selectedIndex = 0;
   final NotificationServices _notificationServices = NotificationServices();
 
-  late final List<Widget> _pages;
+  late final List<_TabItem> tabItems;
 
   @override
   void initState() {
     super.initState();
     _initNotifications();
 
-    _pages = [
-      DashboardScreen(isGuest: widget.isGuest),
-      PromotionsScreen(),
-      ProfileScreen(isGuest: widget.isGuest),
+    tabItems = [
+      _TabItem(
+        label: 'Restaurants',
+        icon: Icons.fastfood_rounded,
+        screen: DashboardScreen(isGuest: widget.isGuest),
+      ),
+      // _TabItem(
+      //   label: 'Offers',
+      //   icon: Icons.local_offer_outlined,
+      //   screen: PromotionsScreen(),
+      // ),
+      _TabItem(
+        label: 'Profile',
+        icon: Icons.person_outline,
+        screen: ProfileScreen(isGuest: widget.isGuest),
+      ),
     ];
   }
 
-Future<void> _initNotifications() async {
-  await _notificationServices.requestNotificationPermissions();
-  await _notificationServices.forgroundMessage();
-  await _notificationServices.firebaseInit(context);
-  await _notificationServices.setupInteractMessage(context);
-  await _notificationServices.isRefreshToken();
+  Future<void> _initNotifications() async {
+    await _notificationServices.requestNotificationPermissions();
+    await _notificationServices.forgroundMessage();
+    await _notificationServices.firebaseInit(context);
+    await _notificationServices.setupInteractMessage(context);
+    await _notificationServices.isRefreshToken();
 
-  _notificationServices.getDeviceToken().then((fcmToken) {
-    if (fcmToken != null) {
-      print("FCM Token: $fcmToken");
-      final payload = {
-        'fullName': '',
-        'email': '',
-        'eato': true,
-        "fcmToken" : fcmToken,
-      };
-      context.read<UpdateCurrentCustomerCubit>().updateCustomer(payload, context);
-    }
-  });
-}
+    _notificationServices.getDeviceToken().then((fcmToken) {
+      if (fcmToken != null) {
+        final payload = {
+          'fullName': '',
+          'email': '',
+          'eato': true,
+          "fcmToken": fcmToken,
+        };
+        context
+            .read<UpdateCurrentCustomerCubit>()
+            .updateCustomer(payload, context);
+      }
+    });
+  }
 
   void _onItemTapped(int index) {
-    if (widget.isGuest && (index == 1 || index == 2)) {
+    final selectedTab = tabItems[index];
+    if (widget.isGuest &&
+        (selectedTab.label == 'Offers' || selectedTab.label == 'Profile')) {
       _showLoginPromptSheet();
       return;
     }
@@ -71,109 +85,169 @@ Future<void> _initNotifications() async {
   void _showLoginPromptSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       backgroundColor: Colors.white,
       builder: (context) {
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.lock_outline_rounded,
-                  size: 48, color: Colors.grey),
-              const SizedBox(height: 12),
-              Text(
-                "Login Required",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColor.PrimaryColor,
+          padding: MediaQuery.of(context).viewInsets,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            width: double.infinity,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 🍽️ Custom food-style icon or image (you can use AssetImage too)
+                const Icon(
+                  Icons.fastfood_rounded,
+                  size: 64,
+                  color: Colors.orangeAccent,
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Please login to access this features",
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColor.PrimaryColor,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    "Login Now",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text(
-                  "Maybe Later",
+                const SizedBox(height: 16),
+                Text(
+                  "Login Required",
                   style: TextStyle(
-                    color: Colors.black54,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.PrimaryColor,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 10),
+                Text(
+                  "To continue enjoying delicious food and offers, please login to your account.",
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: Colors.grey[700],
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 28),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.lock_open),
+                    label: const Text("Login Now"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColor.PrimaryColor,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text(
+                    "Maybe Later",
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
     );
   }
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(child: _pages[_selectedIndex]),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.fastfood),
-            label: 'Restaurants',
+      body: tabItems[_selectedIndex].screen,
+      extendBody: true,
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+        child: Container(
+          height: 64,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 15,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.card_giftcard),
-            label: 'Offers',
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(tabItems.length, (index) {
+              final tab = tabItems[index];
+              final isSelected = index == _selectedIndex;
+              return GestureDetector(
+                onTap: () => _onItemTapped(index),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppColor.PrimaryColor.withOpacity(0.1)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(tab.icon,
+                          size: 24,
+                          color: isSelected
+                              ? AppColor.PrimaryColor
+                              : Colors.grey[600]),
+                      const SizedBox(height: 4),
+                      Text(
+                        tab.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.w600 : FontWeight.w400,
+                          color: isSelected
+                              ? AppColor.PrimaryColor
+                              : Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: AppColor.PrimaryColor,
-        unselectedItemColor: AppColor.Black,
-        backgroundColor: AppColor.White,
+        ),
       ),
     );
   }
+}
+
+class _TabItem {
+  final String label;
+  final IconData icon;
+  final Widget screen;
+
+  _TabItem({
+    required this.label,
+    required this.icon,
+    required this.screen,
+  });
 }

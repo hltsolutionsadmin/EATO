@@ -15,31 +15,31 @@ abstract class AppException implements Exception {
 
 // === Specific Exceptions ===
 class UserNotFoundException extends AppException {
-  UserNotFoundException(String message, int code) : super(message, code);
+  UserNotFoundException(super.message, int super.code);
 }
 
 class UnauthorizedException extends AppException {
-  UnauthorizedException(String message, int code) : super(message, code);
+  UnauthorizedException(super.message, int super.code);
 }
 
 class ForbiddenException extends AppException {
-  ForbiddenException(String message, int code) : super(message, code);
+  ForbiddenException(super.message, int super.code);
 }
 
 class BadRequestException extends AppException {
-  BadRequestException(String message, int code) : super(message, code);
+  BadRequestException(super.message, int super.code);
 }
 
 class ConflictException extends AppException {
-  ConflictException(String message, int code) : super(message, code);
+  ConflictException(super.message, int super.code);
 }
 
 class NotFoundException extends AppException {
-  NotFoundException(String message, int code) : super(message, code);
+  NotFoundException(super.message, int super.code);
 }
 
 class InternalServerErrorException extends AppException {
-  InternalServerErrorException(String message, int code) : super(message, code);
+  InternalServerErrorException(super.message, int super.code);
 }
 
 class NetworkException extends AppException {
@@ -48,8 +48,7 @@ class NetworkException extends AppException {
 }
 
 class UnknownBackendException extends AppException {
-  UnknownBackendException(String message, [int? code])
-      : super(message, code);
+  UnknownBackendException(super.message, [super.code]);
 }
 
 // === Error Mapper Function ===
@@ -119,7 +118,7 @@ AppException mapErrorCodeToException(int code, String message) {
 }
 
 // === Handle Dio Error and Map to AppException ===
-AppException handleDioError(DioError e) {
+AppException handleDioError(DioException e) {
   if (e.response != null) {
     final data = e.response?.data;
     final code = data?['code'] ?? -1;

@@ -10,8 +10,8 @@ class FoodItemCard extends StatelessWidget {
   final Function()? onViewDetails;
 
   const FoodItemCard({
-    super.key, 
-    required this.data, 
+    super.key,
+    required this.data,
     this.onRestaurantTap,
     this.onReorder,
     this.onViewDetails,
@@ -34,9 +34,11 @@ class FoodItemCard extends StatelessWidget {
     return Row(
       children: List.generate(5, (index) {
         return Icon(
-          index < rating.floor() ? Icons.star : Icons.star_border,
+          index < rating.floor()
+              ? Icons.star_rounded
+              : Icons.star_border_rounded,
           color: Colors.amber,
-          size: 20,
+          size: 18,
         );
       }),
     );
@@ -45,138 +47,190 @@ class FoodItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        if (onRestaurantTap != null) {
-          onRestaurantTap!(data["Restaurant"]);
-        }
-      },
+      onTap: () => onRestaurantTap?.call(data["Restaurant"]),
       child: Container(
-        margin: const EdgeInsets.only(bottom: 20),
+        margin: const EdgeInsets.only(bottom: 24, left: 12, right: 12),
         decoration: BoxDecoration(
-          color: AppColor.SecondaryColor,
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            )
+          ],
         ),
         child: Column(
           children: [
             ClipRRect(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-              child: Image.asset(
-                data["image"],
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(18)),
+              child: Stack(
+                children: [
+                  Image.asset(
+                    data["image"],
+                    height: 140,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.black.withOpacity(0.2),
+                            Colors.transparent
+                          ],
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Restaurant & Status Row
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        data["Restaurant"],
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                      Expanded(
+                        child: Text(
+                          data["Restaurant"],
+                          style: GoogleFonts.poppins(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
                       if (data["status"] != null)
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _getStatusColor(data["status"]).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          data["status"],
-                          style: GoogleFonts.poppins(
-                            color: _getStatusColor(data["status"]),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(data["status"])
+                                .withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          child: Text(
+                            data["status"],
+                            style: GoogleFonts.poppins(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: _getStatusColor(data["status"]),
+                            ),
                           ),
                         ),
-                      ),
                     ],
                   ),
-                  SizedBox(height: 8),
+
+                  const SizedBox(height: 10),
+
+                  // Date, Items
                   Row(
                     children: [
-                      Icon(Icons.access_time, size: 16, color: Colors.grey),
-                      SizedBox(width: 4),
+                      Icon(Icons.access_time_rounded,
+                          size: 16, color: Colors.grey),
+                      const SizedBox(width: 4),
                       Text(
-                        data["date"] != null 
-                          ? DateFormat('MMM dd, yyyy').format(data["date"])
-                          : data["time"] ?? "",
-                        style: GoogleFonts.poppins(color: Colors.grey),
+                        data["date"] != null
+                            ? DateFormat('MMM dd, yyyy').format(data["date"])
+                            : data["time"] ?? "",
+                        style: GoogleFonts.poppins(
+                            fontSize: 13, color: Colors.grey[700]),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       Text(
                         '${data["Items"]} ${int.tryParse(data["Items"]) == 1 ? 'item' : 'items'}',
-                        style: GoogleFonts.poppins(color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 12),
-                  Row(
-                    children: [
-                      if (data["rating"] != null) _buildRatingStars(data["rating"]),
-                      Spacer(),
-                      Text(
-                        '\$${data["itemPrice"] ?? data["price"]}',
                         style: GoogleFonts.poppins(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.deepOrangeAccent,
-                        ),
+                            fontSize: 13, color: Colors.grey[700]),
                       ),
                     ],
                   ),
-                  if (onReorder != null || onViewDetails != null)
-                  SizedBox(height: 16),
-                  if (onReorder != null || onViewDetails != null)
+
+                  const SizedBox(height: 12),
+
+                  // Rating & Price
                   Row(
                     children: [
-                      if (onReorder != null)
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          icon: Icon(Icons.repeat, size: 20, color: Colors.black),
-                          label: Text('Reorder',
-                            style: GoogleFonts.poppins(color: Colors.black),
-                          ),
-                          onPressed: onReorder,
-                          style: OutlinedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            side: BorderSide(color: Colors.grey[300]!),
-                          ),
-                        ),
-                      ),
-                      if (onReorder != null && onViewDetails != null)
-                      SizedBox(width: 12),
-                      if (onViewDetails != null)
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          icon: Icon(Icons.description, size: 20, color: Colors.white),
-                          label: Text('Details',
-                            style: GoogleFonts.poppins(color: Colors.white),
-                          ),
-                          onPressed: onViewDetails,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColor.PrimaryColor,
-                            padding: EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
+                      if (data["rating"] != null)
+                        _buildRatingStars(data["rating"]),
+                      const Spacer(),
+                      Text(
+                        '₹${data["itemPrice"] ?? data["price"]}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: AppColor.PrimaryColor,
                         ),
                       ),
                     ],
                   ),
+
+                  // Divider
+                  if (onReorder != null || onViewDetails != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(thickness: 0.8, color: Colors.grey[200]),
+                    ),
+
+                  // Buttons
+                  if (onReorder != null || onViewDetails != null)
+                    Row(
+                      children: [
+                        if (onReorder != null)
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: onReorder,
+                              icon: const Icon(Icons.refresh,
+                                  size: 18, color: Colors.black),
+                              label: Text("Reorder",
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.black,
+                                  )),
+                              style: OutlinedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                side: BorderSide(color: Colors.grey.shade300),
+                              ),
+                            ),
+                          ),
+                        if (onReorder != null && onViewDetails != null)
+                          const SizedBox(width: 12),
+                        if (onViewDetails != null)
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: onViewDetails,
+                              icon: const Icon(Icons.receipt_long,
+                                  size: 18, color: Colors.white),
+                              label: Text("Details",
+                                  style: GoogleFonts.poppins(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white,
+                                  )),
+                              style: ElevatedButton.styleFrom(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                backgroundColor: AppColor.PrimaryColor,
+                                elevation: 2,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                 ],
               ),
             ),

@@ -31,7 +31,7 @@ class CurrentCustomerRemoteDataSourceImpl
         final message = response.data['message'] ?? 'Unknown error occurred';
         throw mapErrorCodeToException(code, message);
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw handleDioError(e);
     } catch (e) {
       throw UnknownBackendException('Unexpected error: ${e.toString()}');

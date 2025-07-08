@@ -1,3 +1,8 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/cupertino.dart';
+
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
@@ -9,10 +14,6 @@ import 'package:eato/presentation/screen/address/address_screen.dart';
 import 'package:eato/presentation/screen/order/myOrders_screen.dart';
 import 'package:eato/presentation/screen/widgets/logout.dart';
 import 'package:eato/presentation/screen/authentication/login_screen.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isGuest;
@@ -26,7 +27,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    BlocProvider.of<CurrentCustomerCubit>(context).GetCurrentCustomer(context);
+    context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
   }
 
   @override
@@ -34,10 +35,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       backgroundColor: AppColor.White,
       appBar: CustomAppBar(title: "My Profile", showBackButton: false),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildUserProfile(context),
             const SizedBox(height: 24),
@@ -53,115 +53,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, state) {
         if (state is CurrentCustomerLoaded) {
           final customer = state.currentCustomerModel;
-          return Row(
-            children: [
-              CircleAvatar(
-                radius: 35,
-                backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
-                child:
-                    Icon(Icons.person, size: 40, color: AppColor.PrimaryColor),
-              ),
-              const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    customer.fullName ?? 'No Name',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppColor.PrimaryColor,
-                    ),
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 35,
+                  backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
+                  child: Icon(Icons.person,
+                      size: 40, color: AppColor.PrimaryColor),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        customer.fullName ?? 'No Name',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        customer.primaryContact ?? 'No Phone Number',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    customer.primaryContact ?? 'No Phone Number',
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ],
+                )
+              ],
+            ),
           );
         } else if (state is CurrentCustomerError) {
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
-                    child:
-                        Icon(Icons.error_outline, size: 40, color: Colors.red),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      state.message, // ✅ show actual error message
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  ),
-                ],
-              ),
+              Icon(Icons.error, color: Colors.red),
               const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  context
-                      .read<CurrentCustomerCubit>()
-                      .GetCurrentCustomer(context);
-                },
-                icon: const Icon(Icons.refresh),
-                label: const Text("Retry"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColor.PrimaryColor,
-                ),
+              Text(state.message, style: const TextStyle(color: Colors.red)),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => context
+                    .read<CurrentCustomerCubit>()
+                    .GetCurrentCustomer(context),
+                child: const Text("Retry"),
               ),
             ],
           );
         } else if (state is CurrentCustomerLoading) {
-          return const CupertinoActivityIndicator();
+          return const Center(child: CupertinoActivityIndicator());
         }
-
-        return Row(
-          children: [
-            CircleAvatar(
-              radius: 35,
-              backgroundColor: AppColor.PrimaryColor.withOpacity(0.1),
-              child: Icon(Icons.person, size: 40, color: AppColor.PrimaryColor),
-            ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Loading...",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColor.PrimaryColor,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        );
+        return const SizedBox();
       },
     );
   }
 
   Widget _buildBasicOptions(BuildContext context) {
-    final options = [
+    final List<_Option> options = [
       _Option(Icons.shopping_bag_outlined, "My Orders", onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => MyOrders()),
-        );
+        Navigator.push(context, MaterialPageRoute(builder: (_) => MyOrders()));
       }),
       _Option(Icons.location_on_outlined, "Saved Addresses", onTap: () {
         Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => AddressScreen()),
-        );
+            context, MaterialPageRoute(builder: (_) => AddressScreen()));
       }),
       _Option(Icons.logout, "Logout", onTap: () {
         showModalBottomSheet(
@@ -176,7 +146,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         showModalBottomSheet(
           context: context,
           isScrollControlled: true,
-          useRootNavigator: true, // important
+          useRootNavigator: true,
           shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
           ),
@@ -187,32 +157,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return Column(
       children: options.map((opt) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(14),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.08),
+                blurRadius: 8,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
           child: ListTile(
-            leading: Icon(opt.icon, color: AppColor.PrimaryColor),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            leading: Icon(opt.icon,
+                color: opt.isDestructive ? Colors.red : AppColor.PrimaryColor),
             title: Text(
               opt.title,
               style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: opt.title == "Logout" || opt.title == "Delete Account"
-                    ? Colors.red
-                    : Colors.black,
+                fontSize: 16,
+                color: opt.isDestructive ? Colors.red : Colors.black,
               ),
             ),
-            trailing: Icon(
-              Icons.chevron_right,
-              color: opt.title == "Logout" || opt.title == "Delete Account"
-                  ? Colors.red
-                  : AppColor.PrimaryColor,
-            ),
-            onTap: opt.onTap ?? () {},
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-              side: BorderSide(
-                color: Colors.grey.withOpacity(0.2),
-              ),
-            ),
+            trailing: Icon(Icons.chevron_right,
+                color: opt.isDestructive ? Colors.red : Colors.grey),
+            onTap: opt.onTap,
           ),
         );
       }).toList(),
@@ -221,22 +194,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildDeleteConfirmation(BuildContext context) {
     return BlocProvider.value(
-      value: BlocProvider.of<DeleteAccountCubit>(context),
+      value: context.read<DeleteAccountCubit>(),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.warning_amber_rounded,
-                color: AppColor.PrimaryColor, size: 40),
+                color: AppColor.PrimaryColor, size: 48),
             const SizedBox(height: 16),
-            Text(
-              "Are you sure?",
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColor.PrimaryColor),
-            ),
+            Text("Are you sure?",
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: AppColor.PrimaryColor)),
             const SizedBox(height: 12),
             const Text(
               "This will permanently delete your account and all associated data.",
@@ -247,33 +218,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade300,
-                      foregroundColor: Colors.black,
-                    ),
+                  child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     child: const Text("Cancel"),
                   ),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: BlocConsumer<DeleteAccountCubit, DeleteAccountState>(
                     listener: (context, state) async {
                       if (state is DeleteAccountSuccess) {
-                        Navigator.pop(context); // Close bottom sheet
-
+                        Navigator.pop(context);
                         CustomSnackbars.showSuccessSnack(
                           context: context,
                           title: "Deleted",
                           message: "Your account has been deleted.",
                         );
-
                         SharedPreferences prefs =
                             await SharedPreferences.getInstance();
-                        prefs.remove('TOKEN');
                         prefs.clear();
-
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
                               builder: (_) => const LoginScreen()),
@@ -289,10 +252,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     },
                     builder: (context, state) {
                       return ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColor.PrimaryColor,
-                          foregroundColor: Colors.white,
-                        ),
                         onPressed: state is DeleteAccountLoading
                             ? null
                             : () {
@@ -300,13 +259,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     .read<DeleteAccountCubit>()
                                     .deleteAccount();
                               },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                        ),
                         child: state is DeleteAccountLoading
                             ? const SizedBox(
-                                height: 18,
                                 width: 18,
+                                height: 18,
                                 child: CircularProgressIndicator(
-                                  strokeWidth: 2,
                                   color: Colors.white,
+                                  strokeWidth: 2,
                                 ),
                               )
                             : const Text("Delete"),
@@ -329,4 +291,8 @@ class _Option {
   final VoidCallback? onTap;
 
   _Option(this.icon, this.title, {this.onTap});
+
+  bool get isDestructive =>
+      title.toLowerCase().contains("logout") ||
+      title.toLowerCase().contains("delete");
 }

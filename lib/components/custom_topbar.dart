@@ -15,31 +15,68 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      backgroundColor: AppColor.PrimaryColor,
-      leading: showBackButton == true
-          ? IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios,
-                color: AppColor.White,
-                size: 24,
-              ),
-              onPressed: onBackPressed,
-            )
-          : null,
-      title: Text(
-        title,
-        style: TextStyle(
-          color: AppColor.White,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.2,
+    return Material(
+      elevation: 6,
+      shadowColor: Colors.black.withOpacity(0.15),
+      borderRadius: const BorderRadius.only(
+        bottomLeft: Radius.circular(24),
+        bottomRight: Radius.circular(24),
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppColor.PrimaryColor.withOpacity(0.95),
+              AppColor.PrimaryColor.withOpacity(0.85),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: const BorderRadius.only(
+            bottomLeft: Radius.circular(24),
+            bottomRight: Radius.circular(24),
+          ),
+        ),
+        child: SafeArea(
+          top: true,
+          bottom: false,
+          child: Container(
+            height: preferredSize.height - 30,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                if (showBackButton)
+                  IconButton(
+                    icon:
+                        const Icon(Icons.arrow_back_ios_new_rounded, size: 22),
+                    color: AppColor.White,
+                    onPressed: onBackPressed ?? () => Navigator.pop(context),
+                  )
+                else
+                  const SizedBox(width: 48),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 48),
+              ],
+            ),
+          ),
         ),
       ),
-      centerTitle: true,
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(60);
+  Size get preferredSize =>
+      const Size.fromHeight(80); // increased height to include SafeArea
 }
