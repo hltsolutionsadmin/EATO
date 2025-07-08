@@ -350,12 +350,13 @@ class _MyOrdersState extends State<MyOrders> {
     }
   }
 
-  int getProgressIndex(String status) {
+int getProgressIndex(String status) {
     switch (status.toUpperCase()) {
       case 'PLACED':
         return 1;
       case 'CONFIRMED':
       case 'ACCEPTED':
+      case 'PREPARING':
         return 2;
       case 'OUT_FOR_DELIVERY':
         return 3;
@@ -365,4 +366,5 @@ class _MyOrdersState extends State<MyOrders> {
         return 0;
     }
   }
+
 }

@@ -42,6 +42,7 @@ dependencies:
   latlong2: ^0.9.0
   sqflite: ^2.3.2
   shimmer: ^3.0.0
+  carousel_slider: ^5.1.1
 
 
 

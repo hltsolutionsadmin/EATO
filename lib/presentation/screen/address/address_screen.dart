@@ -1,3 +1,4 @@
+import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/data/model/address/getAddress/getAddress_model.dart';
@@ -57,7 +58,8 @@ class _AddressScreenState extends State<AddressScreen> {
     super.dispose();
   }
 
-  void _fetchAddresses() => context.read<GetAddressCubit>().fetchAddress(context);
+  void _fetchAddresses() =>
+      context.read<GetAddressCubit>().fetchAddress(context);
 
   void _saveAddress() {
     if (!_formKey.currentState!.validate() || !_isLocationPicked) {
@@ -111,9 +113,18 @@ class _AddressScreenState extends State<AddressScreen> {
         ),
       ),
     );
-    if (result == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Location selection cancelled")),
+
+    if (result == true) {
+      CustomSnackbars.showSuccessSnack(
+        context: context,
+        title: "Success",
+        message: "Location selected successfully",
+      );
+    } else {
+      CustomSnackbars.showErrorSnack(
+        context: context,
+        title: "Al ",
+        message: "Failed to select location",
       );
     }
   }
@@ -212,41 +223,32 @@ class _AddressScreenState extends State<AddressScreen> {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        // appBar: CustomAppBar(
-        //   title: "Manage Addresses",
-        //   showBackButton: true,
-        //   onBackPressed: () {
-        //     Navigator.pop(context);
-        //     _clearForm();
-        //   },
-        // ),
-
-        // Place TabBar inside the appBar's bottom property for proper display
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(200),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               CustomAppBar(
-          title: "Manage Addresses",
-          showBackButton: true,
-          onBackPressed: () {
-            Navigator.pop(context);
-            _clearForm();
-          },
+                title: "Manage Addresses",
+                showBackButton: true,
+                onBackPressed: () {
+                  Navigator.pop(context);
+                  _clearForm();
+                },
               ),
               TabBar(
-          labelColor: AppColor.PrimaryColor,
-          unselectedLabelColor: Colors.grey,
-          indicatorColor: AppColor.PrimaryColor,
-          tabs: const [
-            Tab(text: "Saved Addresses"),
-            Tab(text: "Add New Address"),
-          ],
+                labelColor: AppColor.PrimaryColor,
+                unselectedLabelColor: Colors.grey,
+                indicatorColor: AppColor.PrimaryColor,
+                tabs: const [
+                  Tab(text: "Saved Addresses"),
+                  Tab(text: "Add New Address"),
+                ],
               ),
             ],
           ),
         ),
+        backgroundColor: AppColor.White,
         body: MultiBlocListener(
           listeners: [
             BlocListener<SaveAddressCubit, SaveAddressState>(

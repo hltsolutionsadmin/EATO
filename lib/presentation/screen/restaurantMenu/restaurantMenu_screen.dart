@@ -50,7 +50,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
   void initState() {
     super.initState();
 
-    // ✅ Print isGuest value
     print("RestaurantMenuScreen - isGuest: ${widget.isGuest}");
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,7 +73,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     });
   }
 
-
   Future<void> _loadCart() async {
     final cartState = context.read<GetCartCubit>().state;
     if (cartState is GetCartLoaded) {
@@ -96,7 +94,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     Map<String, int> updatedCart = {};
     List<Content> updatedSelectedItems = [];
 
-    for (var cartItem in state.cart.cartItems as List<CartItems>) {
+    for (var cartItem in state.cart.cartItems as List<CartItem>) {
       final menuItem = menuItems.firstWhere(
         (item) => item.id == cartItem.productId,
         orElse: () => Content(
@@ -203,59 +201,86 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       return RestaurantCartBottomSheet(
         totalItems: totalItems,
         onViewCartPressed: () async {
-          _bottomSheetController?.close();
-          final result = await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CartScreen(
-                cartItems: selectedItems
-                    .map((item) => {
-                          'productId': item.id,
-                          'quantity': cart[item.name] ?? 0,
-                          'price': item.price,
-                          'name': item.name,
-                          'description': item.description,
-                          'categoryName': item.attributes
-                              .firstWhere(
-                                (a) => a.attributeName?.toLowerCase() == 'type',
-                                orElse: () => Attribute(
-                                    id: 0,
-                                    attributeName: '',
-                                    attributeValue: ''),
-                              )
-                              .attributeValue,
-                          'media': item.media,
-                        })
-                    .toList(),
-                onBottomSheetVisibilityChanged: _onBottomSheetVisibilityChanged,
+            _bottomSheetController?.close();
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CartScreen(
+                  cartItems: selectedItems
+                      .map((item) => {
+                            'productId': item.id,
+                            'quantity': cart[item.name] ?? 0,
+                            'price': item.price,
+                            'name': item.name,
+                            'description': item.description,
+                            'categoryName': item.attributes
+                                .firstWhere(
+                                  (a) =>
+                                      a.attributeName?.toLowerCase() == 'type',
+                                  orElse: () => Attribute(
+                                      id: 0,
+                                      attributeName: '',
+                                      attributeValue: ''),
+                                )
+                                .attributeValue,
+                            'media': item.media,
+                          })
+                      .toList(),
+                  onBottomSheetVisibilityChanged:
+                      _onBottomSheetVisibilityChanged,
+                ),
               ),
-            ),
-          );
-          if (!mounted) return;
-          if (result != null && result is Map<String, dynamic>) {
-            final updatedCart = result['updatedCart'] as Map<String, int>?;
-            final updatedCartLength = result['cartItemsLength'] ?? 0;
-            if (updatedCart != null) {
-              setState(() {
-                cart = Map<String, int>.from(updatedCart);
-                totalItems = updatedCartLength;
-                selectedItems = selectedItems
-                    .where((item) =>
-                        cart.containsKey(item.name) && cart[item.name]! > 0)
-                    .toList();
-                for (var item in menuItems) {
-                  final quantity = cart[item.name] ?? 0;
-                  if (quantity != 0) update_Cart(item, quantity);
-                }
-              });
-              _onBottomSheetVisibilityChanged(cart.isNotEmpty);
-              if (!widget.isGuest) {
-                _loadMenu();
-              }
+            );
 
+            if (!mounted) return;
+
+            if (result != null && result is Map<String, dynamic>) {
+              final updatedCart = result['updatedCart'] as Map<int, int>?;
+              final updatedCartLength = result['cartItemsLength'] ?? 0;
+
+              if (updatedCart != null) {
+                setState(() {
+                  totalItems = updatedCartLength;
+                  cart.clear();
+                  selectedItems.clear();
+
+                  for (var entry in updatedCart.entries) {
+                    final productId = entry.key;
+                    final quantity = entry.value;
+
+                    final item = menuItems.firstWhere(
+                      (item) => item.id == productId,
+                      orElse: () => Content(
+                        id: 0,
+                        name: '',
+                        shortCode: '',
+                        ignoreTax: false,
+                        discount: true,
+                        description: '',
+                        price: 0,
+                        available: false,
+                        shopifyProductId: '',
+                        shopifyVariantId: '',
+                        businessId: 0,
+                        categoryId: 0,
+                        media: [],
+                        attributes: [],
+                      ),
+                    );
+
+                    if (item.id != 0) {
+                      cart[item.name ?? ""] = quantity;
+                      selectedItems.add(item);
+                    }
+                  }
+                });
+
+                _onBottomSheetVisibilityChanged(cart.isNotEmpty);
+                if (!widget.isGuest) _loadMenu();
+              }
             }
           }
-        },
+
       );
     });
 
@@ -292,7 +317,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
         searchText = value;
       });
       if (!widget.isGuest) {
-        _loadMenu(); // ✅ Only for logged-in users
+        _loadMenu();
       }
     });
   }
@@ -374,189 +399,257 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: Colors.grey[100],
-      appBar: CustomAppBar(
-        title: widget.restaurantName,
-        onBackPressed: () {
-          Navigator.pop(context);
-          if (isBottomSheetVisible) _bottomSheetController?.close();
+    return PopScope(
+        canPop: true,
+        onPopInvoked: (didPop) async {
+          if (!didPop &&
+              isBottomSheetVisible &&
+              _bottomSheetController != null) {
+            _bottomSheetController?.close();
+            await Future.delayed(const Duration(milliseconds: 300));
+            if (mounted) Navigator.of(context).pop();
+          }
         },
-      ),
-      body: Column(
-        children: [
-          // top UI...
-          HomeSearchBar(hintText: "menu", onChanged: _onSearchChanged),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Row(
-              children: ['All', 'Veg', 'NonVeg'].map((filter) {
-                final isSelected = filter == filterType;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ChoiceChip(
-                    label: Text(filter),
-                    selected: isSelected,
-                    onSelected: (_) {
-                      setState(() {
-                        filterType = filter;
-                      });
-                      if (!widget.isGuest) _loadMenu();
-                    },
-                    selectedColor: AppColor.PrimaryColor,
-                    labelStyle: GoogleFonts.poppins(
-                        color: isSelected ? Colors.white : Colors.black),
-                  ),
-                );
-              }).toList(),
-            ),
+        child: Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: Colors.grey[100],
+          appBar: CustomAppBar(
+            title: widget.restaurantName,
+            onBackPressed: () async {
+              if (isBottomSheetVisible && _bottomSheetController != null) {
+                _bottomSheetController?.close();
+                await Future.delayed(const Duration(milliseconds: 300));
+              }
+
+              if (mounted) Navigator.of(context).maybePop();
+            },
           ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: widget.isGuest
-                ? BlocConsumer<GuestMenuByRestaurantIdCubit,
-                    GuestMenuByRestaurantIdState>(
-                    listener: (context, state) {
-                      if (state is GuestMenuByRestaurantIdSuccess) {
-                        _isMenuLoaded = true;
-                      }
-                    },
-                    builder: (context, state) {
-                      if (state is GuestMenuByRestaurantIdLoading) {
-                        return const Center(
-                            child: CupertinoActivityIndicator());
-                      } else if (state is GuestMenuByRestaurantIdSuccess) {
-                        final filteredItems = state.data.content.where((item) {
-                          final matchesSearch = (item.name ?? "")
-                              .toLowerCase()
-                              .contains(searchText.toLowerCase());
+          body: Column(
+            children: [
+              HomeSearchBar(hintText: "menu", onChanged: _onSearchChanged),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: ['All', 'Veg', 'NonVeg'].map((filter) {
+                    final isSelected = filter == filterType;
 
-                          final foodType = item.attributes
-                              .firstWhere(
-                                (a) =>
-                                    (a.attributeName ?? "").toLowerCase() ==
-                                    'type',
-                                orElse: () => Attribute(
-                                    id: 0,
-                                    attributeName: '',
-                                    attributeValue: ''),
-                              )
-                              .attributeValue
-                              ?.toLowerCase();
+                    // Determine icon (only for Veg and NonVeg)
+                    Widget? icon;
+                    if (filter == 'Veg') {
+                      icon = vegNonVegIcon(true);
+                    } else if (filter == 'NonVeg') {
+                      icon = vegNonVegIcon(false);
+                    }
 
-                          final matchesFilter = filterType == 'All' ||
-                              (filterType.toLowerCase() == 'veg' &&
-                                  foodType == 'veg') ||
-                              (filterType.toLowerCase() == 'nonveg' &&
-                                  foodType == 'nonveg');
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(12),
+                        onTap: () {
+                          setState(() {
+                            filterType = filter;
+                          });
+                          if (!widget.isGuest) _loadMenu();
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppColor.PrimaryColor
+                                : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppColor.PrimaryColor
+                                  : Colors.grey.shade300,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: AppColor.PrimaryColor.withOpacity(
+                                          0.2),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 2),
+                                    )
+                                  ]
+                                : [],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (icon != null) ...[
+                                icon,
+                                const SizedBox(width: 6),
+                              ],
+                              Text(
+                                filter,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.black87,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: widget.isGuest
+                    ? BlocConsumer<GuestMenuByRestaurantIdCubit,
+                        GuestMenuByRestaurantIdState>(
+                        listener: (context, state) {
+                          if (state is GuestMenuByRestaurantIdSuccess) {
+                            _isMenuLoaded = true;
+                          }
+                        },
+                        builder: (context, state) {
+                          if (state is GuestMenuByRestaurantIdLoading) {
+                            return const Center(
+                                child: CupertinoActivityIndicator());
+                          } else if (state is GuestMenuByRestaurantIdSuccess) {
+                            final filteredItems =
+                                state.data.content.where((item) {
+                              final matchesSearch = (item.name ?? "")
+                                  .toLowerCase()
+                                  .contains(searchText.toLowerCase());
 
-                          return matchesSearch && matchesFilter;
-                        }).toList();
+                              final foodType = item.attributes
+                                  .firstWhere(
+                                    (a) =>
+                                        (a.attributeName ?? "").toLowerCase() ==
+                                        'type',
+                                    orElse: () => Attribute(
+                                        id: 0,
+                                        attributeName: '',
+                                        attributeValue: ''),
+                                  )
+                                  .attributeValue
+                                  ?.toLowerCase();
 
-                        if (filteredItems.isEmpty) {
-                          return const Center(
-                              child: Text("No menu items available"));
-                        }
+                              final matchesFilter = filterType == 'All' ||
+                                  (filterType.toLowerCase() == 'veg' &&
+                                      foodType == 'veg') ||
+                                  (filterType.toLowerCase() == 'nonveg' &&
+                                      foodType == 'nonveg');
 
-                        return ListView.builder(
-                          padding: const EdgeInsets.all(16.0),
-                          itemCount: filteredItems.length,
-                          itemBuilder: (context, index) {
-                            final item = filteredItems[index];
-                            return MenuItemWidget(
-                              item: item,
-                              quantity: 0,
-                              restaurantId: widget.restaurantId,
-                              restaurantName: widget.restaurantName,
-                              isGuest: true,
-                              onQuantityChanged: (_) {},
-                              onGuestAttempt: () {
-                                showLoginPromptBottomSheet(context, 0, item);
+                              return matchesSearch && matchesFilter;
+                            }).toList();
+
+                            if (filteredItems.isEmpty) {
+                              return const Center(
+                                  child: Text("No menu items available"));
+                            }
+
+                            return ListView.builder(
+                              padding: const EdgeInsets.all(16.0),
+                              itemCount: filteredItems.length,
+                              itemBuilder: (context, index) {
+                                final item = filteredItems[index];
+                                return MenuItemWidget(
+                                  item: item,
+                                  quantity: 0,
+                                  restaurantId: widget.restaurantId,
+                                  restaurantName: widget.restaurantName,
+                                  isGuest: true,
+                                  onQuantityChanged: (_) {},
+                                  onGuestAttempt: () {
+                                    showLoginPromptBottomSheet(
+                                        context, 0, item);
+                                  },
+                                );
                               },
                             );
-                          },
-                        );
-                      } else if (state is GuestMenuByRestaurantIdFailure) {
-                        return const Center(child: Text("Error loading menu"));
-                      }
-                      return const SizedBox();
-                    },
-                  )
-                : BlocConsumer<GetMenuByRestaurantIdCubit,
-                    GetMenuByRestaurantIdState>(
-                    listener: (context, state) {
-                      if (state is GetMenuByRestaurantIdLoaded) {
-                        setState(() {
-                          menuItems = state.model.content;
-                          _isMenuLoaded = true;
-                        });
-                        if (!_isCartLoaded) _loadCart();
-                      }
-                    },
-                    builder: (context, state) {
-                      if (state is GetMenuByRestaurantIdLoading) {
-                        return const Center(
-                            child: CupertinoActivityIndicator());
-                      } else if (state is GetMenuByRestaurantIdLoaded) {
-                        final filteredItems = menuItems.where((item) {
-                          final matchesSearch = (item.name ?? "")
-                              .toLowerCase()
-                              .contains(searchText.toLowerCase());
+                          } else if (state is GuestMenuByRestaurantIdFailure) {
+                            return const Center(
+                                child: Text("Error loading menu"));
+                          }
+                          return const SizedBox();
+                        },
+                      )
+                    : BlocConsumer<GetMenuByRestaurantIdCubit,
+                        GetMenuByRestaurantIdState>(
+                        listener: (context, state) {
+                          if (state is GetMenuByRestaurantIdLoaded) {
+                            setState(() {
+                              menuItems = state.model.content;
+                              _isMenuLoaded = true;
+                            });
+                            if (!_isCartLoaded) _loadCart();
+                          }
+                        },
+                        builder: (context, state) {
+                          if (state is GetMenuByRestaurantIdLoading) {
+                            return const Center(
+                                child: CupertinoActivityIndicator());
+                          } else if (state is GetMenuByRestaurantIdLoaded) {
+                            final filteredItems = menuItems.where((item) {
+                              final matchesSearch = (item.name ?? "")
+                                  .toLowerCase()
+                                  .contains(searchText.toLowerCase());
 
-                          final foodType = item.attributes
-                              .firstWhere(
-                                (a) =>
-                                    (a.attributeName ?? "").toLowerCase() ==
-                                    'type',
-                                orElse: () => Attribute(
-                                    id: 0,
-                                    attributeName: '',
-                                    attributeValue: ''),
-                              )
-                              .attributeValue
-                              ?.toLowerCase();
+                              final foodType = item.attributes
+                                  .firstWhere(
+                                    (a) =>
+                                        (a.attributeName ?? "").toLowerCase() ==
+                                        'type',
+                                    orElse: () => Attribute(
+                                        id: 0,
+                                        attributeName: '',
+                                        attributeValue: ''),
+                                  )
+                                  .attributeValue
+                                  ?.toLowerCase();
 
-                          final matchesFilter = filterType == 'All' ||
-                              (filterType.toLowerCase() == 'veg' &&
-                                  foodType == 'veg') ||
-                              (filterType.toLowerCase() == 'nonveg' &&
-                                  foodType == 'nonveg');
+                              final matchesFilter = filterType == 'All' ||
+                                  (filterType.toLowerCase() == 'veg' &&
+                                      foodType == 'veg') ||
+                                  (filterType.toLowerCase() == 'nonveg' &&
+                                      foodType == 'nonveg');
 
-                          return matchesSearch && matchesFilter;
-                        }).toList();
+                              return matchesSearch && matchesFilter;
+                            }).toList();
 
-                        if (filteredItems.isEmpty) {
-                          return const Center(
-                              child: Text("No menu items available"));
-                        }
+                            if (filteredItems.isEmpty) {
+                              return const Center(
+                                  child: Text("No menu items available"));
+                            }
 
-                        return ListView.builder(
-                          padding: const EdgeInsets.all(16.0),
-                          itemCount: filteredItems.length,
-                          itemBuilder: (context, index) {
-                            final item = filteredItems[index];
-                            final quantity = cart[item.name ?? ""] ?? 0;
-                            return MenuItemWidget(
-                              item: item,
-                              quantity: quantity,
-                              restaurantId: widget.restaurantId,
-                              restaurantName: widget.restaurantName,
-                              onQuantityChanged: (qty) =>
-                                  update_Cart(item, qty),
+                            return ListView.builder(
+                              padding: const EdgeInsets.all(16.0),
+                              itemCount: filteredItems.length,
+                              itemBuilder: (context, index) {
+                                final item = filteredItems[index];
+                                final quantity = cart[item.name ?? ""] ?? 0;
+                                return MenuItemWidget(
+                                  item: item,
+                                  quantity: quantity,
+                                  restaurantId: widget.restaurantId,
+                                  restaurantName: widget.restaurantName,
+                                  onQuantityChanged: (qty) =>
+                                      update_Cart(item, qty),
+                                );
+                              },
                             );
-                          },
-                        );
-                      } else if (state is GetMenuByRestaurantIdError) {
-                        return const Center(child: Text("Error loading menu"));
-                      }
-                      return const Center(child: Text("Loading..."));
-                    },
-                  ),
-          )
-        ],
-      ),
-    );
+                          } else if (state is GetMenuByRestaurantIdError) {
+                            return const Center(
+                                child: Text("Error loading menu"));
+                          }
+                          return const Center(child: Text("Loading..."));
+                        },
+                      ),
+              )
+            ],
+          ),
+        ));
   }
 }

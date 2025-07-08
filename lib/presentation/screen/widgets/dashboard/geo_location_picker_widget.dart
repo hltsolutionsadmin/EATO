@@ -126,7 +126,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                 if (_selectedLocation != null && _currentPlacemark != null) {
                   widget.onLocationSelected
                       ?.call(_selectedLocation!, _currentPlacemark!);
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 }
               },
             ),
@@ -245,7 +245,7 @@ class _LocationPickerPageState extends State<LocationPickerPage> {
                                 _currentPlacemark != null) {
                               widget.onLocationSelected?.call(
                                   _selectedLocation!, _currentPlacemark!);
-                              Navigator.pop(context);
+                              Navigator.pop(context, true);
                             }
                           },
                           child: Text(

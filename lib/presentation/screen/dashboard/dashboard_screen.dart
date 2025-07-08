@@ -17,6 +17,7 @@ import 'package:eato/presentation/screen/widgets/dashboard/foodCatagoryIcons.dar
 import 'package:eato/presentation/screen/widgets/dashboard/foodItemCard.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/locationHeader.dart';
 import 'package:eato/components/searchBar.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/offersCard_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -34,141 +35,164 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double? latitude;
   double? longitude;
   String searchQuery = '';
-  dynamic cartdata = {};
-  List<dynamic> cartList = [];
-  Map<String, int> cart = {};
+  List<CartItem> cartList = [];
+  GetCartModel? cartData;
   final ScrollController _scrollController = ScrollController();
   bool _showBottomCart = true;
   bool _isScrollingDown = false;
   double _scrollPosition = 0;
-  int totalItems = 0, page = 0, size = 10;
+  int page = 0, size = 10;
 
   @override
   void initState() {
     super.initState();
     context.read<CreateCartCubit>().createCart(context);
-    _loadCoordinatesAndFetch();
-    fetchCart();
+    _loadCoordinatesAndFetchRestaurants();
+    _fetchCart();
     _scrollController.addListener(_scrollListener);
   }
 
-  void fetchCart() async {
-    await context.read<GetCartCubit>().fetchCart(context);
-    final state = context.read<GetCartCubit>().state;
-    if (state is GetCartLoaded) {
-      cartList = state.cart.cartItems as List<CartItems>;
-      cartdata = state.cart;
-    } else {
-      cartList = [];
-      cartdata = {};
+  void _scrollListener() {
+    final currentPosition = _scrollController.position.pixels;
+    final scrollDelta = currentPosition - _scrollPosition;
+    _scrollPosition = currentPosition;
+
+    if (cartList.isNotEmpty && (cartData?.totalCount ?? 0) > 0) {
+      if (scrollDelta > 10 && !_isScrollingDown) {
+        _isScrollingDown = true;
+        if (_showBottomCart) setState(() => _showBottomCart = false);
+      } else if (scrollDelta < -10 && _isScrollingDown) {
+        _isScrollingDown = false;
+        if (!_showBottomCart) setState(() => _showBottomCart = true);
+      }
     }
   }
 
-  void onLocationChanged() {
-    _loadCoordinatesAndFetch();
-    setState(() {});
+  Future<void> _fetchCart() async {
+    await context.read<GetCartCubit>().fetchCart(context);
+
+    final state = context.read<GetCartCubit>().state;
+    if (state is GetCartLoaded) {
+      setState(() {
+        cartList = state.cart.cartItems;
+        cartData = state.cart;
+        _showBottomCart =
+            cartList.isNotEmpty && (cartData?.totalCount ?? 0) > 0;
+      });
+    }
   }
 
-  Future<void> _loadCoordinatesAndFetch() async {
+  void _onLocationChanged() {
+    _loadCoordinatesAndFetchRestaurants();
+  }
+
+  Future<void> _loadCoordinatesAndFetchRestaurants() async {
     final prefs = await SharedPreferences.getInstance();
     latitude = prefs.getDouble('saved_latitude') ?? 17.385044;
     longitude = prefs.getDouble('saved_longitude') ?? 78.486671;
 
+    final params = {
+      "latitude": latitude,
+      "longitude": longitude,
+      "postalCode": "531001",
+      "page": page,
+      "size": size,
+    };
+
     if (widget.isGuest) {
-      await context
+      context
           .read<GuestNearByRestaurantsCubit>()
-          .fetchGuestNearbyRestaurants({
-        "latitude": latitude,
-        "longitude": longitude,
-        "postalCode": "531001",
-        "page": page,
-        "size": size,
-      });
+          .fetchGuestNearbyRestaurants(params);
     } else {
-      context.read<GetNearbyRestaurantsCubit>().fetchNearbyRestaurants({
-        "latitude": latitude,
-        "longitude": longitude,
-        "postalCode": "531001",
-        "page": page,
-        "size": size,
-      });
+      context.read<GetNearbyRestaurantsCubit>().fetchNearbyRestaurants(params);
     }
   }
 
-  void _showRestaurantMenu(String restaurantName, String restaurantId) {
-    Navigator.push(
+void _navigateToRestaurantMenu(String name, String id) async {
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RestaurantMenuScreen(
-          restaurantName: restaurantName,
-          restaurantId: restaurantId,
+        builder: (_) => RestaurantMenuScreen(
+          restaurantName: name,
+          restaurantId: id,
           isGuest: widget.isGuest,
         ),
       ),
-    ).then((value) => fetchCart());
+    );
+
+    // ✅ Fetch cart again after coming back from RestaurantMenu
+    if (!mounted) return;
+    _fetchCart();
+  }
+
+
+  Map<String, String> _buildRestaurantCardData(String name, String category) {
+    return {
+      "Restaurant": name,
+      "Items": category,
+      "price": "₹200",
+      "itemPrice": "From ₹ 89",
+      "image": dish,
+      "time": "20 - 25 MINS",
+    };
+  }
+
+  Widget _buildRestaurantList<T>({
+    required List<T> restaurants,
+    required String Function(T) getName,
+    required String Function(T) getCategory,
+    required String Function(T) getId,
+  }) {
+    return Column(
+      children: restaurants.map((restaurant) {
+        final data = _buildRestaurantCardData(
+          getName(restaurant),
+          getCategory(restaurant),
+        );
+        return FoodItemCard(
+          data: data,
+          onRestaurantTap: (name) =>
+              _navigateToRestaurantMenu(name, getId(restaurant)),
+        );
+      }).toList(),
+    );
   }
 
   Widget _buildNearbyRestaurants() {
-    if (widget.isGuest) {
-      return BlocBuilder<GuestNearByRestaurantsCubit,
-          GuestNearByRestaurantsState>(
-        builder: (context, state) {
-          if (state is GuestNearByRestaurantsLoading) {
-            return const Center(child: CupertinoActivityIndicator());
-          } else if (state is GuestNearByRestaurantsSuccess) {
-            final restaurants = state.data.content;
-            return Column(
-              children: restaurants.map((restaurant) {
-                final data = {
-                  "Restaurant": restaurant.businessName ?? "Unknown",
-                  "Items": restaurant.categoryName ?? "",
-                  "price": "₹200",
-                  "itemPrice": "From ₹ 89",
-                  "image": dish,
-                  "time": "20 - 25 MINS",
-                };
-                return FoodItemCard(
-                  data: data,
-                  onRestaurantTap: (name) => _showRestaurantMenu(
-                      name, (restaurant.id ?? "").toString()),
+    return widget.isGuest
+        ? BlocBuilder<GuestNearByRestaurantsCubit, GuestNearByRestaurantsState>(
+            builder: (context, state) {
+              if (state is GuestNearByRestaurantsLoading) {
+                return const Center(child: CupertinoActivityIndicator());
+              } else if (state is GuestNearByRestaurantsSuccess) {
+                return _buildRestaurantList(
+                  restaurants: state.data.content,
+                  getName: (r) => r.businessName ?? "Unknown",
+                  getCategory: (r) => r.categoryName ?? "",
+                  getId: (r) => (r.id ?? "").toString(),
                 );
-              }).toList(),
-            );
-          } else {
-            return const Center(child: Text("Error loading guest restaurants"));
-          }
-        },
-      );
-    } else {
-      return BlocBuilder<GetNearbyRestaurantsCubit, GetNearbyRestaurantsState>(
-        builder: (context, state) {
-          if (state is GetNearbyRestaurantsLoading) {
-            return const Center(child: CupertinoActivityIndicator());
-          } else if (state is GetNearbyRestaurantsLoaded) {
-            final restaurants = state.model.content;
-            return Column(
-              children: restaurants.map((restaurant) {
-                final data = {
-                  "Restaurant": restaurant.businessName ?? "Unknown",
-                  "Items": restaurant.categoryName ?? "",
-                  "price": "₹200",
-                  "itemPrice": "From ₹ 89",
-                  "image": dish,
-                  "time": "20 - 25 MINS",
-                };
-                return FoodItemCard(
-                  data: data,
-                  onRestaurantTap: (name) => _showRestaurantMenu(
-                      name, (restaurant.id ?? "").toString()),
+              } else {
+                return const Center(
+                    child: Text("Error loading guest restaurants"));
+              }
+            },
+          )
+        : BlocBuilder<GetNearbyRestaurantsCubit, GetNearbyRestaurantsState>(
+            builder: (context, state) {
+              if (state is GetNearbyRestaurantsLoading) {
+                return const Center(child: CupertinoActivityIndicator());
+              } else if (state is GetNearbyRestaurantsLoaded) {
+                return _buildRestaurantList(
+                  restaurants: state.model.content,
+                  getName: (r) => r.businessName ?? "Unknown",
+                  getCategory: (r) => r.categoryName ?? "",
+                  getId: (r) => (r.id ?? "").toString(),
                 );
-              }).toList(),
-            );
-          } else {
-            return const Center(child: Text("Error loading restaurants"));
-          }
-        },
-      );
-    }
+              } else {
+                return const Center(child: Text("Error loading restaurants"));
+              }
+            },
+          );
   }
 
   Widget _buildSearchResults() {
@@ -182,48 +206,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
           if (restaurants.isEmpty) {
             return const Center(child: Text("No restaurants found"));
           }
-          return Column(
-            children: restaurants.map((restaurant) {
-              final data = {
-                "Restaurant": restaurant.businessName ?? "Unknown",
-                "Items": restaurant.categoryName ?? "",
-                "price": "₹200",
-                "itemPrice": "From ₹ 89",
-                "image": dish,
-                "time": "20 - 25 MINS",
-              };
-              return FoodItemCard(
-                data: data,
-                onRestaurantTap: (name) => _showRestaurantMenu(
-                    name, (restaurant.businessId ?? "").toString()),
-              );
-            }).toList(),
+          return _buildRestaurantList(
+            restaurants: restaurants,
+            getName: (r) => r.businessName ?? "Unknown",
+            getCategory: (r) => r.categoryName ?? "",
+            getId: (r) => (r.businessId ?? "").toString(),
           );
-        } else {
-          return const SizedBox();
         }
+        return const SizedBox();
       },
     );
-  }
-
-  void _scrollListener() {
-    final currentPosition = _scrollController.position.pixels;
-    if (currentPosition > _scrollPosition) {
-      if (!_isScrollingDown) {
-        _isScrollingDown = true;
-        if (_showBottomCart) {
-          setState(() => _showBottomCart = false);
-        }
-      }
-    } else if (currentPosition < _scrollPosition) {
-      if (_isScrollingDown) {
-        _isScrollingDown = false;
-        if (!_showBottomCart) {
-          setState(() => _showBottomCart = true);
-        }
-      }
-    }
-    _scrollPosition = currentPosition;
   }
 
   @override
@@ -239,56 +231,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
       listener: (context, state) {
         if (state is GetCartLoaded) {
           setState(() {
-            cartList = state.cart.cartItems as List<CartItems>;
-            cartdata = state.cart;
+            cartList = state.cart.cartItems;
+            cartData = state.cart;
+            _showBottomCart =
+                cartList.isNotEmpty && (cartData?.totalCount ?? 0) > 0;
           });
         }
+        if (state is GetCartError) {}
       },
       child: Scaffold(
+        backgroundColor: AppColor.White,
         appBar: PreferredSize(
-          preferredSize: const Size.fromHeight(150),
-          child: AppBar(
-            automaticallyImplyLeading: false,
-            backgroundColor: AppColor.PrimaryColor,
-            elevation: 0,
-            title: LocationHeader(
-              latitude: latitude,
-              longitude: longitude,
-              onLocationChanged: onLocationChanged,
-            ),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
-            ),
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(80),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 16.0),
-                child: CategorySearchBar(
-                  hintText: "Search for restaurants, dishes, and cuisines",
-                  onChanged: (value) async {
-                    setState(() => searchQuery = value);
-                    final prefs = await SharedPreferences.getInstance();
-                    final latitude =
-                        prefs.getDouble('saved_latitude') ?? 17.385044;
-                    final longitude =
-                        prefs.getDouble('saved_longitude') ?? 78.486671;
-                    context
-                        .read<GetRestaurantsByProductNameCubit>()
-                        .fetchRestaurantsByProductName({
-                      "productName": value,
-                      "latitude": latitude,
-                      "longitude": longitude,
-                      "postalCode": "531001",
-                      "page": 0,
-                      "size": 10,
-                    });
-                  },
+          preferredSize: const Size.fromHeight(350),
+          child: ClipPath(
+            clipper: EyeShapeClipper(),
+            child: Container(
+              color: AppColor.PrimaryColor,
+              child: SafeArea(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                      child: LocationHeader(
+                        latitude: latitude,
+                        longitude: longitude,
+                        onLocationChanged: _onLocationChanged,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: CategorySearchBar(
+                        hintText:
+                            "Search for restaurants, dishes, and cuisines",
+                        onChanged: (query) async {
+                          setState(() => searchQuery = query);
+                          final prefs = await SharedPreferences.getInstance();
+                          final lat =
+                              prefs.getDouble('saved_latitude') ?? 17.385044;
+                          final lon =
+                              prefs.getDouble('saved_longitude') ?? 78.486671;
+
+                          context
+                              .read<GetRestaurantsByProductNameCubit>()
+                              .fetchRestaurantsByProductName({
+                            "productName": query,
+                            "latitude": lat,
+                            "longitude": lon,
+                            "postalCode": "531001",
+                            "page": 0,
+                            "size": 10,
+                          });
+                        },
+                      ),
+                    ),
+                    const OffersCarousel(),
+                  ],
                 ),
               ),
             ),
           ),
         ),
-        backgroundColor: AppColor.White,
         body: Stack(
           children: [
             SafeArea(
@@ -304,16 +307,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         onCategoryTap: (label) async {
                           setState(() => searchQuery = label);
                           final prefs = await SharedPreferences.getInstance();
-                          final latitude =
+                          final lat =
                               prefs.getDouble('saved_latitude') ?? 17.385044;
-                          final longitude =
+                          final lon =
                               prefs.getDouble('saved_longitude') ?? 78.486671;
+
                           context
                               .read<GetRestaurantsByProductNameCubit>()
                               .fetchRestaurantsByProductName({
                             "productName": label,
-                            "latitude": latitude,
-                            "longitude": longitude,
+                            "latitude": lat,
+                            "longitude": lon,
                             "postalCode": "531001",
                             "page": 0,
                             "size": 10,
@@ -339,7 +343,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
-            if (cartList.isNotEmpty)
+            if (cartList.isNotEmpty && (cartData?.totalCount ?? 0) > 0)
               Positioned(
                 bottom: 0,
                 left: 0,
@@ -348,36 +352,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   duration: const Duration(milliseconds: 300),
                   offset: _showBottomCart ? Offset.zero : const Offset(0, 1),
                   child: BottomCartCard(
-                    itemCount: cartdata.totalCount,
+                    itemCount: cartData?.totalCount ?? 0,
                     onTap: () async {
                       final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (_) => CartScreen(
                             cartItems: cartList
-                                .map((item) => {
-                                      'productId': item.id,
-                                      'quantity': item.quantity ?? 0,
-                                      'price': item.price,
-                                      'name': item.productName,
-                                      'description': item.productName,
+                                .map((cartItem) => {
+                                      'productId': cartItem.productId,
+                                      'quantity': cartItem.quantity ?? 0,
+                                      'price': cartItem.price ?? 0,
+                                      'name': cartItem.productName ?? '',
+                                      'media': cartItem.media.isNotEmpty
+                                          ? cartItem.media[0].url
+                                          : null,
                                     })
                                 .toList(),
                           ),
                         ),
                       );
+
                       if (!mounted) return;
-                      if (result != null && result is Map<String, dynamic>) {
-                        final updatedCart =
-                            result['updatedCart'] as Map<String, int>?;
-                        final updatedCartLength =
-                            result['cartItemsLength'] ?? 0;
-                        if (updatedCart != null) {
+
+                      if (result != null && result is Map) {
+                        final int updatedCount = result['cartItemsLength'] ?? 0;
+                        final cubit = context.read<GetCartCubit>();
+                        await cubit.fetchCart(context);
+                        final state = cubit.state;
+                        if (state is GetCartLoaded) {
                           setState(() {
-                            cart = Map<String, int>.from(updatedCart);
-                            totalItems = updatedCartLength;
-                            cartdata.totalCount = updatedCartLength;
+                            cartList = state.cart.cartItems;
+                            cartData = state.cart;
+                            _showBottomCart = updatedCount > 0 &&
+                                (cartData?.totalCount ?? 0) > 0;
                           });
+
+                          // ✅ Print total cart data (for debugging or logs)
+                          double total = 0;
+                          debugPrint("🛒 Updated Cart Items:");
+                          for (var item in cartList) {
+                            final quantity = item.quantity ?? 0;
+                            final price = item.price ?? 0;
+                            final itemTotal = quantity * price;
+                            total += itemTotal;
+                            debugPrint(
+                                "→ ${item.productName}: Qty = $quantity, Price = ₹$price, Total = ₹$itemTotal");
+                          }
+                          debugPrint(
+                              "🧾 Grand Total: ₹${total.toStringAsFixed(2)}");
                         }
                       }
                     },
@@ -389,4 +412,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+}
+
+class EyeShapeClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final Path path = Path();
+    path.lineTo(0, size.height - 40);
+    path.quadraticBezierTo(
+        size.width / 2, size.height + 20, size.width, size.height - 40);
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

@@ -109,43 +109,39 @@ class _LocationHeaderState extends State<LocationHeader> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16)
-          .copyWith(top: 18, bottom: 10),
-      child: Row(
-        children: [
-          const Icon(Icons.location_pin, color: Colors.white, size: 24),
-          const SizedBox(width: 10),
-          Expanded(
-            child: _isLoading
-                ? _buildShimmer()
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _city,
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
+    return Row(
+      children: [
+        const Icon(Icons.location_pin, color: Colors.white, size: 24),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _isLoading
+              ? _buildShimmer()
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _city,
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        _area,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.white70,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _area,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w400,
+                        color: Colors.white70,
                       ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 

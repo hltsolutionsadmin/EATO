@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 
 class CustomSnackbars {
@@ -6,12 +7,14 @@ class CustomSnackbars {
     required String title,
     required String message,
   }) {
-    _showSnackBar(
+    _showOverlaySnackbar(
       context: context,
       title: title,
       message: message,
-      backgroundColor: Colors.greenAccent,
-      textColor: Colors.black,
+      icon: Icons.check_circle,
+      backgroundColor: const Color(0xFFDCFCE7),
+      iconColor: const Color(0xFF22C55E),
+      textColor: const Color(0xFF166534),
     );
   }
 
@@ -20,12 +23,14 @@ class CustomSnackbars {
     required String title,
     required String message,
   }) {
-    _showSnackBar(
+    _showOverlaySnackbar(
       context: context,
       title: title,
       message: message,
-      backgroundColor: Colors.redAccent,
-      textColor: Colors.white,
+      icon: Icons.error,
+      backgroundColor: const Color(0xFFFEE2E2),
+      iconColor: const Color(0xFFDC2626),
+      textColor: const Color(0xFF7F1D1D),
     );
   }
 
@@ -34,87 +39,92 @@ class CustomSnackbars {
     required String title,
     required String message,
   }) {
-    _showSnackBar(
+    _showOverlaySnackbar(
       context: context,
       title: title,
       message: message,
-      backgroundColor: Colors.blueAccent,
-      textColor: Colors.white,
+      icon: Icons.info,
+      backgroundColor: const Color(0xFFE0F2FE),
+      iconColor: const Color(0xFF0284C7),
+      textColor: const Color(0xFF075985),
     );
   }
 
-  static void _showSnackBar({
+  static void _showOverlaySnackbar({
     required BuildContext context,
     required String title,
     required String message,
+    required IconData icon,
     required Color backgroundColor,
+    required Color iconColor,
     required Color textColor,
   }) {
     final overlay = Overlay.of(context);
-    final overlayEntry = OverlayEntry(
+    late OverlayEntry overlayEntry;
+
+    final animationController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: Navigator.of(context),
+    );
+
+    final animation = Tween<Offset>(
+      begin: const Offset(-1.0, 0.0),
+      end: Offset.zero,
+    ).animate(
+        CurvedAnimation(parent: animationController, curve: Curves.easeOut));
+
+    final double topPadding = MediaQuery.of(context).padding.top + 8;
+
+    overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        top: 50,
-        left: 10,
-        right: 10,
-        child: Material(
-          color: Colors.transparent,
-          child: FadeTransition(
-            opacity:
-                _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
-            child: SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(0, -1),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent:
-                    _getAnimation(context) ?? const AlwaysStoppedAnimation(1.0),
-                curve: Curves.easeOut,
-              )),
-              child: ShakeTransition(
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                  decoration: BoxDecoration(
-                    color: backgroundColor,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 12,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
+        top: topPadding,
+        left: 20,
+        right: 20,
+        child: SlideTransition(
+          position: animation,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                color: backgroundColor,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
                   ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline,
-                        color: textColor,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              message,
-                              style: TextStyle(color: textColor),
-                            ),
-                          ],
+                ],
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Row(
+                children: [
+                  Icon(icon, color: iconColor, size: 28),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: textColor,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 4),
+                        Text(
+                          message,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: textColor.withOpacity(0.85),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
@@ -123,63 +133,12 @@ class CustomSnackbars {
     );
 
     overlay.insert(overlayEntry);
+    animationController.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
+    Timer(const Duration(seconds: 3), () async {
+      await animationController.reverse();
       overlayEntry.remove();
+      animationController.dispose();
     });
-  }
-
-  static Animation<double>? _getAnimation(BuildContext context) {
-    final route = ModalRoute.of(context);
-    if (route == null || route.animation == null) {
-      return null;
-    }
-    return route.animation;
-  }
-}
-
-class ShakeTransition extends StatefulWidget {
-  final Widget child;
-
-  const ShakeTransition({super.key, required this.child});
-
-  @override
-  _ShakeTransitionState createState() => _ShakeTransitionState();
-}
-
-class _ShakeTransitionState extends State<ShakeTransition>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<Offset> _shakeAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    )..repeat(reverse: true);
-
-    _shakeAnimation = Tween<Offset>(
-      begin: Offset.zero,
-      end: const Offset(0.01, 0),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticInOut,
-    ));
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SlideTransition(
-      position: _shakeAnimation,
-      child: widget.child,
-    );
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
   }
 }

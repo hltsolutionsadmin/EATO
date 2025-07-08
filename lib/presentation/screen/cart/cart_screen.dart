@@ -1,8 +1,16 @@
 import 'dart:convert';
-import 'package:eato/components/custom_button.dart' as eato_button;
+import 'package:eato/presentation/screen/widgets/cart/address_card.dart';
+import 'package:eato/presentation/screen/widgets/cart/cart_item_card.dart';
+import 'package:eato/presentation/screen/widgets/cart/checkout_bottom_bar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart' as http;
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:eato/core/constants/colors.dart';
 import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
-import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
@@ -10,192 +18,90 @@ import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart
 import 'package:eato/presentation/cubit/payment/payment_cubit.dart';
 import 'package:eato/presentation/cubit/payment/payment_state.dart';
 import 'package:eato/presentation/screen/address/address_screen.dart';
-import 'package:eato/presentation/screen/cart/cart_screen_helper_widget.dart';
-import 'package:eato/presentation/screen/widgets/cart/cart.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:razorpay_flutter/razorpay_flutter.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
 class CartScreen extends StatefulWidget {
   final int? orderId;
   final List<Map<String, dynamic>>? cartItems;
   final Function(bool)? onBottomSheetVisibilityChanged;
   final Widget? customCheckoutButton;
-  const CartScreen({
-    super.key,
-    this.orderId,
-    this.cartItems,
-    this.onBottomSheetVisibilityChanged,
-    this.customCheckoutButton,
-  });
+  const CartScreen(
+      {super.key,
+      this.orderId,
+      this.cartItems,
+      this.onBottomSheetVisibilityChanged,
+      this.customCheckoutButton});
   @override
-  _CartScreenState createState() => _CartScreenState();
+  State<CartScreen> createState() => _CartScreenState();
 }
 
 class _CartScreenState extends State<CartScreen> {
-  late final Razorpay _razorpay;
+  late Razorpay _razorpay;
   static const razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
   static const razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
-  bool loading = false;
   final Map<String, int> cart = {};
   final List<Map<String, dynamic>> selectedItems = [];
   int? cartId;
+  bool loading = false;
+  String selectedAddress = "Add Address";
+
   static const double gstPercentage = 0.05;
   static const double deliveryCharge = 30.0;
-  String selectedAddress = "Add Address";
 
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay()
+      ..on(Razorpay.EVENT_PAYMENT_SUCCESS, _onPaymentSuccess)
+      ..on(Razorpay.EVENT_PAYMENT_ERROR, _onPaymentFailure)
+      ..on(Razorpay.EVENT_EXTERNAL_WALLET, _onExternalWallet);
     context.read<GetCartCubit>().fetchCart(context);
     _loadSavedAddress();
-    _razorpay = Razorpay()
-      ..on(Razorpay.EVENT_PAYMENT_SUCCESS, handlePaymentSuccess)
-      ..on(Razorpay.EVENT_PAYMENT_ERROR, handlePaymentFailure)
-      ..on(Razorpay.EVENT_EXTERNAL_WALLET, handleExternalWallet);
-    _initializeCartAndSelectedItems();
+    _initCartItems();
   }
 
-  void handlePaymentSuccess(PaymentSuccessResponse response) async {
-    try {
-      final exactAmount = getTotalAmount();
-      print(exactAmount);
-      final payload = {
-        "cartId": cartId ?? 0,
-        "amount": exactAmount,
-        "paymentId": response.paymentId,
-        "razorpayOrderId": response.orderId,
-        "razorpaySignature": response.signature,
-        "status": "SUCCESS"
-      };
-      setState(() => loading = true);
-      await context.read<PaymentCubit>().makePayment(payload, context);
-      setState(() => loading = false);
-    } catch (e) {
-      setState(() => loading = false);
-      CustomSnackbars.showErrorSnack(
-        context: context,
-        title: 'ERROR',
-        message: 'Payment or order creation failed:: ${e.toString()}',
-      );
-    }
+  void _onPaymentSuccess(PaymentSuccessResponse response) async {
+    final payload = {
+      "cartId": cartId ?? 0,
+      "amount": getTotalAmount(),
+      "paymentId": response.paymentId,
+      "razorpayOrderId": response.orderId,
+      "razorpaySignature": response.signature,
+      "status": "SUCCESS"
+    };
+    setState(() => loading = true);
+    await context.read<PaymentCubit>().makePayment(payload, context);
+    setState(() => loading = false);
   }
 
-  void handlePaymentFailure(PaymentFailureResponse response) {
+  void _onPaymentFailure(_) {
     CustomSnackbars.showErrorSnack(
-      context: context,
-      title: 'ERROR',
-      message: 'payment failed, please try after some time',
-    );
+        context: context, title: 'ERROR', message: 'Payment failed');
     setState(() => loading = false);
   }
 
-  void handleExternalWallet(ExternalWalletResponse response) {
+  void _onExternalWallet(_) {
     CustomSnackbars.showInfoSnack(
-      context: context,
-      title: 'Info',
-      message: 'Transaction under process, please check after some time',
-    );
+        context: context, title: 'Info', message: 'Check payment status later');
     setState(() => loading = false);
   }
 
-  Future<void> openCheckOut() async {
-    print(selectedAddress);
-    if (selectedAddress == "Add Address") {
-      CustomSnackbars.showErrorSnack(
-        context: context,
-        title: 'ERROR',
-        message: 'Please select a delivery address before proceeding',
-      );
-      return;
-    } else {
-      if (cartId == null) {
-        CustomSnackbars.showErrorSnack(
-          context: context,
-          title: 'ERROR',
-          message: 'Cart not loaded, please try again',
-        );
-        return;
-      }
-      setState(() => loading = true);
-      try {
-        final exactAmount = getTotalAmount();
-        final amountInPaise = (exactAmount * 100).toInt();
-        final orderId = await createOrder(amount: amountInPaise);
-        final options = {
-          'key': razorPayKey,
-          'amount': amountInPaise,
-          'name': 'EATO',
-          'order_id': orderId,
-          'description': 'Order for cart $cartId',
-          'prefill': {
-            'contact': '9705047662',
-            'email': 'harishpeela03@gmail.com'
-          },
-          'theme': {
-            'color': '#081724',
-            'hide_topbar': false,
-            'backdrop_color': '#081724',
-          }
-        };
-        _razorpay.open(options);
-      } catch (e) {
-        setState(() => loading = false);
-        CustomSnackbars.showErrorSnack(
-          context: context,
-          title: 'ERROR',
-          message: 'Failed to process payment: ${e.toString()}',
-        );
-      }
-    }
+  Future<void> _loadSavedAddress() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() =>
+        selectedAddress = prefs.getString('delivery_address') ?? "Add Address");
   }
 
-  Future<Map<String, dynamic>> razorPayApi(num amount, String recieptId) async {
-    final auth =
-        'Basic ${base64Encode(utf8.encode('$razorPayKey:$razorPaySecret'))}';
-    final headers = {
-      'content-type': 'application/json',
-      "Access-Control_Allow_Origin": "*",
-      'Authorization': auth
-    };
-    final data = {
-      "amount": amount.toInt(),
-      "currency": "INR",
-      "receipt": recieptId
-    };
-    final request =
-        http.Request('POST', Uri.parse('https://api.razorpay.com/v1/orders'))
-          ..body = json.encode(data)
-          ..headers.addAll(headers);
-    final response = await request.send();
-    if (response.statusCode == 200) {
-      return {
-        "status": "success",
-        "body": jsonDecode(await response.stream.bytesToString())
-      };
-    } else {
-      return {"status": "fail", "message": (response.reasonPhrase)};
-    }
+  Future<void> _saveAddress(String address) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('delivery_address', address);
   }
 
-  Future<String> createOrder({required num amount}) async {
-    final myData = await razorPayApi(amount, "rcp_id_2");
-    return myData["status"] == "success" ? myData["body"]["id"] : "";
-  }
-
-  void _initializeCartAndSelectedItems() {
+  void _initCartItems() {
     if (widget.cartItems != null) {
       for (final item in widget.cartItems!) {
-        final productId = item['productId'] as int?;
-        final quantity = item['quantity'] as int?;
-        final name = item['name'] as String?;
-        if (productId != null &&
-            quantity != null &&
-            quantity > 0 &&
-            name != null) {
+        final name = item['name'];
+        final quantity = item['quantity'] ?? 0;
+        if (name != null && quantity > 0) {
           cart[name] = quantity;
           selectedItems.add(item);
         }
@@ -203,76 +109,60 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  void updateCartItemQuantity(String itemName, int newQuantity) {
-    if (newQuantity <= 0) {
-      removeCartItem(itemName);
-    } else {
-      setState(() {
-        cart[itemName] = newQuantity;
-        if (!selectedItems.any((item) => item['name'] == itemName)) {
-          final foundItem = widget.cartItems?.firstWhere(
-            (item) => item['name'] == itemName,
-            orElse: () => {},
-          );
-          if (foundItem != null && foundItem.isNotEmpty) {
-            selectedItems.add(foundItem);
-          }
-        }
-      });
-    }
-    widget.onBottomSheetVisibilityChanged?.call(cart.isNotEmpty);
-  }
-
-  void removeCartItem(String itemName) {
-    setState(() {
-      cart.remove(itemName);
-      selectedItems.removeWhere((item) => item['name'] == itemName);
-    });
-    widget.onBottomSheetVisibilityChanged?.call(cart.isNotEmpty);
-  }
-
-  double getSubtotal() => selectedItems.fold(0.0, (subtotal, item) {
-        final name = item['name'] as String?;
+  double getSubtotal() => selectedItems.fold(0.0, (sum, item) {
+        final qty = cart[item['name']] ?? 0;
         final price = item['price'];
-        final quantity = cart[name] ?? 0;
-        if (name == null || quantity == 0) return subtotal;
-        final itemPrice = price is String
-            ? double.tryParse(price.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0.0
-            : price is double
-                ? price
-                : 0.0;
-        return subtotal + (itemPrice * quantity);
+        final double val =
+            price is String ? double.tryParse(price) ?? 0 : (price ?? 0.0);
+        return sum + (qty * val);
       });
 
-  int getCartItemCount() => cart.values.fold(0, (sum, qty) => sum + qty);
   double getGSTAmount() => getSubtotal() * gstPercentage;
-  double getTotalAmount() {
-    final subtotal = getSubtotal();
-    final gst = subtotal * gstPercentage;
-    return (subtotal + gst + deliveryCharge).floorToDouble();
+  double getTotalAmount() =>
+      (getSubtotal() + getGSTAmount() + deliveryCharge).floorToDouble();
+  int getCartItemCount() => cart.values.fold(0, (sum, q) => sum + q);
+
+  Future<Map<String, dynamic>> _createOrder(int amount) async {
+    final auth =
+        'Basic ${base64Encode(utf8.encode('$razorPayKey:$razorPaySecret'))}';
+    final headers = {'content-type': 'application/json', 'Authorization': auth};
+    final data = {"amount": amount, "currency": "INR", "receipt": "rcptid_11"};
+    final request =
+        http.Request('POST', Uri.parse('https://api.razorpay.com/v1/orders'))
+          ..body = json.encode(data)
+          ..headers.addAll(headers);
+    final response = await request.send();
+    final body = jsonDecode(await response.stream.bytesToString());
+    return {
+      "status": response.statusCode == 200 ? "success" : "fail",
+      "body": body
+    };
   }
 
-  List<Map<String, dynamic>> getCartPayload() => selectedItems.map((item) {
-        final name = item['name'] as String?;
-        final quantity = cart[name] ?? 0;
-        final price = item['price'];
-        return {
-          'productId': item['productId'],
-          'quantity': quantity,
-          'price': price,
-        };
-      }).toList();
-
-  Future<void> _loadSavedAddress() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      selectedAddress = prefs.getString('delivery_address') ?? "Add Address";
+  Future<void> openCheckOut() async {
+    if (selectedAddress == "Add Address") {
+      CustomSnackbars.showErrorSnack(
+          context: context,
+          title: "ERROR",
+          message: "Select delivery address first");
+      return;
+    }
+    final amountInPaise = (getTotalAmount() * 100).toInt();
+    final orderResp = await _createOrder(amountInPaise);
+    if (orderResp["status"] != "success") {
+      CustomSnackbars.showErrorSnack(
+          context: context, title: 'ERROR', message: 'Payment gateway error');
+      return;
+    }
+    _razorpay.open({
+      'key': razorPayKey,
+      'amount': amountInPaise,
+      'name': 'EATO',
+      'order_id': orderResp['body']['id'],
+      'description': 'Cart Payment',
+      'prefill': {'contact': '9705047662', 'email': 'harishpeela03@gmail.com'},
+      'theme': {'color': '#081724'}
     });
-  }
-
-  Future<void> _saveAddress(String address) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('delivery_address', address);
   }
 
   @override
@@ -284,18 +174,14 @@ class _CartScreenState extends State<CartScreen> {
             if (state is ProductsAddToCartFailure) {
               setState(() => loading = false);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text('Something went wrong please try after sometime')),
+                const SnackBar(content: Text('Something went wrong')),
               );
             }
           },
         ),
         BlocListener<GetCartCubit, GetCartState>(
           listener: (context, state) {
-            if (state is GetCartLoaded) {
-              setState(() => cartId = state.cart.id);
-            }
+            if (state is GetCartLoaded) setState(() => cartId = state.cart.id);
           },
         ),
         BlocListener<PaymentCubit, PaymentState>(
@@ -304,191 +190,84 @@ class _CartScreenState extends State<CartScreen> {
               CustomSnackbars.showErrorSnack(
                 context: context,
                 title: 'FAILURE',
-                message:
-                    'Your order was not confirmed, if any amount was deducted, it will be refunded within 24 hours!',
+                message: 'Payment failed. Refund will be initiated if debited.',
               );
             } else if (state is PaymentSuccess) {
               CustomSnackbars.showSuccessSnack(
-                context: context,
-                title: 'SUCCESS',
-                message: 'Payment successful, order created successfully!',
-              );
+                  context: context,
+                  title: 'SUCCESS',
+                  message: 'Payment Successful!');
             } else if (state is PaymentFailure) {
               CustomSnackbars.showErrorSnack(
-                context: context,
-                title: 'ERROR',
-                message: state.error,
-              );
+                  context: context, title: 'ERROR', message: state.error);
             }
           },
-        ),
+        )
       ],
       child: Scaffold(
+        backgroundColor: AppColor.White,
         appBar: CustomAppBar(
           title: "Cart (${getCartItemCount()} items)",
           onBackPressed: () {
-            final updatedCart = <String, int>{};
-            for (final item in selectedItems) {
-              final name = item['name'] as String?;
-              if (name != null && cart.containsKey(name)) {
-                updatedCart[name] = cart[name]!;
-              }
-            }
-            Navigator.pop(context, {
-              'updatedCart': updatedCart,
-              'cartItemsLength': getCartItemCount(),
-            });
-            widget.onBottomSheetVisibilityChanged?.call(updatedCart.isNotEmpty);
+            Navigator.pop(context,
+                {'updatedCart': cart, 'cartItemsLength': getCartItemCount()});
+            widget.onBottomSheetVisibilityChanged?.call(cart.isNotEmpty);
           },
         ),
         body: Stack(
           children: [
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColor.White, Colors.white],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-            ),
             Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColor.PrimaryColor.withOpacity(0.1),
-                      border: Border.all(color: AppColor.PrimaryColor),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.location_on, color: Colors.red),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Deliver to",
-                                style: TextStyle(
-                                    fontSize: 14, color: Colors.black54),
-                              ),
-                              Text(
-                                selectedAddress == "Add Address"
-                                    ? "Select delivery address"
-                                    : selectedAddress,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w400,
-                                  color: selectedAddress == "Add Address"
-                                      ? Colors.grey
-                                      : Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.edit),
-                          onPressed: () async {
-                            final address = await Navigator.push<String>(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const AddressScreen(),
-                              ),
-                            );
-                            if (address != null) {
-                              await _saveAddress(address);
-                              setState(() => selectedAddress = address);
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                AddressCard(
+                  address: selectedAddress,
+                  onEdit: () async {
+                    final address = await Navigator.push<String>(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddressScreen()),
+                    );
+                    if (address != null) {
+                      await _saveAddress(address);
+                      setState(() => selectedAddress = address);
+                    }
+                  },
                 ),
                 Expanded(
                   child: selectedItems.isEmpty
-                      ? const Center(
-                          child: Text(
-                            "No items in the cart!",
-                            style: TextStyle(fontSize: 18, color: Colors.grey),
-                          ),
-                        )
+                      ? const Center(child: Text("No items in cart"))
                       : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 180),
+                          padding: const EdgeInsets.only(bottom: 160),
                           itemCount: selectedItems.length,
-                          itemBuilder: (context, index) {
-                            final item = selectedItems[index];
-                            final quantity = cart[item['name']] ?? 0;
-                            return CartItemWidget(
-                              item: item,
-                              quantity: quantity,
-                              onQuantityChanged: updateCartItemQuantity,
-                              onRemove: removeCartItem,
-                            );
-                          },
+                          itemBuilder: (ctx, i) => CartItemCard(
+                            item: selectedItems[i],
+                            quantity: cart[selectedItems[i]['name']] ?? 1,
+                            onQuantityChanged: (q) {
+                              setState(() {
+                                if (q <= 0) {
+                                  cart.remove(selectedItems[i]['name']);
+                                  selectedItems.removeAt(i);
+                                } else {
+                                  cart[selectedItems[i]['name']] = q;
+                                }
+                              });
+                              widget.onBottomSheetVisibilityChanged
+                                  ?.call(cart.isNotEmpty);
+                            },
+                          ),
                         ),
                 ),
               ],
             ),
             Positioned(
-              bottom: 0,
               left: 0,
               right: 0,
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      offset: Offset(0, -2),
-                      blurRadius: 6,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    BuildPriceRow("Subtotal", getSubtotal()),
-                    BuildPriceRow("GST (5%)", getGSTAmount()),
-                    BuildPriceRow("Delivery Charge", deliveryCharge),
-                    const Divider(thickness: 1),
-                    BuildPriceRow("Total", getTotalAmount(), isBold: true),
-                    const SizedBox(height: 12),
-                    BlocBuilder<PaymentCubit, PaymentState>(
-                      builder: (context, paymentState) {
-                        return BlocBuilder<ProductsAddToCartCubit,
-                            ProductsAddToCartState>(
-                          builder: (context, cartState) {
-                            if (paymentState is PaymentLoading ||
-                                cartState is ProductsAddToCartLoading) {
-                              return CupertinoActivityIndicator(
-                                color: AppColor.PrimaryColor,
-                              );
-                            }
-                            return eato_button.CustomButton(
-                              buttonText: "Checkout",
-                              onPressed: () {
-                                setState(() => loading = true);
-                                openCheckOut();
-                              },
-                            );
-                          },
-                        );
-                      },
-                    ),
-                  ],
-                ),
+              bottom: 0,
+              child: CheckoutBottomBar(
+                subtotal: getSubtotal(),
+                gst: getGSTAmount(),
+                deliveryCharge: deliveryCharge,
+                total: getTotalAmount(),
+                loading: loading,
+                onPlaceOrder: openCheckOut,
               ),
             ),
           ],
