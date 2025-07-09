@@ -24,12 +24,14 @@ class CartScreen extends StatefulWidget {
   final List<Map<String, dynamic>>? cartItems;
   final Function(bool)? onBottomSheetVisibilityChanged;
   final Widget? customCheckoutButton;
-  const CartScreen(
-      {super.key,
-      this.orderId,
-      this.cartItems,
-      this.onBottomSheetVisibilityChanged,
-      this.customCheckoutButton});
+  const CartScreen({
+    super.key,
+    this.orderId,
+    this.cartItems,
+    this.onBottomSheetVisibilityChanged,
+    this.customCheckoutButton,
+  });
+
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
@@ -38,6 +40,7 @@ class _CartScreenState extends State<CartScreen> {
   late Razorpay _razorpay;
   static const razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
   static const razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
+
   final Map<String, int> cart = {};
   final List<Map<String, dynamic>> selectedItems = [];
   int? cartId;
@@ -54,6 +57,7 @@ class _CartScreenState extends State<CartScreen> {
       ..on(Razorpay.EVENT_PAYMENT_SUCCESS, _onPaymentSuccess)
       ..on(Razorpay.EVENT_PAYMENT_ERROR, _onPaymentFailure)
       ..on(Razorpay.EVENT_EXTERNAL_WALLET, _onExternalWallet);
+
     context.read<GetCartCubit>().fetchCart(context);
     _loadSavedAddress();
     _initCartItems();
@@ -147,6 +151,7 @@ class _CartScreenState extends State<CartScreen> {
           message: "Select delivery address first");
       return;
     }
+
     final amountInPaise = (getTotalAmount() * 100).toInt();
     final orderResp = await _createOrder(amountInPaise);
     if (orderResp["status"] != "success") {
@@ -154,6 +159,7 @@ class _CartScreenState extends State<CartScreen> {
           context: context, title: 'ERROR', message: 'Payment gateway error');
       return;
     }
+
     _razorpay.open({
       'key': razorPayKey,
       'amount': amountInPaise,
@@ -172,16 +178,24 @@ class _CartScreenState extends State<CartScreen> {
         BlocListener<ProductsAddToCartCubit, ProductsAddToCartState>(
           listener: (context, state) {
             if (state is ProductsAddToCartFailure) {
+              if ((state.message).isNotEmpty) {
+                CustomSnackbars.showErrorSnack(
+                    context: context,
+                    title: "Failed",
+                    message: "Something went wrong");
+              }
               setState(() => loading = false);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Something went wrong')),
-              );
+            } else if (state is ProductsAddToCartSuccess) {
+              // CustomSnackbars.showSuccessSnack(
+              //     context: context, title: "SUCCESS", message: "Item Updated");
             }
           },
         ),
         BlocListener<GetCartCubit, GetCartState>(
           listener: (context, state) {
-            if (state is GetCartLoaded) setState(() => cartId = state.cart.id);
+            if (state is GetCartLoaded) {
+              setState(() => cartId = state.cart.id);
+            }
           },
         ),
         BlocListener<PaymentCubit, PaymentState>(
@@ -194,81 +208,108 @@ class _CartScreenState extends State<CartScreen> {
               );
             } else if (state is PaymentSuccess) {
               CustomSnackbars.showSuccessSnack(
-                  context: context,
-                  title: 'SUCCESS',
-                  message: 'Payment Successful!');
+                context: context,
+                title: 'SUCCESS',
+                message: 'Payment Successful!',
+              );
             } else if (state is PaymentFailure) {
               CustomSnackbars.showErrorSnack(
-                  context: context, title: 'ERROR', message: state.error);
+                context: context,
+                title: 'ERROR',
+                message: state.error,
+              );
             }
           },
-        )
+        ),
       ],
       child: Scaffold(
         backgroundColor: AppColor.White,
         appBar: CustomAppBar(
           title: "Cart (${getCartItemCount()} items)",
           onBackPressed: () {
-            Navigator.pop(context,
-                {'updatedCart': cart, 'cartItemsLength': getCartItemCount()});
+            final updatedCart = <int, int>{};
+            for (var item in selectedItems) {
+              final productId = item['productId'] ?? item['id'];
+              final qty = cart[item['name']] ?? 0;
+              if (qty > 0) updatedCart[productId] = qty;
+            }
+
+            Navigator.pop(context, {
+              'updatedCart': updatedCart,
+              'cartItemsLength': getCartItemCount()
+            });
+
             widget.onBottomSheetVisibilityChanged?.call(cart.isNotEmpty);
           },
         ),
-        body: Stack(
+        body: Column(
           children: [
-            Column(
-              children: [
-                AddressCard(
-                  address: selectedAddress,
-                  onEdit: () async {
-                    final address = await Navigator.push<String>(
-                      context,
-                      MaterialPageRoute(builder: (_) => const AddressScreen()),
-                    );
-                    if (address != null) {
-                      await _saveAddress(address);
-                      setState(() => selectedAddress = address);
-                    }
-                  },
-                ),
-                Expanded(
-                  child: selectedItems.isEmpty
-                      ? const Center(child: Text("No items in cart"))
-                      : ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 160),
-                          itemCount: selectedItems.length,
-                          itemBuilder: (ctx, i) => CartItemCard(
-                            item: selectedItems[i],
-                            quantity: cart[selectedItems[i]['name']] ?? 1,
+            AddressCard(
+              address: selectedAddress,
+              onEdit: () async {
+                final address = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddressScreen()),
+                );
+                if (address != null) {
+                  await _saveAddress(address);
+                  setState(() => selectedAddress = address);
+                }
+              },
+            ),
+            Expanded(
+              child: selectedItems.isEmpty
+                  ? const Center(child: Text("No items in cart"))
+                  : ListView.builder(
+                      itemCount: selectedItems.length + 1,
+                      itemBuilder: (ctx, i) {
+                        if (i < selectedItems.length) {
+                          final item = selectedItems[i];
+                          return CartItemCard(
+                            item: item,
+                            quantity: cart[item['name']] ?? 1,
                             onQuantityChanged: (q) {
+                              final productId = item['productId'] ?? item['id'];
+                              final price = item['price'] ?? 0;
+
                               setState(() {
                                 if (q <= 0) {
-                                  cart.remove(selectedItems[i]['name']);
+                                  cart.remove(item['name']);
                                   selectedItems.removeAt(i);
                                 } else {
-                                  cart[selectedItems[i]['name']] = q;
+                                  cart[item['name']] = q;
                                 }
                               });
+
+                              context.read<ProductsAddToCartCubit>().addToCart([
+                                {
+                                  "productId": productId,
+                                  "quantity": q,
+                                  "price": price
+                                }
+                              ]);
+
+                              context.read<GetCartCubit>().fetchCart(context);
                               widget.onBottomSheetVisibilityChanged
                                   ?.call(cart.isNotEmpty);
                             },
-                          ),
-                        ),
-                ),
-              ],
-            ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: CheckoutBottomBar(
-                subtotal: getSubtotal(),
-                gst: getGSTAmount(),
-                deliveryCharge: deliveryCharge,
-                total: getTotalAmount(),
-                loading: loading,
-                onPlaceOrder: openCheckOut,
-              ),
+                          );
+                        } else {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 20, horizontal: 16),
+                            child: CheckoutBottomBar(
+                              subtotal: getSubtotal(),
+                              gst: getGSTAmount(),
+                              deliveryCharge: deliveryCharge,
+                              total: getTotalAmount(),
+                              loading: loading,
+                              onPlaceOrder: openCheckOut,
+                            ),
+                          );
+                        }
+                      },
+                    ),
             ),
           ],
         ),
