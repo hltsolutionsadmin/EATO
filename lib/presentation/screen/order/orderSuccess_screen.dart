@@ -1,11 +1,28 @@
 import 'package:eato/components/bottomTab.dart';
-import 'package:eato/components/custom_button.dart';
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/presentation/screen/order/orderTracking_screen.dart';
 import 'package:flutter/material.dart';
 
-class OrderSuccessScreen extends StatelessWidget {
+class OrderSuccessScreen extends StatefulWidget {
   const OrderSuccessScreen({super.key});
+
+  @override
+  State<OrderSuccessScreen> createState() => _OrderSuccessScreenState();
+}
+
+class _OrderSuccessScreenState extends State<OrderSuccessScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const BottomTab()),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,156 +33,85 @@ class OrderSuccessScreen extends StatelessWidget {
           children: [
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                padding: const EdgeInsets.symmetric(horizontal: 28.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: Color(0xFF4CAF50).withOpacity(0.1),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: TweenAnimationBuilder(
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          duration: Duration(milliseconds: 500),
-                          builder: (context, value, child) {
-                            return Transform.scale(
-                              scale: value,
-                              child: Icon(
-                                Icons.check_circle,
-                                size: 60,
-                                color: Color(0xFF4CAF50),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                    TweenAnimationBuilder(
+                      tween: Tween<double>(begin: 0.8, end: 1.0),
+                      duration: const Duration(milliseconds: 800),
+                      curve: Curves.easeOutBack,
+                      builder: (context, scale, child) {
+                        return Transform.scale(
+                          scale: scale,
+                          child: Image.asset(
+                            "assets/images/png/delivery.png",
+                            height: 180,
+                          ),
+                        );
+                      },
                     ),
-                    SizedBox(height: 32),
+                    const SizedBox(height: 28),
                     Text(
-                      'Order Confirmed!',
+                      'Order Placed Successfully!',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black87,
+                        color: AppColor.PrimaryColor,
                       ),
-                    ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Your delicious food is being prepared and will arrive soon',
                       textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Sit back and relax while we prepare your delicious food.',
                       style: TextStyle(
                         fontSize: 16,
                         color: Colors.black54,
                         height: 1.5,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     Container(
-                      padding: EdgeInsets.all(20),
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(18),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
+                            color: Colors.black.withOpacity(0.07),
+                            blurRadius: 15,
+                            offset: const Offset(0, 6),
                           ),
                         ],
                       ),
-                      child: Column(
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Icon(Icons.access_time,
-                                  color: AppColor.PrimaryColor, size: 20),
-                              SizedBox(width: 12),
-                              Text(
-                                'Estimated Delivery Time',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              Spacer(),
-                              Text(
-                                '25-35 min',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
+                          Icon(Icons.access_time_filled,
+                              color: AppColor.PrimaryColor, size: 22),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Delivery Time',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black54,
+                            ),
                           ),
-                          SizedBox(height: 16),
-                          Divider(height: 1, color: Colors.grey[200]),
-                          SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Icon(Icons.receipt,
-                                  color: AppColor.PrimaryColor, size: 20),
-                              SizedBox(width: 12),
-                              Text(
-                                'Order Number',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.black54,
-                                ),
-                              ),
-                              Spacer(),
-                              Text(
-                                '#FD-128456',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                            ],
+                          const Spacer(),
+                          Text(
+                            '25-35 min',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    SizedBox(height: 32),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: CustomButton(
-                          buttonText: "Track Your Order",
-                          onPressed: () {
-                            Navigator.push(context,
-                                MaterialPageRoute(builder: (context) {
-                              return OrderTracker(
-                                  orderId: "1234", status: "Preparing");
-                            }));
-                          }),
-                    ),
+                    const SizedBox(height: 32),
                   ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 32.0, left: 32, right: 32),
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => BottomTab()),
-                  );
-                  // Navigator.popUntil(context, (route) => route.isFirst);
-                },
-                child: Text(
-                  'Back to Home',
-                  style: TextStyle(
-                    color: AppColor.PrimaryColor,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
                 ),
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:eato/components/bottomTab.dart';
 import 'package:eato/components/custom_button.dart';
+import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
@@ -16,6 +17,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:pinput/pinput.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+// ignore: must_be_immutable
 class OtpScreen extends StatefulWidget {
   final String mobileNumber;
   String otp;
@@ -36,6 +38,27 @@ class OtpScreen extends StatefulWidget {
 
 class _OtpScreenState extends State<OtpScreen> {
   final TextEditingController otpController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  final FocusNode _otpFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _otpFocusNode.addListener(() {
+      if (_otpFocusNode.hasFocus) {
+        Future.delayed(const Duration(milliseconds: 300), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+            );
+          }
+        });
+      }
+    });
+  }
 
   void _navigateBasedOnCustomerStatus(BuildContext context) {
     context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
@@ -44,6 +67,8 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void dispose() {
     otpController.dispose();
+    _scrollController.dispose();
+    _otpFocusNode.dispose();
     super.dispose();
   }
 
@@ -61,8 +86,9 @@ class _OtpScreenState extends State<OtpScreen> {
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (_) =>
-                      const Center(child: CupertinoActivityIndicator()),
+                  builder: (_) => const Center(
+                    child: CupertinoActivityIndicator(),
+                  ),
                 );
               } else {
                 Navigator.of(context, rootNavigator: true).pop();
@@ -71,16 +97,11 @@ class _OtpScreenState extends State<OtpScreen> {
               if (state is SignInLoaded) {
                 _navigateBasedOnCustomerStatus(context);
               } else if (state is SignInError) {
-                String errorMessage =
-                    state.message.toLowerCase().contains('otp')
-                        ? "The OTP you entered is incorrect. Please try again."
-                        : state.message;
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(errorMessage),
-                    backgroundColor: Colors.red,
-                  ),
+                CustomSnackbars.showErrorSnack(
+                  context: context,
+                  title: "Failed",
+                  message:
+                      "The OTP you entered is incorrect. Please try again.",
                 );
               }
             },
@@ -109,8 +130,10 @@ class _OtpScreenState extends State<OtpScreen> {
                   );
                 }
               } else if (state is CurrentCustomerError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(state.message)),
+                CustomSnackbars.showErrorSnack(
+                  context: context,
+                  title: "Failed",
+                  message: "Something went wrong",
                 );
               }
             },
@@ -118,9 +141,8 @@ class _OtpScreenState extends State<OtpScreen> {
         ],
         child: Column(
           children: [
-            // Top Image
             SizedBox(
-              height: size.height * 0.45,
+              height: size.height * 0.5,
               child: Stack(
                 children: [
                   Positioned.fill(
@@ -145,25 +167,15 @@ class _OtpScreenState extends State<OtpScreen> {
               ),
             ),
 
-            // Bottom Box
             Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(30),
-                    topRight: Radius.circular(30),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 10,
-                      offset: const Offset(0, -4),
-                    ),
-                  ],
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                padding: EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                  top: 30,
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -177,7 +189,6 @@ class _OtpScreenState extends State<OtpScreen> {
                     ),
                     const SizedBox(height: 10),
 
-                    // Subheading with number and "change"
                     Row(
                       children: [
                         Expanded(
@@ -209,8 +220,6 @@ class _OtpScreenState extends State<OtpScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 24),
-                    // OTP Debug Text (if shown)
                     if (widget.otp != 'true') ...[
                       const SizedBox(height: 10),
                       Center(
@@ -225,9 +234,9 @@ class _OtpScreenState extends State<OtpScreen> {
                     ],
                     const SizedBox(height: 20),
 
-                    // OTP field
                     Center(
                       child: Pinput(
+                        focusNode: _otpFocusNode,
                         controller: otpController,
                         length: 6,
                         onCompleted: (value) {
@@ -290,7 +299,6 @@ class _OtpScreenState extends State<OtpScreen> {
 
                     const SizedBox(height: 18),
 
-                    // Resend
                     Center(
                       child: InkWell(
                         onTap: () {

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:eato/components/custom_topbar.dart';
-import 'package:eato/data/model/cart/getCart/getCart_model.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
 import 'package:eato/presentation/cubit/cart/productsAddToCart/productsAddtoCart_cubit.dart';
@@ -94,7 +93,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     Map<String, int> updatedCart = {};
     List<Content> updatedSelectedItems = [];
 
-    for (var cartItem in state.cart.cartItems as List<CartItem>) {
+    for (var cartItem in state.cart.cartItems) {
       final menuItem = menuItems.firstWhere(
         (item) => item.id == cartItem.productId,
         orElse: () => Content(
@@ -199,8 +198,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     _bottomSheetController =
         _scaffoldKey.currentState!.showBottomSheet((context) {
       return RestaurantCartBottomSheet(
-        totalItems: totalItems,
-        onViewCartPressed: () async {
+          totalItems: totalItems,
+          onViewCartPressed: () async {
             _bottomSheetController?.close();
             final result = await Navigator.push(
               context,
@@ -239,49 +238,52 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
               final updatedCartLength = result['cartItemsLength'] ?? 0;
 
               if (updatedCart != null) {
-                setState(() {
-                  totalItems = updatedCartLength;
-                  cart.clear();
-                  selectedItems.clear();
+                cart.clear();
+                selectedItems.clear();
 
-                  for (var entry in updatedCart.entries) {
-                    final productId = entry.key;
-                    final quantity = entry.value;
+                for (var entry in updatedCart.entries) {
+                  final productId = entry.key;
+                  final quantity = entry.value;
 
-                    final item = menuItems.firstWhere(
-                      (item) => item.id == productId,
-                      orElse: () => Content(
-                        id: 0,
-                        name: '',
-                        shortCode: '',
-                        ignoreTax: false,
-                        discount: true,
-                        description: '',
-                        price: 0,
-                        available: false,
-                        shopifyProductId: '',
-                        shopifyVariantId: '',
-                        businessId: 0,
-                        categoryId: 0,
-                        media: [],
-                        attributes: [],
-                      ),
-                    );
+                  final item = menuItems.firstWhere(
+                    (item) => item.id == productId,
+                    orElse: () => Content(
+                      id: 0,
+                      name: '',
+                      shortCode: '',
+                      ignoreTax: false,
+                      discount: true,
+                      description: '',
+                      price: 0,
+                      available: false,
+                      shopifyProductId: '',
+                      shopifyVariantId: '',
+                      businessId: 0,
+                      categoryId: 0,
+                      media: [],
+                      attributes: [],
+                    ),
+                  );
 
-                    if (item.id != 0) {
-                      cart[item.name ?? ""] = quantity;
-                      selectedItems.add(item);
-                    }
+                  if (item.id != 0) {
+                    cart[item.name ?? ""] = quantity;
+                    selectedItems.add(item);
                   }
-                });
+                }
 
-                _onBottomSheetVisibilityChanged(cart.isNotEmpty);
+                totalItems = updatedCartLength;
+
+                _onBottomSheetVisibilityChanged(false);
+                await Future.delayed(const Duration(milliseconds: 100));
+
+                if (mounted && cart.isNotEmpty) {
+                  showPersistentCart();
+                }
+
                 if (!widget.isGuest) _loadMenu();
               }
             }
-          }
-
-      );
+          });
     });
 
     _bottomSheetController!.closed.then((_) {
@@ -298,15 +300,13 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
 
   void _onBottomSheetVisibilityChanged(bool visible) {
     if (!mounted) return;
-    if (visible && !isBottomSheetVisible) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showPersistentCart();
-      });
-    }
     setState(() {
       isBottomSheetVisible = visible;
     });
-    if (!visible) _bottomSheetController?.close();
+
+    if (!visible && totalItems == 0) {
+      _bottomSheetController?.close();
+    }
   }
 
   void _onSearchChanged(String value) {
@@ -414,16 +414,27 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
           key: _scaffoldKey,
           backgroundColor: Colors.grey[100],
           appBar: CustomAppBar(
-            title: widget.restaurantName,
-            onBackPressed: () async {
-              if (isBottomSheetVisible && _bottomSheetController != null) {
-                _bottomSheetController?.close();
-                await Future.delayed(const Duration(milliseconds: 300));
-              }
+              title: widget.restaurantName,
+              onBackPressed: () async {
+                if (isBottomSheetVisible && _bottomSheetController != null) {
+                  _bottomSheetController?.close();
+                  await Future.delayed(const Duration(milliseconds: 300));
+                }
 
-              if (mounted) Navigator.of(context).maybePop();
-            },
-          ),
+                final updatedCart = <int, int>{};
+                for (var item in selectedItems) {
+                  final productId = item.id;
+                  final qty = cart[item.name] ?? 0;
+                  if (qty > 0) updatedCart[productId ?? 0] = qty;
+                }
+
+                if (mounted) {
+                  Navigator.pop(context, {
+                    'updatedCart': updatedCart,
+                    'cartItemsLength': totalItems,
+                  });
+                }
+              }),
           body: Column(
             children: [
               HomeSearchBar(hintText: "menu", onChanged: _onSearchChanged),
@@ -625,7 +636,8 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                             }
 
                             return ListView.builder(
-                              padding: const EdgeInsets.all(16.0),
+                              padding: const EdgeInsets.fromLTRB(
+                                  16.0, 16.0, 16.0, 100.0), 
                               itemCount: filteredItems.length,
                               itemBuilder: (context, index) {
                                 final item = filteredItems[index];

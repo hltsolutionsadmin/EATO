@@ -135,7 +135,7 @@ class _MyOrdersState extends State<MyOrders> {
                     color: AppColor.PrimaryColor,
                   ));
                 } else if (state is OrderHistoryError && _currentPage == 0) {
-                  return Center(child: Text("Error loading orders."));
+                  return Center(child: Text("Failed loading orders."));
                 }
 
                 final filteredOrders = _allOrders.where((order) {

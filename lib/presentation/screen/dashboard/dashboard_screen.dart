@@ -1,6 +1,7 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/data/model/cart/getCart/getCart_model.dart';
+import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/createCart/createCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
@@ -12,7 +13,9 @@ import 'package:eato/presentation/cubit/restaurants/guestNearbyRestaurants/guest
 import 'package:eato/presentation/cubit/restaurants/guestNearbyRestaurants/guestNearbyRestaurants_state.dart';
 import 'package:eato/presentation/screen/cart/cart_screen.dart';
 import 'package:eato/presentation/screen/restaurantMenu/restaurantMenu_screen.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/LocationPermissionDialog.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/bottom_card_widget.dart';
+import 'package:eato/presentation/screen/widgets/dashboard/clear_cart_dialog.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/foodCatagoryIcons.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/foodItemCard.dart';
 import 'package:eato/presentation/screen/widgets/dashboard/locationHeader.dart';
@@ -21,6 +24,7 @@ import 'package:eato/presentation/screen/widgets/dashboard/offersCard_widget.dar
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -42,14 +46,45 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isScrollingDown = false;
   double _scrollPosition = 0;
   int page = 0, size = 10;
+  bool _isLoading = true;
 
-  @override
+@override
   void initState() {
     super.initState();
     context.read<CreateCartCubit>().createCart(context);
-    _loadCoordinatesAndFetchRestaurants();
-    _fetchCart();
+    _requestLocationPermission();
     _scrollController.addListener(_scrollListener);
+  }
+
+  Future<void> _requestLocationPermission() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      await _loadCoordinatesAndFetchRestaurants();
+
+      if (!widget.isGuest) {
+        await _fetchCart();
+      }
+    } else {
+      if (!mounted) return;
+      await LocationPermissionDialog.show(context);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _clearCart() async {
+    await context.read<ClearCartCubit>().clearCart(context);
+    await _fetchCart();
   }
 
   void _scrollListener() {
@@ -87,9 +122,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadCoordinatesAndFetchRestaurants() async {
+    // await Future.delayed(const Duration(milliseconds: 500)); // Optional delay
+
     final prefs = await SharedPreferences.getInstance();
+
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      latitude = position.latitude;
+      longitude = position.longitude;
+      prefs.setDouble('saved_latitude', latitude!);
+      prefs.setDouble('saved_longitude', longitude!);
+    } catch (e) {
     latitude = prefs.getDouble('saved_latitude') ?? 17.385044;
     longitude = prefs.getDouble('saved_longitude') ?? 78.486671;
+    }
 
     final params = {
       "latitude": latitude,
@@ -108,7 +156,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-void _navigateToRestaurantMenu(String name, String id) async {
+  void _navigateToRestaurantMenu(String name, String id) async {
     await Navigator.push(
       context,
       MaterialPageRoute(
@@ -120,11 +168,9 @@ void _navigateToRestaurantMenu(String name, String id) async {
       ),
     );
 
-    // ✅ Fetch cart again after coming back from RestaurantMenu
     if (!mounted) return;
     _fetchCart();
   }
-
 
   Map<String, String> _buildRestaurantCardData(String name, String category) {
     return {
@@ -173,7 +219,7 @@ void _navigateToRestaurantMenu(String name, String id) async {
                 );
               } else {
                 return const Center(
-                    child: Text("Error loading guest restaurants"));
+                    child: Text("Failed to load guest restaurants"));
               }
             },
           )
@@ -189,7 +235,7 @@ void _navigateToRestaurantMenu(String name, String id) async {
                   getId: (r) => (r.id ?? "").toString(),
                 );
               } else {
-                return const Center(child: Text("Error loading restaurants"));
+                return const Center(child: Text("Failed loading restaurants"));
               }
             },
           );
@@ -257,6 +303,7 @@ void _navigateToRestaurantMenu(String name, String id) async {
                         latitude: latitude,
                         longitude: longitude,
                         onLocationChanged: _onLocationChanged,
+                        isGuest: widget.isGuest,
                       ),
                     ),
                     Padding(
@@ -353,6 +400,16 @@ void _navigateToRestaurantMenu(String name, String id) async {
                   offset: _showBottomCart ? Offset.zero : const Offset(0, 1),
                   child: BottomCartCard(
                     itemCount: cartData?.totalCount ?? 0,
+                    onDeletePressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => ClearCartDialog(
+                          onClear: () async {
+                            await _clearCart();
+                          },
+                        ),
+                      );
+                    },
                     onTap: () async {
                       final result = await Navigator.push(
                         context,
@@ -387,8 +444,6 @@ void _navigateToRestaurantMenu(String name, String id) async {
                             _showBottomCart = updatedCount > 0 &&
                                 (cartData?.totalCount ?? 0) > 0;
                           });
-
-                          // ✅ Print total cart data (for debugging or logs)
                           double total = 0;
                           debugPrint("🛒 Updated Cart Items:");
                           for (var item in cartList) {

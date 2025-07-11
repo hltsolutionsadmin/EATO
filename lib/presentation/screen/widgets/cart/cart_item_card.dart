@@ -1,7 +1,6 @@
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/data/model/restaurants/guestMenuByRestaurantId/menu_content_model.dart';
 import 'package:eato/presentation/screen/widgets/restaurantMenu/menu.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -19,22 +18,19 @@ class CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-   final imageUrl = (() {
+    final imageUrl = (() {
       final media = item['media'];
-      if (media is String) return media; // ✅ direct url from DashboardScreen
+      if (media is String) return media;
       if (media is List && media.isNotEmpty) {
         final first = media[0];
-        if (first is Map && first['url'] != null) {
-          return first['url'];
-        } else if (first is Media && first.url != null) {
-          return first.url;
-        }
+        if (first is Map && first['url'] != null) return first['url'];
+        if (first is Media && first.url != null) return first.url;
       }
       return null;
     })();
 
-
     final isVeg = (item['type']?.toLowerCase() ?? '') == 'veg';
+    final hasImage = imageUrl != null && imageUrl.isNotEmpty;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -57,55 +53,61 @@ class CartItemCard extends StatelessWidget {
                   width: 120,
                   height: 120,
                   color: Colors.grey[200],
-                  child: imageUrl != null
+                  child: hasImage
                       ? Image.network(
-                          imageUrl,
+                          imageUrl!,
                           fit: BoxFit.cover,
                           width: 120,
                           height: 120,
                           errorBuilder: (_, __, ___) =>
-                              const Icon(Icons.restaurant_menu, size: 50),
+                              Container(color: Colors.grey[200]),
                         )
-                      : const Icon(Icons.restaurant_menu, size: 50),
+                      : const SizedBox.shrink(),
                 ),
               ),
-              Positioned(
-                bottom: 6,
-                left: 6,
-                right: 6,
-                child: Container(
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(6),
-                    boxShadow: const [
-                      BoxShadow(
+              Positioned.fill(
+                child: Align(
+                  alignment:
+                      hasImage ? Alignment.bottomCenter : Alignment.center,
+                  child: Container(
+                    width: 80,
+                    height: 30,
+                    margin: hasImage
+                        ? const EdgeInsets.only(bottom: 6)
+                        : EdgeInsets.zero,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(6),
+                      boxShadow: const [
+                        BoxShadow(
                           color: Colors.black12,
                           blurRadius: 4,
-                          offset: Offset(0, 2)),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      GestureDetector(
-                        onTap: () => onQuantityChanged(quantity - 1),
-                        child: const Icon(Icons.remove,
-                            size: 18, color: Colors.red),
-                      ),
-                      Text(
-                        '$quantity',
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                          offset: Offset(0, 2),
                         ),
-                      ),
-                      GestureDetector(
-                        onTap: () => onQuantityChanged(quantity + 1),
-                        child: Icon(Icons.add,
-                            size: 18, color: AppColor.PrimaryColor),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        GestureDetector(
+                          onTap: () => onQuantityChanged(quantity - 1),
+                          child: const Icon(Icons.remove,
+                              size: 18, color: Colors.red),
+                        ),
+                        Text(
+                          '$quantity',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: () => onQuantityChanged(quantity + 1),
+                          child: Icon(Icons.add,
+                              size: 18, color: AppColor.PrimaryColor),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -135,7 +137,9 @@ class CartItemCard extends StatelessWidget {
                 Text(
                   "₹${item['price'] ?? '0'}",
                   style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.bold, fontSize: 14),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 const Row(
