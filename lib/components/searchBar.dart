@@ -6,11 +6,13 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 class CategorySearchBar extends StatefulWidget {
   final String hintText;
   final ValueChanged<String> onChanged;
+  final FocusNode? focusNode; // <-- Added for external control
 
   const CategorySearchBar({
     super.key,
     required this.hintText,
     required this.onChanged,
+    this.focusNode,
   });
 
   @override
@@ -28,15 +30,6 @@ class _CategorySearchBarState extends State<CategorySearchBar> {
     super.initState();
     _speech = stt.SpeechToText();
     _controller = TextEditingController();
-    // _initializeSpeech();
-  }
-
-  // ignore: unused_element
-  void _initializeSpeech() async {
-    bool available = await _speech.initialize();
-    if (!available) {
-      print("Speech recognition not available.");
-    }
   }
 
   void _toggleMic() async {
@@ -88,17 +81,18 @@ class _CategorySearchBarState extends State<CategorySearchBar> {
             color: AppColor.White,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: Colors.black.withOpacity(0.3)),
-            
           ),
           child: TextField(
             controller: _controller,
+            focusNode: widget.focusNode, // <-- Use provided focus node
             onChanged: widget.onChanged,
             style: GoogleFonts.poppins(
               fontSize: 14,
               color: Colors.black,
             ),
             decoration: InputDecoration(
-              contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              contentPadding:
+                  const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               border: InputBorder.none,
               hintText: "${widget.hintText}...",
               hintStyle: GoogleFonts.poppins(
@@ -106,16 +100,15 @@ class _CategorySearchBarState extends State<CategorySearchBar> {
                 fontSize: 14,
               ),
               prefixIcon: const Icon(Icons.search, color: Colors.black),
-              suffixIcon: IconButton(
-                icon: _isListening
-                    ? const Icon(Icons.mic_none, color: Colors.green)
-                    : const Icon(Icons.mic, color: Colors.black),
-                onPressed: _toggleMic,
-              ),
+              // suffixIcon: IconButton(
+              //   icon: _isListening
+              //       ? const Icon(Icons.mic_none, color: Colors.green)
+              //       : const Icon(Icons.mic, color: Colors.black),
+              //   onPressed: _toggleMic,
+              // ),
             ),
           ),
         ),
-
         if (_isListening)
           Padding(
             padding: const EdgeInsets.only(top: 8),

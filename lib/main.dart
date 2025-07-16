@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:eato/core/constants/global_rating_listener.dart';
 import 'package:eato/core/network/network_cubit.dart';
 import 'package:eato/firebase_options.dart';
 import 'package:eato/presentation/cubit/address/defaultAddress/get/getDefaultAddress_cubit.dart';
@@ -118,8 +119,11 @@ class _MyAppState extends State<MyApp> {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
           useMaterial3: true,
         ),
-        home: SplashScreen(),
+        home: GlobalRatingListener(
+          child: SplashScreen(),
+        ),
       ),
+
     );
   }
 }

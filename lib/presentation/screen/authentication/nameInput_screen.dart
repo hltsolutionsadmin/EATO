@@ -1,5 +1,6 @@
 import 'package:eato/components/bottomTab.dart';
 import 'package:eato/components/custom_button.dart';
+import 'package:eato/components/custom_snackbar.dart';
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/update/update_current_customer_cubit.dart';
@@ -44,14 +45,25 @@ class _NameInputScreenState extends State<NameInputScreen> {
     return BlocListener<UpdateCurrentCustomerCubit, UpdateCurrentCustomerState>(
       listener: (context, state) {
         if (state.isLoading) {
-        } else if (state.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.error!)),
+        } else if (state.error != null && state.error!.isNotEmpty) {
+          CustomSnackbars.showErrorSnack(
+            context: context,
+            title: "Failed",
+            message: "Something went wrong",
           );
         } else if (state.data != null) {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => BottomTab()));
+          CustomSnackbars.showSuccessSnack(
+            context: context,
+            title: "Success",
+            message: "Profile updated successfully",
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => BottomTab()),
+          );
         }
       },
+
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: CustomAppBar(

@@ -11,28 +11,72 @@ class RestaurantCartBottomSheet extends StatelessWidget {
     required this.totalItems,
     required this.onViewCartPressed,
   });
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       decoration: BoxDecoration(
-        color: AppColor.PrimaryColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 16,
+            offset: const Offset(0, -6),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            "$totalItems item${totalItems > 1 ? 's' : ''} in cart",
-            style: GoogleFonts.poppins(color: Colors.white),
-          ),
-          TextButton(
-            onPressed: onViewCartPressed,
+          Expanded(
             child: Text(
-              "View Cart",
+              "$totalItems item${totalItems > 1 ? 's' : ''} in cart",
               style: GoogleFonts.poppins(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: onViewCartPressed,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    AppColor.PrimaryColor,
+                    AppColor.PrimaryColor.withOpacity(0.85)
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColor.PrimaryColor.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.shopping_cart_outlined,
+                      color: Colors.white, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    'View Cart',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:eato/presentation/screen/widgets/dashboard/LocationPermissionDialog.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:geolocator/geolocator.dart';
@@ -9,11 +10,13 @@ class LocationHeader extends StatefulWidget {
   final double? latitude;
   final double? longitude;
   final VoidCallback onLocationChanged;
+  final bool isGuest;
 
   const LocationHeader({
     this.latitude,
     this.longitude,
     required this.onLocationChanged,
+    this.isGuest = false,
     super.key,
   });
 
@@ -21,90 +24,162 @@ class LocationHeader extends StatefulWidget {
   State<LocationHeader> createState() => _LocationHeaderState();
 }
 
-class _LocationHeaderState extends State<LocationHeader> {
+class _LocationHeaderState extends State<LocationHeader>
+    with WidgetsBindingObserver {
   String _city = "";
   String _area = "";
   bool _isLoading = true;
+  bool _shouldRetryLocation = false;
+  bool _hasTriedFetchingLocation = false;
+  bool _isRequestingPermission = false;
 
   @override
   void initState() {
     super.initState();
-    _initLocationOnce();
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPermissionAndFetchLocation();
+    });
   }
 
-  void _initLocationOnce() async {
-    if (widget.latitude != null && widget.longitude != null) {
-      await _getAddress(widget.latitude!, widget.longitude!);
-    } else {
-      await _fetchLocation();
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _shouldRetryLocation) {
+      _checkPermissionAndFetchLocation();
     }
   }
 
-  Future<void> _saveCoordinates(double lat, double lng) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('saved_latitude', lat);
-    await prefs.setDouble('saved_longitude', lng);
-    widget.onLocationChanged();
-  }
+  Future<void> _checkPermissionAndFetchLocation() async {
+    if (_isRequestingPermission) return;
+    _isRequestingPermission = true;
 
-  Future<void> _fetchLocation() async {
+    setState(() => _isLoading = true);
+
     try {
       bool enabled = await Geolocator.isLocationServiceEnabled();
       if (!enabled) {
-        setState(() {
-          _city = "Location Off";
-          _isLoading = false;
-        });
+        _setError("Location Off", "Turn on location");
+        _isRequestingPermission = false;
         return;
       }
 
       LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
+      if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
-        if (permission != LocationPermission.always &&
-            permission != LocationPermission.whileInUse) {
-          setState(() {
-            _city = "Permission Denied";
-            _isLoading = false;
-          });
-          return;
-        }
       }
 
-      Position pos = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
+      if (permission == LocationPermission.deniedForever) {
+        _shouldRetryLocation = true;
+        _setError("Permission Denied", "Go to settings to enable");
+        await LocationPermissionDialog.show(context);
+        _isRequestingPermission = false;
+        return;
+      }
 
-      await _saveCoordinates(pos.latitude, pos.longitude);
-      await _getAddress(pos.latitude, pos.longitude);
+      if (permission == LocationPermission.denied) {
+        _setError("Permission Denied", "Location not available");
+        await LocationPermissionDialog.show(context);
+        _isRequestingPermission = false;
+        return;
+      }
+
+      // ✅ Wait briefly to avoid race conditions
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      _shouldRetryLocation = false;
+      await _fetchLocation();
     } catch (e) {
-      setState(() {
-        _city = "Error";
-        _area = "Couldn't detect";
-        _isLoading = false;
-      });
+      debugPrint("❌ Location permission check failed: $e");
+      _setError("Error", "Couldn't detect");
     }
+
+    _isRequestingPermission = false;
   }
+
+  Future<void> _fetchLocation() async {
+    try {
+      Position? pos;
+      try {
+        pos = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high,
+        );
+      } catch (e) {
+        debugPrint("⚠️ getCurrentPosition failed: $e");
+        pos = await Geolocator.getLastKnownPosition();
+      }
+
+      if (pos != null) {
+        await _saveCoordinates(pos.latitude, pos.longitude);
+        await _getAddress(pos.latitude, pos.longitude);
+      } else {
+        const fallbackLat = 17.385044;
+        const fallbackLng = 78.486671;
+        await _saveCoordinates(fallbackLat, fallbackLng);
+        await _getAddress(fallbackLat, fallbackLng);
+      }
+    } catch (e) {
+      debugPrint("❌ Location fetch error: $e");
+      const fallbackLat = 17.385044;
+      const fallbackLng = 78.486671;
+      await _saveCoordinates(fallbackLat, fallbackLng);
+      await _getAddress(fallbackLat, fallbackLng);
+    }
+
+    widget
+        .onLocationChanged(); // ✅ Trigger Cubit after setting fallback/real coords
+  }
+
+
 
   Future<void> _getAddress(double lat, double lng) async {
     try {
       List<Placemark> places = await placemarkFromCoordinates(lat, lng);
       Placemark place = places.first;
 
+      if (!mounted) return;
       setState(() {
         _city = place.locality ?? "Unknown";
         _area =
             "${place.subLocality ?? ''}, ${place.administrativeArea ?? ''} ${place.postalCode ?? ''}";
         _isLoading = false;
+        _hasTriedFetchingLocation = true;
       });
     } catch (e) {
-      setState(() {
-        _city = "Unknown";
-        _area = "Unable to fetch address";
-        _isLoading = false;
-      });
+      _setError("Unknown", "Unable to fetch address");
     }
+  }
+
+  void _setError(String city, String area) {
+    debugPrint("📍 Location Error → $city: $area");
+    if (!mounted) return;
+
+    // 👇 Instead of setting "Error", fallback to default label
+    setState(() {
+      _city = city == "Error" ? "Location" : city;
+      _area = area == "Couldn't detect" ? "Using default location" : area;
+      _isLoading = false;
+      _hasTriedFetchingLocation = true;
+    });
+  }
+
+  Future<void> _saveCoordinates(double lat, double lng) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('saved_latitude', lat);
+    await prefs.setDouble('saved_longitude', lng);
+    // 🔁 No callback here
+  }
+
+
+
+  void _openAppSettings() async {
+    _shouldRetryLocation = true;
+    await Geolocator.openAppSettings();
   }
 
   @override
@@ -114,31 +189,41 @@ class _LocationHeaderState extends State<LocationHeader> {
         const Icon(Icons.location_pin, color: Colors.white, size: 24),
         const SizedBox(width: 10),
         Expanded(
-          child: _isLoading
+          child: _isLoading && !_hasTriedFetchingLocation
               ? _buildShimmer()
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _city,
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+              : GestureDetector(
+                  onTap: () {
+                    if (_isRequestingPermission) return;
+                    if (_city == "Permission Denied") {
+                      _openAppSettings();
+                    } else if (_city == "Location Off" || _city == "Error") {
+                      _checkPermissionAndFetchLocation();
+                    }
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _city,
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _area,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.poppins(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.white70,
+                      const SizedBox(height: 2),
+                      Text(
+                        _area,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
         ),
       ],
@@ -152,17 +237,9 @@ class _LocationHeaderState extends State<LocationHeader> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 120,
-            height: 16,
-            color: Colors.white,
-          ),
+          Container(width: 120, height: 16, color: Colors.white),
           const SizedBox(height: 5),
-          Container(
-            width: 180,
-            height: 12,
-            color: Colors.white,
-          ),
+          Container(width: 180, height: 12, color: Colors.white),
         ],
       ),
     );

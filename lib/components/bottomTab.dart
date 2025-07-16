@@ -47,14 +47,23 @@ class _BottomTabState extends State<BottomTab> {
     ];
   }
 
+  
+
   Future<void> _initNotifications() async {
     await _notificationServices.requestNotificationPermissions();
     await _notificationServices.forgroundMessage();
+
+    if (!mounted) return;
     await _notificationServices.firebaseInit(context);
+
+    if (!mounted) return;
     await _notificationServices.setupInteractMessage(context);
+
+    if (!mounted) return;
     await _notificationServices.isRefreshToken();
 
     _notificationServices.getDeviceToken().then((fcmToken) {
+      if (!mounted) return; 
       if (fcmToken != null) {
         final payload = {
           'fullName': '',
@@ -68,6 +77,7 @@ class _BottomTabState extends State<BottomTab> {
       }
     });
   }
+
 
   void _onItemTapped(int index) {
     final selectedTab = tabItems[index];

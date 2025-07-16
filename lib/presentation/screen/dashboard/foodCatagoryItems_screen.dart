@@ -144,7 +144,6 @@ class _CategoryItemScreenState extends State<CategoryItemScreen> {
               itemBuilder: (context, index) {
                 final item = widget.items[index];
 
-                // Filtering by search text
                 if (widget.searchText.isNotEmpty &&
                     !item["name"].toString().toLowerCase().contains(widget.searchText)) {
                   return const SizedBox.shrink();

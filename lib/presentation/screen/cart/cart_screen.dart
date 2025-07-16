@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/screen/widgets/cart/address_card.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart_item_card.dart';
 import 'package:eato/presentation/screen/widgets/cart/checkout_bottom_bar.dart';
@@ -79,7 +80,7 @@ class _CartScreenState extends State<CartScreen> {
 
   void _onPaymentFailure(_) {
     CustomSnackbars.showErrorSnack(
-        context: context, title: 'ERROR', message: 'Payment failed');
+        context: context, title: 'Failed', message: 'Payment failed');
     setState(() => loading = false);
   }
 
@@ -147,7 +148,7 @@ class _CartScreenState extends State<CartScreen> {
     if (selectedAddress == "Add Address") {
       CustomSnackbars.showErrorSnack(
           context: context,
-          title: "ERROR",
+          title: "Attention",
           message: "Select delivery address first");
       return;
     }
@@ -203,20 +204,20 @@ class _CartScreenState extends State<CartScreen> {
             if (state is PaymentRefundSuccess) {
               CustomSnackbars.showErrorSnack(
                 context: context,
-                title: 'FAILURE',
+                title: 'Failed',
                 message: 'Payment failed. Refund will be initiated if debited.',
               );
             } else if (state is PaymentSuccess) {
               CustomSnackbars.showSuccessSnack(
                 context: context,
-                title: 'SUCCESS',
+                title: 'Success',
                 message: 'Payment Successful!',
               );
             } else if (state is PaymentFailure) {
               CustomSnackbars.showErrorSnack(
                 context: context,
-                title: 'ERROR',
-                message: state.error,
+                title: 'Failed',
+                message: "payment Failed",
               );
             }
           },
@@ -268,7 +269,7 @@ class _CartScreenState extends State<CartScreen> {
                           return CartItemCard(
                             item: item,
                             quantity: cart[item['name']] ?? 1,
-                            onQuantityChanged: (q) {
+                            onQuantityChanged: (q) async {
                               final productId = item['productId'] ?? item['id'];
                               final price = item['price'] ?? 0;
 
@@ -280,19 +281,33 @@ class _CartScreenState extends State<CartScreen> {
                                   cart[item['name']] = q;
                                 }
                               });
+                              final isCartEmpty = selectedItems.isEmpty;
 
-                              context.read<ProductsAddToCartCubit>().addToCart([
-                                {
-                                  "productId": productId,
-                                  "quantity": q,
-                                  "price": price
-                                }
-                              ]);
+                              if (isCartEmpty) {
+                                await context
+                                    .read<ClearCartCubit>()
+                                    .clearCart(context);
+                                await context
+                                    .read<GetCartCubit>()
+                                    .fetchCart(context);
+                              } else {
+                                // 🛒 Otherwise, just update the cart
+                                context
+                                    .read<ProductsAddToCartCubit>()
+                                    .addToCart([
+                                  {
+                                    "productId": productId,
+                                    "quantity": q,
+                                    "price": price
+                                  }
+                                ]);
+                                context.read<GetCartCubit>().fetchCart(context);
+                              }
 
-                              context.read<GetCartCubit>().fetchCart(context);
                               widget.onBottomSheetVisibilityChanged
                                   ?.call(cart.isNotEmpty);
                             },
+
                           );
                         } else {
                           return Padding(

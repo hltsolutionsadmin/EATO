@@ -1,4 +1,6 @@
 import 'package:eato/core/constants/colors.dart';
+import 'package:eato/core/constants/img_const.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +10,7 @@ class FoodItemCard extends StatelessWidget {
   final Function(String restaurantName)? onRestaurantTap;
   final Function()? onReorder;
   final Function()? onViewDetails;
+  final List<String> mediaUrls;
 
   const FoodItemCard({
     super.key,
@@ -15,6 +18,7 @@ class FoodItemCard extends StatelessWidget {
     this.onRestaurantTap,
     this.onReorder,
     this.onViewDetails,
+    this.mediaUrls = const [],
   });
 
   Color _getStatusColor(String status) {
@@ -68,11 +72,35 @@ class FoodItemCard extends StatelessWidget {
                   const BorderRadius.vertical(top: Radius.circular(18)),
               child: Stack(
                 children: [
-                  Image.asset(
-                    data["image"],
+                  SizedBox(
                     height: 140,
                     width: double.infinity,
-                    fit: BoxFit.cover,
+                    child: (data["mediaList"] as List?)?.isNotEmpty ?? false
+                        ? PageView.builder(
+                            itemCount: data["mediaList"].length,
+                            itemBuilder: (context, index) {
+                              final url =
+                                  data["mediaList"][index]; // ✅ No ["url"]
+                              return Image.network(
+                                url,
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                loadingBuilder: (context, child, progress) =>
+                                    progress == null
+                                        ? child
+                                        : const Center(
+                                            child:
+                                                CupertinoActivityIndicator()),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Image.asset(dish, fit: BoxFit.cover),
+                              );
+                            },
+                          )
+                        : Image.asset(
+                            dish,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
                   ),
                   Positioned.fill(
                     child: Container(
@@ -135,7 +163,7 @@ class FoodItemCard extends StatelessWidget {
                   // Date, Items
                   Row(
                     children: [
-                      Icon(Icons.access_time_rounded,
+                      const Icon(Icons.access_time_rounded,
                           size: 16, color: Colors.grey),
                       const SizedBox(width: 4),
                       Text(
@@ -147,33 +175,33 @@ class FoodItemCard extends StatelessWidget {
                       ),
                       const Spacer(),
                       Text(
-                        '${data["Items"]} ${int.tryParse(data["Items"]) == 1 ? 'item' : 'items'}',
+                        '${_capitalize(data["Items"])} ${int.tryParse(data["Items"].toString()) == 1 ? 'item' : 'items'}',
                         style: GoogleFonts.poppins(
-                            fontSize: 13, color: Colors.grey[700]),
+                          fontSize: 13,
+                          color: Colors.grey[700],
+                        ),
                       ),
                     ],
                   ),
 
                   const SizedBox(height: 12),
 
-                  // Rating & Price
                   Row(
                     children: [
                       if (data["rating"] != null)
-                        _buildRatingStars(data["rating"]),
+                        _buildRatingStars(data["rating"].toDouble()),
                       const Spacer(),
-                      Text(
-                        '₹${data["itemPrice"] ?? data["price"]}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColor.PrimaryColor,
-                        ),
-                      ),
+                      // Text(
+                      //   '${data["itemPrice"] ?? data["price"]}',
+                      //   style: GoogleFonts.poppins(
+                      //     fontSize: 18,
+                      //     fontWeight: FontWeight.bold,
+                      //     color: AppColor.PrimaryColor,
+                      //   ),
+                      // ),
                     ],
                   ),
 
-                  // Divider
                   if (onReorder != null || onViewDetails != null)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16),
@@ -239,4 +267,10 @@ class FoodItemCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _capitalize(String input) {
+  input = input.toLowerCase();
+  if (input.isEmpty) return input;
+  return input[0].toUpperCase() + input.substring(1);
 }

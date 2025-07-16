@@ -11,8 +11,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class SavedAddressesView extends StatelessWidget {
   final Function(Content)? onAddressSelected;
+  final VoidCallback? onAddNewAddressTap;
 
-  const SavedAddressesView({super.key, this.onAddressSelected});
+  const SavedAddressesView({
+    super.key,
+    this.onAddressSelected,
+    this.onAddNewAddressTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +25,10 @@ class SavedAddressesView extends StatelessWidget {
       builder: (context, state) {
         if (state is GetAddressLoading) {
           return Center(
-              child: CupertinoActivityIndicator(
-            color: AppColor.PrimaryColor,
-          ));
+            child: CupertinoActivityIndicator(
+              color: AppColor.PrimaryColor,
+            ),
+          );
         }
 
         if (state is GetAddressSuccess) {
@@ -35,9 +41,10 @@ class SavedAddressesView extends StatelessWidget {
         }
 
         return Center(
-            child: CupertinoActivityIndicator(
-          color: AppColor.PrimaryColor,
-        ));
+          child: CupertinoActivityIndicator(
+            color: AppColor.PrimaryColor,
+          ),
+        );
       },
     );
   }
@@ -80,7 +87,7 @@ class SavedAddressesView extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.grey)),
           const SizedBox(height: 8),
           TextButton(
-            onPressed: () => DefaultTabController.of(context).animateTo(0),
+            onPressed: onAddNewAddressTap,
             child: Text("Add New Address",
                 style: TextStyle(color: AppColor.PrimaryColor)),
           ),
@@ -175,26 +182,21 @@ class SavedAddressesView extends StatelessWidget {
                       style: const TextStyle(
                           fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
-
               if (address.addressLine2?.isNotEmpty ?? false)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(address.addressLine2!,
                       style: TextStyle(color: Colors.grey.shade600)),
                 ),
-
               if (address.street?.isNotEmpty ?? false)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(address.street!,
                       style: TextStyle(color: Colors.grey.shade600)),
                 ),
-
               Text('${address.city}, ${address.state} - ${address.postalCode}',
                   style: TextStyle(color: Colors.grey.shade600)),
-
               const SizedBox(height: 16),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -221,7 +223,6 @@ class SavedAddressesView extends StatelessWidget {
       ),
     );
   }
-
 
   void _showDeleteConfirmation(BuildContext context, int addressId) {
     showDialog(

@@ -24,7 +24,9 @@ class AddressScreen extends StatefulWidget {
   State<AddressScreen> createState() => _AddressScreenState();
 }
 
-class _AddressScreenState extends State<AddressScreen> {
+class _AddressScreenState extends State<AddressScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   final nameController = TextEditingController();
   final phoneController = TextEditingController();
@@ -41,11 +43,13 @@ class _AddressScreenState extends State<AddressScreen> {
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 2, vsync: this);
     _fetchAddresses();
   }
 
   @override
   void dispose() {
+    _tabController.dispose();
     nameController.dispose();
     phoneController.dispose();
     houseController.dispose();
@@ -220,9 +224,8 @@ class _AddressScreenState extends State<AddressScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
+    return Builder(builder: (scaffoldContext) {
+      return Scaffold(
         appBar: PreferredSize(
           preferredSize: const Size.fromHeight(200),
           child: Column(
@@ -237,6 +240,7 @@ class _AddressScreenState extends State<AddressScreen> {
                 },
               ),
               TabBar(
+                controller: _tabController,
                 labelColor: AppColor.PrimaryColor,
                 unselectedLabelColor: Colors.grey,
                 indicatorColor: AppColor.PrimaryColor,
@@ -254,37 +258,49 @@ class _AddressScreenState extends State<AddressScreen> {
             BlocListener<SaveAddressCubit, SaveAddressState>(
               listener: (context, state) {
                 if (state is SaveAddressSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Address Saved Successfully"),
-                      behavior: SnackBarBehavior.floating));
+                  CustomSnackbars.showSuccessSnack(
+                    context: scaffoldContext,
+                    title: "Success",
+                    message: "Address Saved Successfully",
+                  );
                   _clearForm();
                   _fetchAddresses();
+                  _tabController.animateTo(0);
                 } else if (state is SaveAddressFailure) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(state.message),
-                      behavior: SnackBarBehavior.floating));
+                  CustomSnackbars.showErrorSnack(
+                    context: scaffoldContext,
+                    title: "Failed",
+                    message: "Failed to Save Address",
+                  );
                 }
               },
             ),
             BlocListener<DeleteAddressCubit, DeleteAddressState>(
               listener: (context, state) {
                 if (state is DeleteAddressSuccess) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text("Address deleted successfully"),
-                      behavior: SnackBarBehavior.floating));
+                  CustomSnackbars.showSuccessSnack(
+                    context: scaffoldContext,
+                    title: "Success",
+                    message: "Address Deleted Successfully",
+                  );
                   _fetchAddresses();
                 } else if (state is DeleteAddressFailure) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(state.error),
-                      behavior: SnackBarBehavior.floating));
+                  CustomSnackbars.showErrorSnack(
+                    context: scaffoldContext,
+                    title: "Failed",
+                    message: "Failed to Delete Address",
+                  );
                 }
               },
             ),
           ],
           child: TabBarView(
+            controller: _tabController,
             children: [
               SavedAddressesView(
-                onAddressSelected: widget.selectedAddress,
+                onAddNewAddressTap: () {
+                  _tabController.animateTo(1);
+                },
               ),
               SingleChildScrollView(
                 padding: const EdgeInsets.all(20),
@@ -472,7 +488,7 @@ class _AddressScreenState extends State<AddressScreen> {
             ],
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 }

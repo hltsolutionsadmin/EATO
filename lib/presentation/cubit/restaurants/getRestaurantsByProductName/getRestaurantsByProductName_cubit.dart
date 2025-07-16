@@ -2,17 +2,22 @@ import 'package:eato/domain/usecase/restaurants/getRestaurantsByProductName/getR
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'getRestaurantsByProductName_state.dart';
 
-class GetRestaurantsByProductNameCubit extends Cubit<GetRestaurantsByProductNameState> {
+class GetRestaurantsByProductNameCubit
+    extends Cubit<GetRestaurantsByProductNameState> {
   final GetRestaurantsByProductNameUseCase useCase;
 
-  GetRestaurantsByProductNameCubit(this.useCase) : super(GetRestaurantsByProductNameInitial());
+  GetRestaurantsByProductNameCubit(this.useCase)
+      : super(GetRestaurantsByProductNameInitial());
 
-  Future<void> fetchRestaurantsByProductName(Map<String, dynamic> params) async {
+  Future<void> fetchRestaurantsByProductName(
+      Map<String, dynamic> params) async {
+    print(params);
     try {
       emit(GetRestaurantsByProductNameLoading());
       final result = await useCase(params);
       emit(GetRestaurantsByProductNameSuccess(result));
     } catch (e) {
+      print(e);
       emit(GetRestaurantsByProductNameFailure(e.toString()));
     }
   }

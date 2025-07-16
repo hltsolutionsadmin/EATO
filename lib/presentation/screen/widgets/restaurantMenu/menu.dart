@@ -81,10 +81,9 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
           }
         }
       }
-      return true; // Show item regardless of time if available is true
+      return true;
     }
 
-    // available is false
     if (endTime != null) {
       final parts = endTime.split(':');
       if (parts.length >= 2) {
@@ -100,20 +99,32 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
           isBeforeStartTime = true;
           final time = TimeOfDay.fromDateTime(end);
           comingSoonText = 'Available after ${time.format(context)}';
-          return true; // Show item with overlay
+          return true;
         } else {
-          return false; // Hide if after end time
+          return false;
         }
       }
     }
 
-    // No endTime and available is false → hide
     return false;
   }
 
-  void updateQuantity(int newQty) {
+  void updateQuantity(int newQty) async {
     setState(() => quantity = newQty);
     widget.onQuantityChanged(newQty);
+
+    if (newQty == 0) {
+      final cartState = context.read<GetCartCubit>().state;
+      final cartData = cartState is GetCartLoaded ? cartState.cart : null;
+      final totalItems = cartData?.cartItems
+              ?.fold<int>(0, (sum, item) => sum + (item.quantity ?? 0)) ??
+          0;
+
+      if (totalItems <= 1) {
+        await context.read<ClearCartCubit>().clearCart(context);
+        await context.read<GetCartCubit>().fetchCart(context);
+      }
+    }
   }
 
   void _handleAdd(cartData, String? cartBusinessId) async {
@@ -177,114 +188,132 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Image
-          Stack(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: 140,
-                  height: 140,
-                  child: mediaUrl != null
-                      ? Image.network(
-                          mediaUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              Image.asset(dish, fit: BoxFit.cover),
-                        )
-                      : Container(color: Colors.grey[200]),
-                ),
-              ),
-
-              // Grey overlay when item is before start time
-              if (isBeforeStartTime)
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      comingSoonText ?? "Coming Soon",
-                      style: GoogleFonts.poppins(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              height: 140,
+              width: 140,
+              // decoration: BoxDecoration(
+              //   color: Colors.transparent,
+              // ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  if (mediaUrl != null)
+                    Positioned.fill(
+                      child: Image.network(
+                        mediaUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
-                ),
 
-              // Add / Quantity buttons
-              if (!isBeforeStartTime)
-                Positioned(
-                  bottom: 8,
-                  left: 12,
-                  right: 12,
-                  child: quantity == 0
-                      ? ElevatedButton(
-                          onPressed: () => _handleAdd(cartData, cartBusinessId),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            elevation: 2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                          ),
-                          child: Text(
-                            "ADD",
-                            style: GoogleFonts.poppins(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.green,
-                            ),
-                          ),
-                        )
-                      : Container(
-                          height: 32,
-                          decoration: BoxDecoration(
+                  if (isBeforeStartTime)
+                    Positioned.fill(
+                      child: Container(
+                        color: Colors.black.withOpacity(0.5),
+                        alignment: Alignment.center,
+                        child: Text(
+                          comingSoonText ?? "Coming Soon",
+                          style: GoogleFonts.poppins(
                             color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13,
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              GestureDetector(
-                                onTap: () {
-                                  if (quantity > 0) {
-                                    updateQuantity(quantity - 1);
-                                  }
-                                },
-                                child: const Icon(Icons.remove,
-                                    color: Colors.redAccent, size: 18),
-                              ),
-                              Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                child: Text(
-                                  '$quantity',
-                                  style: GoogleFonts.poppins(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
-                                  ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+
+                  Align(
+                    alignment: mediaUrl == null
+                        ? Alignment.center
+                        : Alignment.bottomCenter,
+                    child: Padding(
+                      padding: mediaUrl != null
+                          ? const EdgeInsets.only(bottom: 8.0)
+                          : EdgeInsets.zero,
+                      child: isBeforeStartTime || !(item.available ?? true)
+                          ? Container(
+                              height: 36,
+                              alignment: Alignment.center,
+                              child: Text(
+                                comingSoonText ?? "Unavailable",
+                                style: GoogleFonts.poppins(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              GestureDetector(
-                                onTap: () =>
-                                    _handleAdd(cartData, cartBusinessId),
-                                child: Icon(Icons.add,
-                                    color: AppColor.PrimaryColor, size: 18),
-                              ),
-                            ],
-                          ),
-                        ),
-                ),
-            ],
-          ),
+                            )
+                          : quantity == 0
+                              ? ElevatedButton(
+                                  onPressed: () =>
+                                      _handleAdd(cartData, cartBusinessId),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    "ADD",
+                                    style: GoogleFonts.poppins(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: Colors.green,
+                                    ),
+                                  ),
+                                )
+                              : Container(
+                                  height: 36,
+                                  decoration: BoxDecoration(
+                                    color: AppColor.White,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 6),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      GestureDetector(
+                                        onTap: () {
+                                          if (quantity > 0) {
+                                            updateQuantity(quantity - 1);
+                                          }
+                                        },
+                                        child: const Icon(Icons.remove,
+                                            color: Colors.redAccent, size: 18),
+                                      ),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 12),
+                                        child: Text(
+                                          '$quantity',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ),
+                                      GestureDetector(
+                                        onTap: () => _handleAdd(
+                                            cartData, cartBusinessId),
+                                        child: Icon(Icons.add,
+                                            color: AppColor.PrimaryColor,
+                                            size: 18),
+                                      ),
+                                    ],
+                                  ),
+                                ),
 
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -355,7 +384,6 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
   }
 }
 
-// Replace Cart Dialog
 Future<bool?> showReplaceCartDialog({
   required BuildContext context,
   required String currentRestaurant,
@@ -364,38 +392,86 @@ Future<bool?> showReplaceCartDialog({
   return showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (context) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      title: const Text(
-        'Replace cart items?',
-        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-      ),
-      content: Text.rich(
-        TextSpan(
+    builder: (context) => Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const TextSpan(text: 'Your cart contains dishes from '),
-            TextSpan(
-              text: currentRestaurant,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            const Icon(Icons.shopping_cart_outlined,
+                size: 48, color: Colors.deepOrange),
+            const SizedBox(height: 16),
+            Text(
+              'Replace items in your cart?',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const TextSpan(
-                text: '. Do you want to discard and add dishes from '),
-            TextSpan(
-              text: newRestaurant,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+            const SizedBox(height: 12),
+            Text.rich(
+              TextSpan(
+                children: [
+                  const TextSpan(text: 'Your cart contains dishes from '),
+                  TextSpan(
+                    text: currentRestaurant,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                  const TextSpan(
+                      text: '.\n\nDo you want to discard and add items from '),
+                  TextSpan(
+                    text: newRestaurant,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.black),
+                  ),
+                  const TextSpan(text: '?'),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[700]),
             ),
-            const TextSpan(text: '?'),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.black87,
+                      side: const BorderSide(color: Colors.black26),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text("No"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepOrange,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text("Replace"),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
-      actions: [
-        TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("No")),
-        ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text("Replace")),
-      ],
     ),
   );
 }

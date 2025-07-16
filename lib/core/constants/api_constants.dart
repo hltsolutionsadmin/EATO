@@ -11,7 +11,7 @@ const deleteAccountUrl = 'usermgmt/user/skillrat';
 const rolePostUrl = 'user/user';
 String getNearbyRestaurantsUrl(
     double latitude, double longitude, String postalCode, int page, int size) {
-  return 'business/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&page=$page&size=$size';
+  return 'business/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&page=$page&size=$size&categoryName=Restaurant';
 }
 
 String guestNearbyRestaurantsUrl(
@@ -35,7 +35,7 @@ String guestMenuByRestaurantIdUrl(int restaurantId) {
 
 String getRestaurantsByProductNameUrl(String productName, double latitude,
     double longitude, String postalcode, int page, int size) {
-  return 'product/api/products/nearby-search?latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalcode&page=$page&size=$size&searchTerm=$productName';
+  return 'product/api/products/nearby-search?latitude=$latitude&longitude=$longitude&radius=20&postalCode=$postalcode&page=$page&size=$size&searchTerm=$productName&categoryName=Restaurant';
 }
 
 String orderHistoryUrl(int page, int size, String searchQuery) {

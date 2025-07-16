@@ -95,20 +95,20 @@ class _MyOrdersState extends State<MyOrders> {
         children: [
           Padding(
             padding: const EdgeInsets.all(16),
-            child: TextField(
-              controller: searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search restaurant...',
-                prefixIcon: Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.grey.shade100,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
+            // child: TextField(
+            //   controller: searchController,
+            //   onChanged: _onSearchChanged,
+            //   decoration: InputDecoration(
+            //     hintText: 'Search restaurant...',
+            //     prefixIcon: Icon(Icons.search),
+            //     filled: true,
+            //     fillColor: Colors.grey.shade100,
+            //     border: OutlineInputBorder(
+            //       borderRadius: BorderRadius.circular(12),
+            //       borderSide: BorderSide.none,
+            //     ),
+            //   ),
+            // ),
           ),
           Expanded(
             child: BlocConsumer<OrderHistoryCubit, OrderHistoryState>(
@@ -135,7 +135,7 @@ class _MyOrdersState extends State<MyOrders> {
                     color: AppColor.PrimaryColor,
                   ));
                 } else if (state is OrderHistoryError && _currentPage == 0) {
-                  return Center(child: Text("Error loading orders."));
+                  return Center(child: Text("Failed loading orders."));
                 }
 
                 final filteredOrders = _allOrders.where((order) {
@@ -200,20 +200,21 @@ class _MyOrdersState extends State<MyOrders> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          /// Order Summary
           Row(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.asset(
-                  dish,
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      Icon(Icons.broken_image, size: 60),
-                ),
-              ),
-              SizedBox(width: 12),
+              // ClipRRect(
+              //   borderRadius: BorderRadius.circular(8),
+              //   child: Image.asset(
+              //     dish,
+              //     width: 60,
+              //     height: 60,
+              //     fit: BoxFit.cover,
+              //     errorBuilder: (context, error, stackTrace) =>
+              //         Icon(Icons.broken_image, size: 60),
+              //   ),
+              // ),
+              // SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -234,105 +235,205 @@ class _MyOrdersState extends State<MyOrders> {
                       color: AppColor.PrimaryColor)),
             ],
           ),
+
           SizedBox(height: 12),
-          Text("Status: ${order.orderStatus}",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: getStatusColor(order.orderStatus ?? ''),
-              )),
+
+          /// Order Status
+          Text(
+            "Status: ${capitalizeStatus(order.orderStatus ?? '')}",
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: getStatusColor(order.orderStatus ?? ''),
+            ),
+          ),
+
           SizedBox(height: 12),
-          order.orderStatus == 'REJECTED'
+
+          /// Order Items
+          if (order.orderItems.isNotEmpty) ...[
+            SizedBox(
+              height: 100, // reduced from 110
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: order.orderItems.length,
+                separatorBuilder: (_, __) => SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  final item = order.orderItems[index];
+                  final imageUrl =
+                      item.media.isNotEmpty ? item.media.first.url : null;
+
+                  return Container(
+                    width: 90,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black12,
+                          blurRadius: 4,
+                          offset: Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(12)),
+                          child: imageUrl != null
+                              ? Image.network(
+                                  imageUrl,
+                                  height: 60, // reduced from 70
+                                  width: 90,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Container(
+                                    height: 60,
+                                    width: 90,
+                                    color: Colors.grey.shade200,
+                                    child: Icon(Icons.broken_image, size: 28),
+                                  ),
+                                )
+                              : Container(
+                                  height: 60,
+                                  width: 90,
+                                  color: Colors.grey.shade200,
+                                  child: Icon(Icons.image, size: 28),
+                                ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 4, vertical: 4),
+                          child: Text(
+                            item.productName ?? 'Unnamed',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 12),
+          ],
+
+          /// Order Tracker
+          (order.orderStatus?.toUpperCase() == 'REJECTED' ||
+                  order.orderStatus?.toUpperCase() == 'DELIVERED')
               ? SizedBox()
               : buildTracker(order.orderStatus ?? ''),
+
         ],
       ),
     );
   }
 
+
  Widget buildTracker(String status) {
-  final steps = ["Placed", "Preparing", "On the Way", "Delivered"];
-  final icons = [
-    Icons.shopping_cart,
-    Icons.kitchen,
-    Icons.delivery_dining,
-    Icons.check_circle,
-  ];
+    final statusUpper = status.toUpperCase();
 
-  final progress = getProgressIndex(status);
+    // Define valid status steps in the order flow
+    final statusSteps = [
+      'PLACED',
+      'PREPARING',
+      'OUT_FOR_DELIVERY',
+      'DELIVERED',
+    ];
 
-  return Column(
-    children: [
-      Row(
-        children: List.generate(steps.length, (i) {
-          final isActive = i < progress;
-          final isCurrent = i == progress - 1;
+    // Add final states like Cancelled/Rejected if they occur
+    if (statusUpper == 'CANCELLED' || statusUpper == 'REJECTED') {
+      statusSteps.add(statusUpper); // Append cancelled or rejected
+    }
 
-          return Expanded(
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    if (i != 0)
-                      Expanded(
-                        child: Container(
-                          height: 2,
-                          color: i < progress
-                              ? AppColor.PrimaryColor
-                              : Colors.grey.shade300,
-                        ),
-                      ),
+    final statusIcons = {
+      'PLACED': Icons.shopping_cart,
+      'PREPARING': Icons.kitchen,
+      'OUT_FOR_DELIVERY': Icons.delivery_dining,
+      'DELIVERED': Icons.check_circle,
+      'CANCELLED': Icons.cancel,
+      'REJECTED': Icons.close,
+    };
 
-                    Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: isActive
+    final progress = getProgressIndex(statusUpper);
+
+    return Column(
+      children: [
+        Row(
+          children: List.generate(statusSteps.length, (i) {
+            final step = statusSteps[i];
+            final isActive = i < progress;
+            final isCurrent = i == progress - 1;
+
+            return Expanded(
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      if (i != 0)
+                        Expanded(
+                          child: Container(
+                            height: 2,
+                            color: i < progress
                                 ? AppColor.PrimaryColor
                                 : Colors.grey.shade300,
                           ),
-                          child: Icon(
-                            icons[i],
-                            size: 16,
-                            color: isActive
-                                ? Colors.white
-                                : Colors.grey.shade600,
+                        ),
+                      Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isActive
+                                  ? AppColor.PrimaryColor
+                                  : Colors.grey.shade300,
+                            ),
+                            child: Icon(
+                              statusIcons[step] ?? Icons.info,
+                              size: 16,
+                              color: isActive
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          steps[i],
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: isActive ? Colors.black87 : Colors.grey,
-                            fontWeight: isCurrent
-                                ? FontWeight.bold
-                                : FontWeight.normal,
+                          const SizedBox(height: 4),
+                          Text(
+                            capitalizeStatus(step.replaceAll('_', ' ')),
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isActive ? Colors.black87 : Colors.grey,
+                              fontWeight: isCurrent
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-
-                    if (i != steps.length - 1)
-                      Expanded(
-                        child: Container(
-                          height: 2,
-                          color: i < progress - 1
-                              ? AppColor.PrimaryColor
-                              : Colors.grey.shade300,
-                        ),
+                        ],
                       ),
-                  ],
-                ),
-              ],
-            ),
-          );
-        }),
-      ),
-    ],
-  );
-}
+                      if (i != statusSteps.length - 1)
+                        Expanded(
+                          child: Container(
+                            height: 2,
+                            color: i < progress - 1
+                                ? AppColor.PrimaryColor
+                                : Colors.grey.shade300,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }),
+        ),
+      ],
+    );
+  }
+
 
 
   Color getStatusColor(String status) {
@@ -343,6 +444,8 @@ class _MyOrdersState extends State<MyOrders> {
         return Colors.orange;
       case 'out for delivery':
         return Colors.blue;
+      case 'rejected':
+        return Colors.red;
       case 'cancelled':
         return Colors.red;
       default:
@@ -362,9 +465,18 @@ int getProgressIndex(String status) {
         return 3;
       case 'DELIVERED':
         return 4;
+      case 'CANCELLED':
+      case 'REJECTED':
+        return 5; // Final step if cancelled or rejected
       default:
         return 0;
     }
   }
 
+
+}
+
+String capitalizeStatus(String status) {
+  if (status.isEmpty) return '';
+  return status[0].toUpperCase() + status.substring(1).toLowerCase();
 }

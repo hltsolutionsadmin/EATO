@@ -1,12 +1,11 @@
-
 import 'package:dio/dio.dart';
 import 'package:eato/core/constants/api_constants.dart';
 import 'package:eato/data/model/restaurants/getNearbyRestaurants/getNearByrestarants_model.dart';
 
 abstract class GetNearByRestaurantsRemoteDataSource {
-  Future<GetNearByRestaurantsModel> getNearByRestaurants(Map<String, dynamic> params);
+  Future<GetNearByRestaurantsModel> getNearByRestaurants(
+      Map<String, dynamic> params);
 }
-
 
 class GetNearByRestaurantsRemoteDataSourceImpl
     implements GetNearByRestaurantsRemoteDataSource {
@@ -15,7 +14,8 @@ class GetNearByRestaurantsRemoteDataSourceImpl
   GetNearByRestaurantsRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<GetNearByRestaurantsModel> getNearByRestaurants(Map<String, dynamic> params) async {
+  Future<GetNearByRestaurantsModel> getNearByRestaurants(
+      Map<String, dynamic> params) async {
     try {
       final double latitude = params['latitude'];
       final double longitude = params['longitude'];
@@ -23,7 +23,8 @@ class GetNearByRestaurantsRemoteDataSourceImpl
       final int page = params['page'];
       final int size = params['size'];
 
-      final url = '$baseUrl2${getNearbyRestaurantsUrl(latitude, longitude, postalCode, page, size)}';
+      final url =
+          '$baseUrl2${getNearbyRestaurantsUrl(latitude, longitude, postalCode, page, size)}';
 
       final response = await client.request(
         url,
@@ -38,7 +39,8 @@ class GetNearByRestaurantsRemoteDataSourceImpl
             'Failed to load getNearByRestaurants data: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Failed to load getNearByRestaurants data: ${e.toString()}');
+      throw Exception(
+          'Failed to load getNearByRestaurants data: ${e.toString()}');
     }
   }
 }
