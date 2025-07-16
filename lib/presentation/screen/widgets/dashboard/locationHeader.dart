@@ -31,12 +31,15 @@ class _LocationHeaderState extends State<LocationHeader>
   bool _isLoading = true;
   bool _shouldRetryLocation = false;
   bool _hasTriedFetchingLocation = false;
+  bool _isRequestingPermission = false;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initLocationOnce();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkPermissionAndFetchLocation();
+    });
   }
 
   @override
@@ -48,33 +51,21 @@ class _LocationHeaderState extends State<LocationHeader>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && _shouldRetryLocation) {
-      setState(() => _isLoading = true);
-      _fetchLocation();
+      _checkPermissionAndFetchLocation();
     }
   }
 
-  void _initLocationOnce() {
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _fetchLocation();
-    });
-  }
+  Future<void> _checkPermissionAndFetchLocation() async {
+    if (_isRequestingPermission) return;
+    _isRequestingPermission = true;
 
-  Future<void> _saveCoordinates(double lat, double lng) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble('saved_latitude', lat);
-    await prefs.setDouble('saved_longitude', lng);
-    widget.onLocationChanged();
-  }
-
-  Future<void> _fetchLocation() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
       bool enabled = await Geolocator.isLocationServiceEnabled();
       if (!enabled) {
         _setError("Location Off", "Turn on location");
+        _isRequestingPermission = false;
         return;
       }
 
@@ -87,21 +78,39 @@ class _LocationHeaderState extends State<LocationHeader>
         _shouldRetryLocation = true;
         _setError("Permission Denied", "Go to settings to enable");
         await LocationPermissionDialog.show(context);
+        _isRequestingPermission = false;
         return;
       }
 
       if (permission == LocationPermission.denied) {
         _setError("Permission Denied", "Location not available");
+        await LocationPermissionDialog.show(context);
+        _isRequestingPermission = false;
         return;
       }
 
-      _shouldRetryLocation = false;
+      // ✅ Wait briefly to avoid race conditions
+      await Future.delayed(const Duration(milliseconds: 500));
 
+      _shouldRetryLocation = false;
+      await _fetchLocation();
+    } catch (e) {
+      debugPrint("❌ Location permission check failed: $e");
+      _setError("Error", "Couldn't detect");
+    }
+
+    _isRequestingPermission = false;
+  }
+
+  Future<void> _fetchLocation() async {
+    try {
       Position? pos;
       try {
         pos = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.high);
+          desiredAccuracy: LocationAccuracy.high,
+        );
       } catch (e) {
+        debugPrint("⚠️ getCurrentPosition failed: $e");
         pos = await Geolocator.getLastKnownPosition();
       }
 
@@ -109,22 +118,24 @@ class _LocationHeaderState extends State<LocationHeader>
         await _saveCoordinates(pos.latitude, pos.longitude);
         await _getAddress(pos.latitude, pos.longitude);
       } else {
-        _setError("Error", "Couldn't detect");
+        const fallbackLat = 17.385044;
+        const fallbackLng = 78.486671;
+        await _saveCoordinates(fallbackLat, fallbackLng);
+        await _getAddress(fallbackLat, fallbackLng);
       }
     } catch (e) {
-      _setError("Error", "Couldn't detect");
+      debugPrint("❌ Location fetch error: $e");
+      const fallbackLat = 17.385044;
+      const fallbackLng = 78.486671;
+      await _saveCoordinates(fallbackLat, fallbackLng);
+      await _getAddress(fallbackLat, fallbackLng);
     }
+
+    widget
+        .onLocationChanged(); // ✅ Trigger Cubit after setting fallback/real coords
   }
 
-  void _setError(String city, String area) {
-    if (!mounted) return;
-    setState(() {
-      _city = city;
-      _area = area;
-      _isLoading = false;
-      _hasTriedFetchingLocation = true;
-    });
-  }
+
 
   Future<void> _getAddress(double lat, double lng) async {
     try {
@@ -144,6 +155,28 @@ class _LocationHeaderState extends State<LocationHeader>
     }
   }
 
+  void _setError(String city, String area) {
+    debugPrint("📍 Location Error → $city: $area");
+    if (!mounted) return;
+
+    // 👇 Instead of setting "Error", fallback to default label
+    setState(() {
+      _city = city == "Error" ? "Location" : city;
+      _area = area == "Couldn't detect" ? "Using default location" : area;
+      _isLoading = false;
+      _hasTriedFetchingLocation = true;
+    });
+  }
+
+  Future<void> _saveCoordinates(double lat, double lng) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble('saved_latitude', lat);
+    await prefs.setDouble('saved_longitude', lng);
+    // 🔁 No callback here
+  }
+
+
+
   void _openAppSettings() async {
     _shouldRetryLocation = true;
     await Geolocator.openAppSettings();
@@ -160,11 +193,11 @@ class _LocationHeaderState extends State<LocationHeader>
               ? _buildShimmer()
               : GestureDetector(
                   onTap: () {
+                    if (_isRequestingPermission) return;
                     if (_city == "Permission Denied") {
                       _openAppSettings();
                     } else if (_city == "Location Off" || _city == "Error") {
-                      setState(() => _isLoading = true);
-                      _fetchLocation();
+                      _checkPermissionAndFetchLocation();
                     }
                   },
                   child: Column(
@@ -204,17 +237,9 @@ class _LocationHeaderState extends State<LocationHeader>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 120,
-            height: 16,
-            color: Colors.white,
-          ),
+          Container(width: 120, height: 16, color: Colors.white),
           const SizedBox(height: 5),
-          Container(
-            width: 180,
-            height: 12,
-            color: Colors.white,
-          ),
+          Container(width: 180, height: 12, color: Colors.white),
         ],
       ),
     );

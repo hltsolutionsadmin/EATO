@@ -19,10 +19,10 @@ class GetRestaurantsByProductNameModel {
   final int? totalPages;
   final int? totalElements;
   final int? size;
-  final int? number;
+  final num? number;
   final List<dynamic> sort;
   final bool? first;
-  final int? numberOfElements;
+  final num? numberOfElements;
   final bool? empty;
 
   factory GetRestaurantsByProductNameModel.fromJson(Map<String, dynamic> json) {
@@ -46,6 +46,20 @@ class GetRestaurantsByProductNameModel {
       empty: json["empty"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "content": content.map((x) => x?.toJson()).toList(),
+        "pageable": pageable?.toJson(),
+        "last": last,
+        "totalPages": totalPages,
+        "totalElements": totalElements,
+        "size": size,
+        "number": number,
+        "sort": sort.map((x) => x).toList(),
+        "first": first,
+        "numberOfElements": numberOfElements,
+        "empty": empty,
+      };
 }
 
 class Content {
@@ -72,13 +86,13 @@ class Content {
   final bool? ignoreTax;
   final bool? discount;
   final String? description;
-  final double? price;
+  final num? price;
   final bool? available;
   final int? businessId;
   final String? businessName;
   final int? categoryId;
   final String? categoryName;
-  final List<dynamic> media;
+  final List<Media> media;
   final List<Attribute> attributes;
 
   factory Content.fromJson(Map<String, dynamic> json) {
@@ -97,13 +111,30 @@ class Content {
       categoryName: json["categoryName"],
       media: json["media"] == null
           ? []
-          : List<dynamic>.from(json["media"]!.map((x) => x)),
+          : List<Media>.from(json["media"]!.map((x) => Media.fromJson(x))),
       attributes: json["attributes"] == null
           ? []
           : List<Attribute>.from(
               json["attributes"]!.map((x) => Attribute.fromJson(x))),
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "shortCode": shortCode,
+        "ignoreTax": ignoreTax,
+        "discount": discount,
+        "description": description,
+        "price": price,
+        "available": available,
+        "businessId": businessId,
+        "businessName": businessName,
+        "categoryId": categoryId,
+        "categoryName": categoryName,
+        "media": media.map((x) => x?.toJson()).toList(),
+        "attributes": attributes.map((x) => x?.toJson()).toList(),
+      };
 }
 
 class Attribute {
@@ -124,6 +155,34 @@ class Attribute {
       attributeValue: json["attributeValue"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "attributeName": attributeName,
+        "attributeValue": attributeValue,
+      };
+}
+
+class Media {
+  Media({
+    required this.mediaType,
+    required this.url,
+  });
+
+  final String? mediaType;
+  final String? url;
+
+  factory Media.fromJson(Map<String, dynamic> json) {
+    return Media(
+      mediaType: json["mediaType"],
+      url: json["url"],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        "mediaType": mediaType,
+        "url": url,
+      };
 }
 
 class Pageable {
@@ -155,4 +214,13 @@ class Pageable {
       unpaged: json["unpaged"],
     );
   }
+
+  Map<String, dynamic> toJson() => {
+        "sort": sort.map((x) => x).toList(),
+        "pageNumber": pageNumber,
+        "pageSize": pageSize,
+        "offset": offset,
+        "paged": paged,
+        "unpaged": unpaged,
+      };
 }
