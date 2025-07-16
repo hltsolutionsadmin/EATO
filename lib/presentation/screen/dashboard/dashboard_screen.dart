@@ -51,65 +51,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
   late FocusNode _searchFocusNode;
   bool _isRequestingPermission = false;
 
-
-@override
-void initState() {
+  @override
+  void initState() {
     super.initState();
     _searchFocusNode = FocusNode();
     context.read<CreateCartCubit>().createCart(context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 1000));
       await _requestLocationPermission();
     });
 
     _scrollController.addListener(_scrollListener);
   }
 
-
   Future<void> _requestLocationPermission() async {
-    if (_isRequestingPermission) return;
-    _isRequestingPermission = true;
+  if (_isRequestingPermission) return;
+  _isRequestingPermission = true;
 
-    setState(() => isLocationInitializing = true);
+  setState(() => isLocationInitializing = true);
 
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied ||
-          permission == LocationPermission.deniedForever) {
-        permission = await Geolocator.requestPermission();
-      }
+  try {
+    LocationPermission permission = await Geolocator.checkPermission();
+    debugPrint("📍 Initial permission status: $permission");
 
-      if (!mounted) return;
-
-      if (permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always) {
-        await _loadCoordinatesAndFetchRestaurants(); // ✅ With real location
-      } else {
-        debugPrint("⚠️ Permission denied or forever denied → using fallback");
-        // ✅ Use fallback coordinates like guest
-        final prefs = await SharedPreferences.getInstance();
-        const fallbackLat = 17.385044;
-        const fallbackLng = 78.486671;
-        await prefs.setDouble('saved_latitude', fallbackLat);
-        await prefs.setDouble('saved_longitude', fallbackLng);
-        await _loadCoordinatesAndFetchRestaurants(); // 🔁 Still fetch restaurants
-        await LocationPermissionDialog.show(context); // Show alert if needed
-      }
-
-      if (!widget.isGuest) {
-        await _fetchCart(); // 🛒 Always fetch cart for logged-in
-      }
-
-    } catch (e) {
-      debugPrint("❌ Location permission check failed: $e");
-    } finally {
-      if (mounted) {
-        setState(() => isLocationInitializing = false);
-      }
-      _isRequestingPermission = false;
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
+      permission = await Geolocator.requestPermission();
+      debugPrint("📍 After requestPermission: $permission");
     }
+
+    if (!mounted) return;
+
+    if (permission == LocationPermission.whileInUse ||
+        permission == LocationPermission.always) {
+      debugPrint("✅ Permission granted → fetching coordinates");
+      await _loadCoordinatesAndFetchRestaurants();
+    } else {
+      debugPrint("⚠️ Permission denied or forever denied → using fallback");
+
+      final prefs = await SharedPreferences.getInstance();
+      const fallbackLat = 17.385044;
+      const fallbackLng = 78.486671;
+      await prefs.setDouble('saved_latitude', fallbackLat);
+      await prefs.setDouble('saved_longitude', fallbackLng);
+      await _loadCoordinatesAndFetchRestaurants();
+      await LocationPermissionDialog.show(context);
+    }
+
+    if (!widget.isGuest) {
+      await _fetchCart();
+    }
+  } catch (e) {
+    debugPrint("❌ Location permission check failed: $e");
+  } finally {
+    if (mounted) {
+      setState(() {
+        isLocationInitializing = false;
+      });
+    }
+    _isRequestingPermission = false;
   }
+}
+
 
   Future<void> _clearCart() async {
     await context.read<ClearCartCubit>().clearCart(context);
@@ -165,23 +169,36 @@ void initState() {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      latitude = position.latitude;
-      longitude = position.longitude;
+
+      if (!mounted) return;
+
+      setState(() {
+        latitude = position.latitude;
+        longitude = position.longitude;
+      });
+
       await prefs.setDouble('saved_latitude', latitude!);
       await prefs.setDouble('saved_longitude', longitude!);
     } catch (e) {
       debugPrint("⚠️ Failed to get current position: $e");
 
-      // fallback
-      latitude = prefs.getDouble('saved_latitude');
-      longitude = prefs.getDouble('saved_longitude');
+      final savedLat = prefs.getDouble('saved_latitude');
+      final savedLng = prefs.getDouble('saved_longitude');
+
+      if (!mounted) return;
+
+      setState(() {
+        latitude = savedLat;
+        longitude = savedLng;
+      });
 
       if (latitude == null || longitude == null) {
-        debugPrint("❌ Location not available. Skipping fetch.");
+        debugPrint("❌ No valid coordinates found. Skipping fetch.");
         return;
       }
     }
 
+    // Coordinates should now be non-null and trigger UI update
     if (!mounted) return;
 
     final params = {
@@ -202,9 +219,6 @@ void initState() {
       context.read<GetNearbyRestaurantsCubit>().fetchNearbyRestaurants(params);
     }
   }
-
-
-
 
   void _navigateToRestaurantMenu(String name, String id) async {
     await Navigator.push(
@@ -369,12 +383,26 @@ void initState() {
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                        child: LocationHeader(
-                          latitude: latitude,
-                          longitude: longitude,
-                          onLocationChanged: _onLocationChanged,
-                          isGuest: widget.isGuest,
-                        ),
+                        child: (isLocationInitializing ||
+                                latitude == null ||
+                                longitude == null)
+                            ? Shimmer.fromColors(
+                                baseColor: Colors.grey.shade300,
+                                highlightColor: Colors.grey.shade100,
+                                child: Container(
+                                  height: 20,
+                                  width: 200,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : LocationHeader(
+                                key: ValueKey(
+                                    '$latitude$longitude'),
+                                latitude: latitude,
+                                longitude: longitude,
+                                onLocationChanged: _onLocationChanged,
+                                isGuest: widget.isGuest,
+                              ),
                       ),
                       Padding(
                         padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
