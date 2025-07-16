@@ -36,10 +36,20 @@ class _LocationHeaderState extends State<LocationHeader>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkPermissionAndFetchLocation();
-    });
+    if (widget.latitude != null && widget.longitude != null) {
+      _getAddress(widget.latitude!, widget.longitude!);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant LocationHeader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((widget.latitude != oldWidget.latitude ||
+            widget.longitude != oldWidget.longitude) &&
+        widget.latitude != null &&
+        widget.longitude != null) {
+      _getAddress(widget.latitude!, widget.longitude!);
+    }
   }
 
   @override
@@ -48,94 +58,91 @@ class _LocationHeaderState extends State<LocationHeader>
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _shouldRetryLocation) {
-      _checkPermissionAndFetchLocation();
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed && _shouldRetryLocation) {
+  //     _checkPermissionAndFetchLocation();
+  //   }
+  // }
 
-  Future<void> _checkPermissionAndFetchLocation() async {
-    if (_isRequestingPermission) return;
-    _isRequestingPermission = true;
+  // Future<void> _checkPermissionAndFetchLocation() async {
+  //   if (_isRequestingPermission) return;
+  //   _isRequestingPermission = true;
 
-    setState(() => _isLoading = true);
+  //   setState(() => _isLoading = true);
 
-    try {
-      bool enabled = await Geolocator.isLocationServiceEnabled();
-      if (!enabled) {
-        _setError("Location Off", "Turn on location");
-        _isRequestingPermission = false;
-        return;
-      }
+  //   try {
+  //     bool enabled = await Geolocator.isLocationServiceEnabled();
+  //     if (!enabled) {
+  //       _setError("Location Off", "Turn on location");
+  //       _isRequestingPermission = false;
+  //       return;
+  //     }
 
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
-      }
+  //     LocationPermission permission = await Geolocator.checkPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       permission = await Geolocator.requestPermission();
+  //     }
 
-      if (permission == LocationPermission.deniedForever) {
-        _shouldRetryLocation = true;
-        _setError("Permission Denied", "Go to settings to enable");
-        await LocationPermissionDialog.show(context);
-        _isRequestingPermission = false;
-        return;
-      }
+  //     if (permission == LocationPermission.deniedForever) {
+  //       _shouldRetryLocation = true;
+  //       _setError("Permission Denied", "Go to settings to enable");
+  //       await LocationPermissionDialog.show(context);
+  //       _isRequestingPermission = false;
+  //       return;
+  //     }
 
-      if (permission == LocationPermission.denied) {
-        _setError("Permission Denied", "Location not available");
-        await LocationPermissionDialog.show(context);
-        _isRequestingPermission = false;
-        return;
-      }
+  //     if (permission == LocationPermission.denied) {
+  //       _setError("Permission Denied", "Location not available");
+  //       await LocationPermissionDialog.show(context);
+  //       _isRequestingPermission = false;
+  //       return;
+  //     }
 
-      // ✅ Wait briefly to avoid race conditions
-      await Future.delayed(const Duration(milliseconds: 500));
+  //     await Future.delayed(const Duration(milliseconds: 500));
 
-      _shouldRetryLocation = false;
-      await _fetchLocation();
-    } catch (e) {
-      debugPrint("❌ Location permission check failed: $e");
-      _setError("Error", "Couldn't detect");
-    }
+  //     _shouldRetryLocation = false;
+  //     await _fetchLocation();
+  //   } catch (e) {
+  //     debugPrint("❌ Location permission check failed: $e");
+  //     _setError("Error", "Couldn't detect");
+  //   }
 
-    _isRequestingPermission = false;
-  }
+  //   _isRequestingPermission = false;
+  // }
 
-  Future<void> _fetchLocation() async {
-    try {
-      Position? pos;
-      try {
-        pos = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high,
-        );
-      } catch (e) {
-        debugPrint("⚠️ getCurrentPosition failed: $e");
-        pos = await Geolocator.getLastKnownPosition();
-      }
+  // Future<void> _fetchLocation() async {
+  //   try {
+  //     Position? pos;
+  //     try {
+  //       pos = await Geolocator.getCurrentPosition(
+  //         desiredAccuracy: LocationAccuracy.high,
+  //       );
+  //     } catch (e) {
+  //       debugPrint("⚠️ getCurrentPosition failed: $e");
+  //       pos = await Geolocator.getLastKnownPosition();
+  //     }
 
-      if (pos != null) {
-        await _saveCoordinates(pos.latitude, pos.longitude);
-        await _getAddress(pos.latitude, pos.longitude);
-      } else {
-        const fallbackLat = 17.385044;
-        const fallbackLng = 78.486671;
-        await _saveCoordinates(fallbackLat, fallbackLng);
-        await _getAddress(fallbackLat, fallbackLng);
-      }
-    } catch (e) {
-      debugPrint("❌ Location fetch error: $e");
-      const fallbackLat = 17.385044;
-      const fallbackLng = 78.486671;
-      await _saveCoordinates(fallbackLat, fallbackLng);
-      await _getAddress(fallbackLat, fallbackLng);
-    }
+  //     if (pos != null) {
+  //       await _saveCoordinates(pos.latitude, pos.longitude);
+  //       await _getAddress(pos.latitude, pos.longitude);
+  //     } else {
+  //       const fallbackLat = 17.385044;
+  //       const fallbackLng = 78.486671;
+  //       await _saveCoordinates(fallbackLat, fallbackLng);
+  //       await _getAddress(fallbackLat, fallbackLng);
+  //     }
+  //   } catch (e) {
+  //     debugPrint("❌ Location fetch error: $e");
+  //     const fallbackLat = 17.385044;
+  //     const fallbackLng = 78.486671;
+  //     await _saveCoordinates(fallbackLat, fallbackLng);
+  //     await _getAddress(fallbackLat, fallbackLng);
+  //   }
 
-    widget
-        .onLocationChanged(); // ✅ Trigger Cubit after setting fallback/real coords
-  }
-
-
+  //   widget
+  //       .onLocationChanged(); // ✅ Trigger Cubit after setting fallback/real coords
+  // }
 
   Future<void> _getAddress(double lat, double lng) async {
     try {
@@ -177,11 +184,6 @@ class _LocationHeaderState extends State<LocationHeader>
 
 
 
-  void _openAppSettings() async {
-    _shouldRetryLocation = true;
-    await Geolocator.openAppSettings();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -193,11 +195,8 @@ class _LocationHeaderState extends State<LocationHeader>
               ? _buildShimmer()
               : GestureDetector(
                   onTap: () {
-                    if (_isRequestingPermission) return;
-                    if (_city == "Permission Denied") {
-                      _openAppSettings();
-                    } else if (_city == "Location Off" || _city == "Error") {
-                      _checkPermissionAndFetchLocation();
+                    if (widget.latitude != null && widget.longitude != null) {
+                      _getAddress(widget.latitude!, widget.longitude!);
                     }
                   },
                   child: Column(
