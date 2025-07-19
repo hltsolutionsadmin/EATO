@@ -98,7 +98,7 @@ class NotificationServices {
   void _initializeLocalNotifications(
       BuildContext context, RemoteMessage message) async {
     const AndroidInitializationSettings androidInitSettings =
-        AndroidInitializationSettings('ic_notification_icon');
+        AndroidInitializationSettings('ic_notification');
     const DarwinInitializationSettings iosInitSettings =
         DarwinInitializationSettings();
 
@@ -187,7 +187,7 @@ class NotificationServices {
   void initLocalNotifications(
       BuildContext context, RemoteMessage message) async {
     var androidInitSettings =
-        const AndroidInitializationSettings('ic_notification_icon');
+        const AndroidInitializationSettings('ic_notification');
     var iosInitSettings = const DarwinInitializationSettings();
 
     var initSettings = InitializationSettings(
