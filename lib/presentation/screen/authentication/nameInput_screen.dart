@@ -11,7 +11,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 class NameInputScreen extends StatefulWidget {
   final String? initialEmail;
-  
+
   const NameInputScreen({super.key, this.initialEmail});
 
   @override
@@ -24,11 +24,13 @@ class _NameInputScreenState extends State<NameInputScreen> {
   late TextEditingController _emailController;
   final _formKey = GlobalKey<FormState>();
 
+  bool _isSubmitting = false;
+
   @override
   void initState() {
     super.initState();
-    _firstNameController = TextEditingController(text: '');
-    _lastNameController = TextEditingController(text: '');
+    _firstNameController = TextEditingController();
+    _lastNameController = TextEditingController();
     _emailController = TextEditingController(text: widget.initialEmail ?? '');
   }
 
@@ -40,12 +42,41 @@ class _NameInputScreenState extends State<NameInputScreen> {
     super.dispose();
   }
 
+  void _saveChanges() {
+    final cubit = context.read<UpdateCurrentCustomerCubit>();
+
+    if (cubit.state.isLoading || _isSubmitting) return;
+
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      final fullName =
+          '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim();
+
+      final payload = {
+        'fullName': fullName,
+        'email': _emailController.text.trim(),
+        'eato': true,
+        'fcmToken': ''
+      };
+
+      cubit.updateCustomer(payload, context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocListener<UpdateCurrentCustomerCubit, UpdateCurrentCustomerState>(
+    return BlocConsumer<UpdateCurrentCustomerCubit, UpdateCurrentCustomerState>(
       listener: (context, state) {
-        if (state.isLoading) {
-        } else if (state.error != null && state.error!.isNotEmpty) {
+        if (state.isLoading) return;
+
+        setState(() {
+          _isSubmitting = false;
+        });
+
+        if (state.error != null && state.error!.isNotEmpty) {
           CustomSnackbars.showErrorSnack(
             context: context,
             title: "Failed",
@@ -57,199 +88,159 @@ class _NameInputScreenState extends State<NameInputScreen> {
             title: "Success",
             message: "Profile updated successfully",
           );
-          Navigator.push(
+
+          Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => BottomTab()),
+            MaterialPageRoute(builder: (_) => BottomTab()),
           );
         }
       },
-
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: CustomAppBar(
-          title: "Welcome to Eato",
-          showBackButton: false,
-        ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'First Name',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
+      builder: (context, state) {
+        return Scaffold(
+          backgroundColor: Colors.white,
+          appBar: CustomAppBar(
+            title: "Welcome to Eato",
+            showBackButton: false,
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'First Name',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextFormField(
+                  const SizedBox(height: 8),
+                  _buildTextField(
                     controller: _firstNameController,
-                    style: const TextStyle(fontSize: 16),
-                    decoration: const InputDecoration(
-                      hintText: 'Enter first name',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      hintStyle: TextStyle(color: Colors.grey),
+                    hintText: 'Enter first name',
+                    validatorMsg: 'Please enter your first name',
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Last Name',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
                     ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-                      LengthLimitingTextInputFormatter(30),
-                    ],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your first name';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-
-                const SizedBox(height: 24),
-                const Text(
-                  'Last Name',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextFormField(
+                  const SizedBox(height: 8),
+                  _buildTextField(
                     controller: _lastNameController,
-                    style: const TextStyle(fontSize: 16),
-                    decoration: const InputDecoration(
-                      hintText: 'Enter last name',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      hintStyle: TextStyle(color: Colors.grey),
+                    hintText: 'Enter last name',
+                    validatorMsg: 'Please enter your last name',
+                  ),
+                  const SizedBox(height: 24),
+                  const Text(
+                    'Email',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black87,
                     ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
-                      LengthLimitingTextInputFormatter(30),
-                    ],
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your last name';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Email',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextFormField(
-                    controller: _emailController,
-                    style: const TextStyle(fontSize: 16),
-                    decoration: const InputDecoration(
-                      hintText: 'Enter email address',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 16,
-                      ),
-                      hintStyle: TextStyle(color: Colors.grey),
+                  const SizedBox(height: 8),
+                  _buildEmailField(),
+                  const SizedBox(height: 24),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColor.PrimaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-
-                const SizedBox(height: 24),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColor.PrimaryColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'This name will appear on your account and food orders',
-                      style: TextStyle(
-                        fontSize: 13,
+                    child: const Center(
+                      child: Text(
+                        'This name will appear on your account and food orders',
+                        style: TextStyle(fontSize: 13),
                       ),
                     ),
                   ),
-                ),
-
-                const SizedBox(height: 30),
-                SizedBox(
-                  width: double.infinity,
-                    child: BlocBuilder<UpdateCurrentCustomerCubit,
-                        UpdateCurrentCustomerState>(
-                      builder: (context, state) {
-                        return SizedBox(
-                          width: double.infinity,
-                          child: CustomButton(
-                            buttonText: "Save Changes",
-                            isLoading: state.isLoading,
-                            onPressed: _saveChanges,
-                          ),
-                        );
-                      },
-                    )
-
-                ),
-              ],
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    child: CustomButton(
+                      buttonText: "Save Changes",
+                      isLoading: state.isLoading,
+                      onPressed: state.isLoading ? () {} : _saveChanges,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hintText,
+    required String validatorMsg,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextFormField(
+        controller: controller,
+        style: const TextStyle(fontSize: 16),
+        decoration: InputDecoration(
+          hintText: hintText,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          hintStyle: const TextStyle(color: Colors.grey),
         ),
+        inputFormatters: [
+          FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]')),
+          LengthLimitingTextInputFormatter(30),
+        ],
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return validatorMsg;
+          }
+          return null;
+        },
       ),
     );
   }
 
-  void _saveChanges() {
-    if (_formKey.currentState!.validate()) {
-      final fullName = '${_firstNameController.text.trim()} ${_lastNameController.text.trim()}'.trim();
-      final payload = {
-        'fullName': fullName,
-        'email': _emailController.text.trim(),
-        'eato': true,
-        "fcmToken": ''
-      };
-      
-      context.read<UpdateCurrentCustomerCubit>().updateCustomer(payload, context);
-    }
+  Widget _buildEmailField() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: TextFormField(
+        controller: _emailController,
+        style: const TextStyle(fontSize: 16),
+        decoration: const InputDecoration(
+          hintText: 'Enter email address',
+          border: InputBorder.none,
+          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          hintStyle: TextStyle(color: Colors.grey),
+        ),
+        keyboardType: TextInputType.emailAddress,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Please enter your email';
+          }
+          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+            return 'Please enter a valid email';
+          }
+          return null;
+        },
+      ),
+    );
   }
 }

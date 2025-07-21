@@ -1,5 +1,9 @@
 //usermanagement
-const baseUrl2 = 'https://skillrat.com/usermgmt/';
+//dev//
+// const baseUrl2 = 'https://skillrat.com/usermgmt/';
+//prod//
+const baseUrl2 = 'https://kovela.app/usermgmt/';
+
 
 const TriggerOtp = 'auth/jtuserotp/trigger/otp?triggerOtp=true';
 const SigninUrl = 'auth/login';
@@ -21,8 +25,10 @@ String guestNearbyRestaurantsUrl(
 
 const addressSave = 'api/addresses/save';
 
-//Eato
-const baseUrl = 'https://skillrat.com/';
+//Eato dev
+// const baseUrl = 'https://skillrat.com/';
+//Eato prod
+const baseUrl = 'https://kovela.app/';
 
 String getMenuByRestaurantIdUrl(
     String restaurantId, String search, int page, int size) {

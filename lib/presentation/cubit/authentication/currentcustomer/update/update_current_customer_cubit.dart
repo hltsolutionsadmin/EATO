@@ -12,25 +12,32 @@ class UpdateCurrentCustomerCubit extends Cubit<UpdateCurrentCustomerState> {
       {required this.useCase, required this.networkService})
       : super(UpdateCurrentCustomerState());
 
-  Future<void> updateCustomer(Map<String, dynamic> payload, context) async {
-    bool isConnected = await networkService.hasInternetConnection();
-    print(isConnected);
-    if (!isConnected) {
-      print("No Internet Connection");
-      CustomSnackbars.showErrorSnack(
-        context: context,
-        title: 'Alert',
-        message: 'Please check Internet Connection',
-      );
-      return;
-    } else {
-      emit(state.copyWith(isLoading: true, error: null));
-      try {
-        final result = await useCase(payload);
-        emit(state.copyWith(isLoading: false, data: result));
-      } catch (e) {
-        emit(state.copyWith(isLoading: false, error: e.toString()));
-      }
-    }
+ bool _isUpdating = false;
+
+Future<void> updateCustomer(Map<String, dynamic> payload, context) async {
+  if (_isUpdating) return;
+
+  _isUpdating = true;
+  bool isConnected = await networkService.hasInternetConnection();
+  if (!isConnected) {
+    CustomSnackbars.showErrorSnack(
+      context: context,
+      title: 'Alert',
+      message: 'Please check Internet Connection',
+    );
+    _isUpdating = false;
+    return;
   }
+
+  emit(state.copyWith(isLoading: true, error: null));
+  try {
+    final result = await useCase(payload);
+    emit(state.copyWith(isLoading: false, data: result));
+  } catch (e) {
+    emit(state.copyWith(isLoading: false, error: e.toString()));
+  } finally {
+    _isUpdating = false;
+  }
+}
+
 }
