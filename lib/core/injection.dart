@@ -565,10 +565,10 @@ void init() {
         sl<GuestNearByRestaurantsUseCase>(),
       ));
 
-      //GuestMenuByRestaurantId
-      sl.registerLazySingleton<GuestMenuByRestaurantIdRemoteDataSource>(
-    () =>
-        GuestMenuByRestaurantIdRemoteDataSourceImpl(client: sl<DioClient>().dio),
+  //GuestMenuByRestaurantId
+  sl.registerLazySingleton<GuestMenuByRestaurantIdRemoteDataSource>(
+    () => GuestMenuByRestaurantIdRemoteDataSourceImpl(
+        client: sl<DioClient>().dio),
   );
   sl.registerLazySingleton<GuestMenuByRestaurantIdRepository>(
     () => GuestMenuByRestaurantIdRepositoryImpl(
@@ -582,7 +582,7 @@ void init() {
         sl<GuestMenuByRestaurantIdUseCase>(),
       ));
 
-      //DeleteAccount
+  //DeleteAccount
   sl.registerLazySingleton<DeleteAccountRemoteDataSource>(
     () => DeleteAccountRemoteDataSourceImpl(client: sl<DioClient>().dio),
   );
@@ -591,7 +591,7 @@ void init() {
         remoteDataSource: sl<DeleteAccountRemoteDataSource>()),
   );
   sl.registerLazySingleton(
-    () => DeleteAccountUseCase(repository: sl<DeleteAccountRepository>()),  
+    () => DeleteAccountUseCase(repository: sl<DeleteAccountRepository>()),
   );
   sl.registerFactory(() => DeleteAccountCubit(
         sl<DeleteAccountUseCase>(),

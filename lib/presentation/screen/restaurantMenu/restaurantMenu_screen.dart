@@ -444,8 +444,6 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
                 child: Row(
                   children: ['All', 'Veg', 'NonVeg'].map((filter) {
                     final isSelected = filter == filterType;
-
-                    // Determine icon (only for Veg and NonVeg)
                     Widget? icon;
                     if (filter == 'Veg') {
                       icon = vegNonVegIcon(true);
