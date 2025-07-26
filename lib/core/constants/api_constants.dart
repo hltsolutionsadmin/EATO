@@ -19,8 +19,9 @@ String getNearbyRestaurantsUrl(
 }
 
 String guestNearbyRestaurantsUrl(
-    double latitude, double longitude, String postalCode, int page, int size) {
-  return 'api/public/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&searchTerm=&page=$page&size=$size';
+    double latitude, double longitude,
+    String postalCode, int page, int size, String searchTerm) {
+  return 'api/public/find?latitude=$latitude&longitude=$longitude&radius=100&postalCode=$postalCode&searchTerm=$searchTerm&page=$page&size=$size';
 }
 
 const addressSave = 'api/addresses/save';
@@ -32,7 +33,7 @@ const baseUrl = 'https://kovela.app/';
 
 String getMenuByRestaurantIdUrl(
     String restaurantId, String search, int page, int size) {
-  return 'product/api/products/filter?restaurantId=$restaurantId&attributeValue=Online&keyword=$search&page=$page&size=$size';
+  return 'product/api/products/filter?restaurantId=$restaurantId&attributeValue=Online&attributeValue=DineIN%26Online%26TakeAway&keyword=$search&page=$page&size=$size';
 }
 
 String guestMenuByRestaurantIdUrl(int restaurantId) {

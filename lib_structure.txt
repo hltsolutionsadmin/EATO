@@ -1,0 +1,517 @@
+lib
+├── components
+│   ├── bottomTab.dart
+│   ├── custom_button.dart
+│   ├── custom_snackbar.dart
+│   ├── custom_topbar.dart
+│   ├── customTextFields.dart
+│   └── searchBar.dart
+├── core
+│   ├── base
+│   │   └── cubit_controller.dart
+│   ├── constants
+│   │   ├── api_constants.dart
+│   │   ├── colors.dart
+│   │   ├── global_exception_handler.dart
+│   │   ├── global_rating_listener.dart
+│   │   ├── img_const.dart
+│   │   ├── rating_service.dart
+│   │   └── sizes.dart
+│   ├── error
+│   │   ├── exceptions.dart
+│   │   └── failure.dart
+│   ├── injection.dart
+│   ├── network
+│   │   ├── dio_client.dart
+│   │   ├── network_cubit.dart
+│   │   ├── network_helper.dart
+│   │   ├── network_Info.dart
+│   │   └── network_service.dart
+│   ├── routes
+│   │   └── app_route.dart
+│   ├── themes
+│   │   └── base_theme.dart
+│   └── utils
+│       ├── conts
+│       │   └── app_const.dart
+│       ├── enums
+│       │   └── enums.dart
+│       ├── push_notication_services.dart
+│       └── storage_utils
+│           └── secure_storage.dart
+├── data
+│   ├── datasource
+│   │   ├── address
+│   │   │   ├── defaultAddress
+│   │   │   │   ├── get
+│   │   │   │   │   └── getDefaultAddress_dataSource.dart
+│   │   │   │   └── post
+│   │   │   │       └── defaultAddress_dataSource.dart
+│   │   │   ├── deleteAddress
+│   │   │   │   └── deleteAddress_dataSource.dart
+│   │   │   ├── getAddress
+│   │   │   │   └── getAddress_dataSource.dart
+│   │   │   └── saveAddress
+│   │   │       └── saveAddress_dataSource.dart
+│   │   ├── authentication
+│   │   │   ├── current_customer_remote_data_source.dart
+│   │   │   ├── deleteAccount_dataSource.dart
+│   │   │   ├── rolesPost_dataSource.dart
+│   │   │   ├── signin_remote_data_source.dart
+│   │   │   ├── signup_remote_data_source.dart
+│   │   │   ├── trigger_otp_remote_data_source.dart
+│   │   │   └── update_current_customer_dataSource.dart
+│   │   ├── cart
+│   │   │   ├── clearCart
+│   │   │   │   └── clearCart_dataSource.dart
+│   │   │   ├── createCart
+│   │   │   │   └── createCart_dataSource.dart
+│   │   │   ├── deleteCartitems
+│   │   │   │   └── deleteCartItems_dataSource.dart
+│   │   │   ├── getCart
+│   │   │   │   └── getCart_dataSource.dart
+│   │   │   ├── productsAddToCart
+│   │   │   │   └── productsAddtoCart_dataSource.dart
+│   │   │   └── updateCartItems
+│   │   │       └── updateCartItems_dataSource.dart
+│   │   ├── location
+│   │   │   └── location_remotedatasource.dart
+│   │   ├── orders
+│   │   │   ├── createOrder
+│   │   │   │   └── createOrder_dataSource.dart
+│   │   │   ├── orderByOrderId
+│   │   │   │   └── orderByOrderId_dataSource.dart
+│   │   │   ├── orderByRestaurantId
+│   │   │   │   └── orderByRestaurantId_dataSource.dart
+│   │   │   ├── orderCancel
+│   │   │   │   └── orderCancel_dataSource.dart
+│   │   │   ├── orderHistory
+│   │   │   │   └── orderHistory_dataSource.dart
+│   │   │   ├── orderTracking
+│   │   │   │   └── orderTracking_dataSource.dart
+│   │   │   └── reOrder
+│   │   │       └── reOrder_dataSource.dart
+│   │   ├── payment
+│   │   │   └── payment_dataSource.dart
+│   │   └── restaurants
+│   │       ├── getMenuByRestaurantId
+│   │       │   └── getMenuByRestaurantId_dataSource.dart
+│   │       ├── getNearbyRestaurants
+│   │       │   └── getNearByrestarants_dataSource.dart
+│   │       ├── getRestaurantsByProductName
+│   │       │   └── getRestaurantsByProductName_dataSource.dart
+│   │       ├── guestMenuByRestaurantId
+│   │       │   └── guestMenuByRestaurantId_dataSource.dart
+│   │       └── guestNearbyRestaurants
+│   │           └── guestNearbyRestaurants_dataSource.dart
+│   ├── model
+│   │   ├── address
+│   │   │   ├── defaultAddress
+│   │   │   │   ├── get
+│   │   │   │   │   └── getDefaultAddress_model.dart
+│   │   │   │   └── post
+│   │   │   │       └── defaultAddress_model.dart
+│   │   │   ├── deleteAddress
+│   │   │   │   └── deleteAddress_model.dart
+│   │   │   ├── getAddress
+│   │   │   │   └── getAddress_model.dart
+│   │   │   └── saveAddress
+│   │   │       └── saveAddress_model.dart
+│   │   ├── authentication
+│   │   │   ├── current_customer_model.dart
+│   │   │   ├── deleteAccount_model.dart
+│   │   │   ├── rolesPost_model.dart
+│   │   │   ├── signin_model.dart
+│   │   │   ├── signup_model.dart
+│   │   │   ├── trigger_otp_model.dart
+│   │   │   └── update_current_customer_model.dart
+│   │   ├── cart
+│   │   │   ├── clearCart
+│   │   │   │   └── clearCart_model.dart
+│   │   │   ├── createCart
+│   │   │   │   └── createCart_model.dart
+│   │   │   ├── deleteCartitems
+│   │   │   │   └── deleteCartItems_model.dart
+│   │   │   ├── getCart
+│   │   │   │   └── getCart_model.dart
+│   │   │   ├── productsAddToCart
+│   │   │   │   └── productsAddtoCart_model.dart
+│   │   │   └── updateCartItems
+│   │   │       └── updateCartItems_model.dart
+│   │   ├── location
+│   │   │   ├── lattitude_longitude_model.dart
+│   │   │   └── location_model.dart
+│   │   ├── orders
+│   │   │   ├── createOrder
+│   │   │   │   └── createOrder_model.dart
+│   │   │   ├── orderByOrderId
+│   │   │   │   └── orderByOrderId_model.dart
+│   │   │   ├── orderByRestaurantId
+│   │   │   │   └── orderByRestaurantId_model.dart
+│   │   │   ├── orderCancel
+│   │   │   │   └── orderCancel_model.dart
+│   │   │   ├── orderHistory
+│   │   │   │   └── orderHistory_model.dart
+│   │   │   ├── orderTracking
+│   │   │   │   └── orderTracking_model.dart
+│   │   │   └── reOrder
+│   │   │       └── reOrder_model.dart
+│   │   ├── payment
+│   │   │   └── payment_model.dart
+│   │   ├── payments
+│   │   │   ├── payment_refund_model.dart
+│   │   │   └── refund_status_model.dart
+│   │   └── restaurants
+│   │       ├── getMenuByRestaurantId
+│   │       │   └── getMenuByRestaurantId_model.dart
+│   │       ├── getNearbyRestaurants
+│   │       │   └── getNearByrestarants_model.dart
+│   │       ├── getRestaurantsByProductName
+│   │       │   └── getRestaurantsByProductName_model.dart
+│   │       ├── guestMenuByRestaurantId
+│   │       │   ├── guestMenuByRestaurantId_model.dart
+│   │       │   └── menu_content_model.dart
+│   │       └── guestNearbyRestaurants
+│   │           └── guestNearbyRestaurants_model.dart
+│   └── repositoryImpl
+│       ├── address
+│       │   ├── defaultAddress
+│       │   │   ├── get
+│       │   │   │   └── getDefaultAddress_repoImpl.dart
+│       │   │   └── post
+│       │   │       └── defaultAddress_dataSource.dart
+│       │   ├── deleteAddress
+│       │   │   └── deleteAddress_repoImpl.dart
+│       │   ├── getAddress
+│       │   │   └── getAddress_repoImpl.dart
+│       │   └── saveAddress
+│       │       └── saveAddress_repoImpl.dart
+│       ├── authentication
+│       │   ├── current_customer_repository_impl.dart
+│       │   ├── deleteAccount_repoImpl.dart
+│       │   ├── rolesPost_repoImpl.dart
+│       │   ├── signin_repository_impl.dart
+│       │   ├── signup_repository_impl.dart
+│       │   ├── trigger_otp_repository_impl.dart
+│       │   └── update_current_customer_repoImpl.dart
+│       ├── cart
+│       │   ├── clearCart
+│       │   │   └── clearCart_repoImpl.dart
+│       │   ├── createCart
+│       │   │   └── createCart_repoImpl.dart
+│       │   ├── deleteCartitems
+│       │   │   └── deleteCartItems_repoImpl.dart
+│       │   ├── getCart
+│       │   │   └── getCart_repoImpl.dart
+│       │   ├── productsAddToCart
+│       │   │   └── productsAddtoCart_repoImpl.dart
+│       │   └── updateCartItems
+│       │       └── updateCartItems_repoImpl.dart
+│       ├── location
+│       │   └── location_repoImpl.dart
+│       ├── orders
+│       │   ├── createOrder
+│       │   │   └── createOrder_repoImpl.dart
+│       │   ├── orderByOrderId
+│       │   │   └── orderByOrderId_repoImpl.dart
+│       │   ├── orderByRestaurantId
+│       │   │   └── orderByRestaurantId_repoImpl.dart
+│       │   ├── orderCancel
+│       │   │   └── orderCancel_repoImpl.dart
+│       │   ├── orderHistory
+│       │   │   └── orderHistory_repoImpl.dart
+│       │   ├── orderTracking
+│       │   │   └── orderTracking_repoImpl.dart
+│       │   └── reOrder
+│       │       └── reOrder_repoImpl.dart
+│       ├── payment
+│       │   └── payment_repoImpl.dart
+│       └── restaurants
+│           ├── getMenuByRestaurantId
+│           │   └── getMenuByRestaurantId_repoImpl.dart
+│           ├── getNearbyRestaurants
+│           │   └── getNearByrestarants_repoImpl.dart
+│           ├── getRestaurantsByProductName
+│           │   └── getRestaurantsByProductName_repoImpl.dart
+│           ├── guestMenuByRestaurantId
+│           │   └── guestMenuByRestaurantId_repoImpl.dart
+│           └── guestNearbyRestaurants
+│               └── guestNearbyRestaurants_repoImpl.dart
+├── domain
+│   ├── repository
+│   │   ├── address
+│   │   │   ├── defaultAddress
+│   │   │   │   ├── get
+│   │   │   │   │   └── getDefaultAddress_repository.dart
+│   │   │   │   └── post
+│   │   │   │       └── defaultAddress_repository.dart
+│   │   │   ├── deleteAddress
+│   │   │   │   └── deleteAddress_repository.dart
+│   │   │   ├── getAddress
+│   │   │   │   └── getAddress_repository.dart
+│   │   │   └── saveAddress
+│   │   │       └── saveAddress_repository.dart
+│   │   ├── authentication
+│   │   │   ├── current_customer_repository.dart
+│   │   │   ├── deleteAccount_repository.dart
+│   │   │   ├── rolesPost_repository.dart
+│   │   │   ├── signin_repository.dart
+│   │   │   ├── signup_repository.dart
+│   │   │   ├── trigger_otp_repository.dart
+│   │   │   └── update_current_customer_repository.dart
+│   │   ├── cart
+│   │   │   ├── clearCart
+│   │   │   │   └── clearCart_repository.dart
+│   │   │   ├── createCart
+│   │   │   │   └── createCart_repository.dart
+│   │   │   ├── deleteCartitems
+│   │   │   │   └── deleteCartItems_repository.dart
+│   │   │   ├── getCart
+│   │   │   │   └── getCart_repository.dart
+│   │   │   ├── productsAddToCart
+│   │   │   │   └── productsAddtoCart_repository.dart
+│   │   │   └── updateCartItems
+│   │   │       └── updateCartItems_repository.dart
+│   │   ├── location
+│   │   │   └── location_repo.dart
+│   │   ├── orders
+│   │   │   ├── createOrder
+│   │   │   │   └── createOrder_repository.dart
+│   │   │   ├── orderByOrderId
+│   │   │   │   └── orderByOrderId_repository.dart
+│   │   │   ├── orderByRestaurantId
+│   │   │   │   └── orderByRestaurantId_repository.dart
+│   │   │   ├── orderCancel
+│   │   │   │   └── orderCancel_repository.dart
+│   │   │   ├── orderHistory
+│   │   │   │   └── orderHistory_repository.dart
+│   │   │   ├── orderTracking
+│   │   │   │   └── orderTracking_repository.dart
+│   │   │   └── reOrder
+│   │   │       └── reOrder_repository.dart
+│   │   ├── payment
+│   │   │   └── payment_repository.dart
+│   │   └── restaurants
+│   │       ├── getMenuByRestaurantId
+│   │       │   └── getMenuByRestaurantId_repository.dart
+│   │       ├── getNearbyRestaurants
+│   │       │   └── getNearByrestarants_repository.dart
+│   │       ├── getRestaurantsByProductName
+│   │       │   └── getRestaurantsByProductName_repository.dart
+│   │       ├── guestMenuByRestaurantId
+│   │       │   └── guestMenuByRestaurantId_repository.dart
+│   │       └── guestNearbyRestaurants
+│   │           └── guestNearbyRestaurants_repository.dart
+│   └── usecase
+│       ├── address
+│       │   ├── defaultAddress
+│       │   │   ├── get
+│       │   │   │   └── getDefaultAddress_usecase.dart
+│       │   │   └── post
+│       │   │       └── defaultAddress_usecase.dart
+│       │   ├── deleteAddress
+│       │   │   └── deleteAddress_usecase.dart
+│       │   ├── getAddress
+│       │   │   └── getAddress_usecase.dart
+│       │   └── saveAddress
+│       │       └── saveAddress_usecase.dart
+│       ├── authentication
+│       │   ├── current_customer_usecase.dart
+│       │   ├── deleteAccount_usecase.dart
+│       │   ├── rolesPost_usecase.dart
+│       │   ├── signin_usecase.dart
+│       │   ├── signup_usecase.dart
+│       │   ├── trigger_otp_usecase.dart
+│       │   └── update_current_customer_usecase.dart
+│       ├── cart
+│       │   ├── clearCart
+│       │   │   └── clearCart_usecase.dart
+│       │   ├── createCart
+│       │   │   └── createCart_usecase.dart
+│       │   ├── deleteCartitems
+│       │   │   └── deleteCartItems_usecase.dart
+│       │   ├── getCart
+│       │   │   └── getCart_usecase.dart
+│       │   ├── productsAddToCart
+│       │   │   └── productsAddtoCart_usecase.dart
+│       │   └── updateCartItems
+│       │       └── updateCartItems_usecase.dart
+│       ├── location
+│       │   └── location_usecase.dart
+│       ├── orders
+│       │   ├── createOrder
+│       │   │   └── createOrder_usecase.dart
+│       │   ├── orderByOrderId
+│       │   │   └── orderByOrderId_usecase.dart
+│       │   ├── orderByRestaurantId
+│       │   │   └── orderByRestaurantId_usecase.dart
+│       │   ├── orderCancel
+│       │   │   └── orderCancel_usecase.dart
+│       │   ├── orderHistory
+│       │   │   └── orderHistory_usecase.dart
+│       │   ├── orderTracking
+│       │   │   └── orderTracking_usecase.dart
+│       │   └── reOrder
+│       │       └── reOrder_usecase.dart
+│       ├── payment
+│       │   └── payment_usecase.dart
+│       └── restaurants
+│           ├── getMenuByRestaurantId
+│           │   └── getMenuByRestaurantId_usecase.dart
+│           ├── getNearbyRestaurants
+│           │   └── getNearByrestarants_usecase.dart
+│           ├── getRestaurantsByProductName
+│           │   └── getRestaurantsByProductName_usecase.dart
+│           ├── guestMenuByRestaurantId
+│           │   └── guestMenuByRestaurantId_usecase.dart
+│           └── guestNearbyRestaurants
+│               └── guestNearbyRestaurants_usecase.dart
+├── firebase_options.dart
+├── main.dart
+└── presentation
+    ├── cubit
+    │   ├── address
+    │   │   ├── defaultAddress
+    │   │   │   ├── get
+    │   │   │   │   ├── getDefaultAddress_cubit.dart
+    │   │   │   │   └── getDefaultAddress_state.dart
+    │   │   │   └── post
+    │   │   │       ├── defaultAddress_cubit.dart
+    │   │   │       └── defaultAddress_state.dart
+    │   │   ├── deleteAddress
+    │   │   │   ├── deleteAddress_cubit.dart
+    │   │   │   └── deleteAddress_state.dart
+    │   │   ├── getAddress
+    │   │   │   ├── getAddress_cubit.dart
+    │   │   │   └── getAddress_state.dart
+    │   │   └── saveAddress
+    │   │       ├── saveAddress_cubit.dart
+    │   │       └── saveAddress_state.dart
+    │   ├── authentication
+    │   │   ├── currentcustomer
+    │   │   │   ├── get
+    │   │   │   │   ├── current_customer_cubit.dart
+    │   │   │   │   └── current_customer_state.dart
+    │   │   │   └── update
+    │   │   │       ├── update_current_customer_cubit.dart
+    │   │   │       └── update_current_customer_state.dart
+    │   │   ├── deleteAccount
+    │   │   │   ├── deleteAccount_cubit.dart
+    │   │   │   └── deleteAccount_state.dart
+    │   │   ├── login
+    │   │   │   ├── trigger_otp_cubit.dart
+    │   │   │   └── trigger_otp_state.dart
+    │   │   ├── roles
+    │   │   │   ├── rolesPost_cubit.dart
+    │   │   │   └── rolesPost_state.dart
+    │   │   ├── signin
+    │   │   │   ├── sigin_cubit.dart
+    │   │   │   └── signin_state.dart
+    │   │   └── signUp
+    │   │       ├── signup_cubit.dart
+    │   │       └── signup_state.dart
+    │   ├── cart
+    │   │   ├── clearCart
+    │   │   │   ├── clearCart_cubit.dart
+    │   │   │   └── clearCart_state.dart
+    │   │   ├── createCart
+    │   │   │   ├── createCart_cubit.dart
+    │   │   │   └── createCart_state.dart
+    │   │   ├── getCart
+    │   │   │   ├── getCart_cubit.dart
+    │   │   │   └── getCart_state.dart
+    │   │   ├── productsAddToCart
+    │   │   │   ├── productsAddtoCart_cubit.dart
+    │   │   │   └── productsAddtoCart_state.dart
+    │   │   └── updateCartItems
+    │   │       ├── updateCartItems_cubit.dart
+    │   │       └── updateCartItems_state.dart
+    │   ├── dashboard
+    │   │   ├── dashboard_cubit.dart
+    │   │   └── dashboard_state.dart
+    │   ├── location
+    │   │   ├── location_cubit.dart
+    │   │   └── location_state.dart
+    │   ├── orders
+    │   │   ├── createOrder
+    │   │   │   ├── createOrder_cubit.dart
+    │   │   │   └── createOrder_state.dart
+    │   │   ├── orderHistory
+    │   │   │   ├── orderHistory_cubit.dart
+    │   │   │   └── orderHistory_state.dart
+    │   │   ├── orderTracking
+    │   │   │   ├── orderTracking_cubit.dart
+    │   │   │   └── orderTracking_state.dart
+    │   │   └── reOrder
+    │   │       ├── reOrder_cubit.dart
+    │   │       └── reOrder_state.dart
+    │   ├── payment
+    │   │   ├── payment_cubit.dart
+    │   │   └── payment_state.dart
+    │   └── restaurants
+    │       ├── getMenuByRestaurantId
+    │       │   ├── getMenuByRestaurantId_cubit.dart
+    │       │   └── getMenuByRestaurantId_state.dart
+    │       ├── getNearbyRestaurants
+    │       │   ├── getNearByrestarants_cubit.dart
+    │       │   └── getNearByrestarants_state.dart
+    │       ├── getRestaurantsByProductName
+    │       │   ├── getRestaurantsByProductName_cubit.dart
+    │       │   └── getRestaurantsByProductName_state.dart
+    │       ├── guestMenuByRestaurantId
+    │       │   ├── guestMenuByRestaurantId_cubit.dart
+    │       │   └── guestMenuByRestaurantId_state.dart
+    │       └── guestNearbyRestaurants
+    │           ├── guestNearbyRestaurants_cubit.dart
+    │           └── guestNearbyRestaurants_state.dart
+    └── screen
+        ├── address
+        │   ├── address_screen.dart
+        │   └── savedAddress_screen.dart
+        ├── authentication
+        │   ├── login_screen.dart
+        │   ├── nameInput_screen.dart
+        │   ├── otp_screen.dart
+        │   ├── signup_screen.dart
+        │   └── splash_screen.dart
+        ├── cart
+        │   └── cart_screen.dart
+        ├── dashboard
+        │   ├── dashboard_screen.dart
+        │   └── foodCatagoryItems_screen.dart
+        ├── order
+        │   ├── myOrders_screen.dart
+        │   ├── orderHistory_Screen.dart
+        │   ├── orderSuccess_screen.dart
+        │   └── orderTracking_screen.dart
+        ├── profile
+        │   ├── profile_screen.dart
+        │   └── terms&conditions_screen.dart
+        ├── promotions
+        │   └── promotions_screen.dart
+        ├── restaurantMenu
+        │   └── restaurantMenu_screen.dart
+        └── widgets
+            ├── cart
+            │   ├── address_card.dart
+            │   ├── cart_item_card.dart
+            │   ├── cart.dart
+            │   └── checkout_bottom_bar.dart
+            ├── dashboard
+            │   ├── bottom_card_widget.dart
+            │   ├── clear_cart_dialog.dart
+            │   ├── foodCatagoryIcons.dart
+            │   ├── foodItemCard.dart
+            │   ├── geo_location_picker_widget.dart
+            │   ├── locationHeader.dart
+            │   ├── LocationPermissionDialog.dart
+            │   └── offersCard_widget.dart
+            ├── logout.dart
+            ├── order_history
+            │   └── order_history_widget.dart
+            └── restaurantMenu
+                ├── bottomSheet.dart
+                ├── menu.dart
+                └── searchBar.dart
+
+228 directories, 287 files

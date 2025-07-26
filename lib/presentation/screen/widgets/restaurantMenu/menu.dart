@@ -161,15 +161,26 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
   Widget build(BuildContext context) {
     showItem = computeVisibility(widget.item);
     if (!showItem) return const SizedBox.shrink();
+
     final item = widget.item;
     final mediaUrl =
         item.media?.isNotEmpty == true ? item.media!.first.url : null;
+
     final typeAttr = item.attributes?.firstWhere(
       (attr) => attr.attributeName?.toLowerCase() == 'type',
       orElse: () =>
           Attribute(id: null, attributeName: null, attributeValue: null),
     );
     final isVeg = typeAttr?.attributeValue?.toLowerCase() == 'veg';
+
+    final onlinePriceAttr = item.attributes.firstWhere(
+      (attr) => attr.attributeName?.toLowerCase() == 'onlineprice',
+      orElse: () =>
+          Attribute(id: null, attributeName: null, attributeValue: null),
+    );
+    final priceText = onlinePriceAttr.attributeValue != null
+        ? "₹${onlinePriceAttr.attributeValue}"
+        : "₹${item.price ?? '0'}";
 
     final cartState = context.watch<GetCartCubit>().state;
     final cartData = cartState is GetCartLoaded ? cartState.cart : null;
@@ -336,7 +347,7 @@ class _MenuItemWidgetState extends State<MenuItemWidget> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "₹${item.price ?? '0'}",
+                  priceText,
                   style: GoogleFonts.poppins(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,

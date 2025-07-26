@@ -40,6 +40,7 @@ class _OtpScreenState extends State<OtpScreen> {
   final TextEditingController otpController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _otpFocusNode = FocusNode();
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -117,7 +118,8 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
           BlocListener<CurrentCustomerCubit, CurrentCustomerState>(
             listener: (context, state) {
-              if (state is CurrentCustomerLoaded) {
+              if (state is CurrentCustomerLoaded && !_hasNavigated) {
+                _hasNavigated = true;
                 if (state.currentCustomerModel.eato == true) {
                   Navigator.pushReplacement(
                     context,
@@ -166,7 +168,6 @@ class _OtpScreenState extends State<OtpScreen> {
                 ],
               ),
             ),
-
             Expanded(
               child: SingleChildScrollView(
                 controller: _scrollController,
@@ -188,7 +189,6 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
                     ),
                     const SizedBox(height: 10),
-
                     Row(
                       children: [
                         Expanded(
@@ -219,7 +219,6 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                       ],
                     ),
-
                     if (widget.otp != 'true') ...[
                       const SizedBox(height: 10),
                       Center(
@@ -233,7 +232,6 @@ class _OtpScreenState extends State<OtpScreen> {
                       ),
                     ],
                     const SizedBox(height: 20),
-
                     Center(
                       child: Pinput(
                         focusNode: _otpFocusNode,
@@ -264,9 +262,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 30),
-
                     BlocBuilder<SignInCubit, SignInState>(
                       builder: (context, state) {
                         return SizedBox(
@@ -296,9 +292,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         );
                       },
                     ),
-
                     const SizedBox(height: 18),
-
                     Center(
                       child: InkWell(
                         onTap: () {

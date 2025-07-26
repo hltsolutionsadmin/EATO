@@ -20,7 +20,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
   bool _isListening = false;
   late stt.SpeechToText _speech;
   late TextEditingController _controller;
-  String _spokenText = "";
+  // String _spokenText = "";
 
   @override
   void initState() {
@@ -29,37 +29,37 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     _controller = TextEditingController();
   }
 
-  void _toggleMic() async {
-    if (_isListening) {
-      setState(() {
-        _isListening = false;
-      });
-      _speech.stop();
-    } else {
-      setState(() {
-        _isListening = true;
-      });
-      _speech.listen(
-        onResult: (result) {
-          setState(() {
-            _spokenText = result.recognizedWords;
-            _controller.text = _spokenText;
-            _controller.selection = TextSelection.fromPosition(
-              TextPosition(offset: _controller.text.length),
-            );
-          });
-          widget.onChanged(_spokenText);
+  // void _toggleMic() async {
+  //   if (_isListening) {
+  //     setState(() {
+  //       _isListening = false;
+  //     });
+  //     _speech.stop();
+  //   } else {
+  //     setState(() {
+  //       _isListening = true;
+  //     });
+  //     _speech.listen(
+  //       onResult: (result) {
+  //         setState(() {
+  //           _spokenText = result.recognizedWords;
+  //           _controller.text = _spokenText;
+  //           _controller.selection = TextSelection.fromPosition(
+  //             TextPosition(offset: _controller.text.length),
+  //           );
+  //         });
+  //         widget.onChanged(_spokenText);
 
-          if (result.finalResult) {
-            setState(() {
-              _isListening = false;
-            });
-            _speech.stop();
-          }
-        },
-      );
-    }
-  }
+  //         if (result.finalResult) {
+  //           setState(() {
+  //             _isListening = false;
+  //           });
+  //           _speech.stop();
+  //         }
+  //       },
+  //     );
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -96,12 +96,6 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
                 fontSize: 14,
               ),
               prefixIcon: const Icon(Icons.search, color: Colors.black),
-              suffixIcon: IconButton(
-                icon: _isListening
-                    ? const Icon(Icons.mic_none, color: Colors.green)
-                    : const Icon(Icons.mic, color: Colors.black),
-                onPressed: _toggleMic,
-              ),
             ),
           ),
         ),

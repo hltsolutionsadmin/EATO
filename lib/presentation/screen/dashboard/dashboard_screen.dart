@@ -207,6 +207,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       "postalCode": "531001",
       "page": page,
       "size": size,
+      "searchTerm": ""
     };
 
     debugPrint("📍 Fetching restaurants with lat=$latitude, lon=$longitude");
@@ -307,37 +308,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildSearchResults() {
-    return BlocBuilder<GetRestaurantsByProductNameCubit,
-        GetRestaurantsByProductNameState>(
-      builder: (context, state) {
-        if (state is GetRestaurantsByProductNameLoading) {
-          return const Center(child: CupertinoActivityIndicator());
-        } else if (state is GetRestaurantsByProductNameSuccess) {
-          final restaurants = state.model.content;
-          print('restaurants--$restaurants');
-          if (restaurants.isEmpty) {
-            return Column(
-              children: [
-                const SizedBox(height: 40),
-                const Center(child: Text("No restaurants found")),
-                SizedBox(height: cartList.isNotEmpty ? 180 : 0),
-              ],
+    if (widget.isGuest) {
+      return BlocBuilder<GuestNearByRestaurantsCubit,
+          GuestNearByRestaurantsState>(
+        builder: (context, state) {
+          if (state is GuestNearByRestaurantsLoading) {
+            return const Center(child: CupertinoActivityIndicator());
+          } else if (state is GuestNearByRestaurantsSuccess) {
+            final filteredList = state.data.content;
+
+            if (filteredList.isEmpty) {
+              return const Center(child: Text("No restaurants found"));
+            }
+
+            return _buildRestaurantList(
+              restaurants: filteredList,
+              getName: (r) => r.businessName ?? "Unknown",
+              getCategory: (r) => r.categoryName ?? "",
+              getId: (r) => (r.id ?? "").toString(),
+              getMediaList: (r) => r.mediaList.map((e) => e.url ?? '').toList(),
             );
+          } else {
+            return const Center(
+                child: Text("Failed to load guest restaurants"));
           }
-          return _buildRestaurantList(
-            restaurants: restaurants,
-            getName: (r) => r.businessName ?? "Unknown",
-            getCategory: (r) => r.categoryName ?? "",
-            getId: (r) => (r.businessId ?? "").toString(),
-            getMediaList: (r) => r.media.map((e) => e.url ?? '').toList(),
-          );
-        } else {
-          print('error');
-        }
-        return const SizedBox();
-      },
-    );
+        },
+      );
+    } else {
+      return BlocBuilder<GetRestaurantsByProductNameCubit,
+          GetRestaurantsByProductNameState>(
+        builder: (context, state) {
+          if (state is GetRestaurantsByProductNameLoading) {
+            return const Center(child: CupertinoActivityIndicator());
+          } else if (state is GetRestaurantsByProductNameSuccess) {
+            final contentList = state.model.content;
+
+            if (contentList.isEmpty) {
+              return const Center(child: Text("No restaurants found"));
+            }
+
+            final allProducts = contentList.expand((c) => c.products).toList();
+
+            return _buildRestaurantList(
+              restaurants: allProducts,
+              getName: (p) => p.businessName ?? "Unknown",
+              getCategory: (p) => p.categoryName ?? "",
+              getId: (p) => (p.businessId ?? "").toString(),
+              getMediaList: (p) => p.media.map((e) => e.url ?? '').toList(),
+            );
+          } else {
+            return const SizedBox();
+          }
+        },
+      );
+    }
   }
+
+
 
   @override
   void dispose() {
@@ -411,24 +438,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           hintText:
                               "Search for restaurants, dishes, and cuisines",
                           onChanged: (query) async {
-                            setState(() => searchQuery = query);
-                            final prefs = await SharedPreferences.getInstance();
-                            final lat =
-                                prefs.getDouble('saved_latitude') ?? 17.385044;
-                            final lon =
-                                prefs.getDouble('saved_longitude') ?? 78.486671;
+                              setState(() => searchQuery = query);
 
-                            context
-                                .read<GetRestaurantsByProductNameCubit>()
-                                .fetchRestaurantsByProductName({
-                              "productName": query,
-                              "latitude": lat,
-                              "longitude": lon,
-                              "postalCode": "531001",
-                              "page": 0,
-                              "size": 10,
-                            });
-                          },
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              final lat = prefs.getDouble('saved_latitude') ??
+                                  17.385044;
+                              final lon = prefs.getDouble('saved_longitude') ??
+                                  78.486671;
+
+                              final params = {
+                                "productName":
+                                    query, // if using GetRestaurantsByProductNameCubit
+                                "latitude": lat,
+                                "longitude": lon,
+                                "postalCode": "531001",
+                                "page": 0,
+                                "size": 10,
+                                "searchTerm":
+                                    query, // use this when fetching with guest cubit
+                              };
+
+                              if (widget.isGuest) {
+                                context
+                                    .read<GuestNearByRestaurantsCubit>()
+                                    .fetchGuestNearbyRestaurants(params);
+                              } else {
+                                context
+                                    .read<GetRestaurantsByProductNameCubit>()
+                                    .fetchRestaurantsByProductName(params);
+                              }
+                            }
+
                         ),
                       ),
                       const OffersCarousel(),
@@ -452,24 +493,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         FoodCategoryIcons(
                           onCategoryTap: (label) async {
                             setState(() => searchQuery = label);
+
                             final prefs = await SharedPreferences.getInstance();
                             final lat =
                                 prefs.getDouble('saved_latitude') ?? 17.385044;
                             final lon =
                                 prefs.getDouble('saved_longitude') ?? 78.486671;
 
-                            context
-                                .read<GetRestaurantsByProductNameCubit>()
-                                .fetchRestaurantsByProductName({
+                            final params = {
                               "productName": label,
                               "latitude": lat,
                               "longitude": lon,
                               "postalCode": "531001",
                               "page": 0,
                               "size": 10,
-                            });
+                              "searchTerm": label, // relevant for guest cubit
+                            };
+
+                            if (widget.isGuest) {
+                              context
+                                  .read<GuestNearByRestaurantsCubit>()
+                                  .fetchGuestNearbyRestaurants(params);
+                            } else {
+                              context
+                                  .read<GetRestaurantsByProductNameCubit>()
+                                  .fetchRestaurantsByProductName(params);
+                            }
                           },
                         ),
+
                         const SizedBox(height: 10),
                         Text(
                           "Restaurants to Explore",

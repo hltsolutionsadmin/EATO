@@ -198,92 +198,106 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
     _bottomSheetController =
         _scaffoldKey.currentState!.showBottomSheet((context) {
       return RestaurantCartBottomSheet(
-          totalItems: totalItems,
-          onViewCartPressed: () async {
-            _bottomSheetController?.close();
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CartScreen(
-                  cartItems: selectedItems
-                      .map((item) => {
-                            'productId': item.id,
-                            'quantity': cart[item.name] ?? 0,
-                            'price': item.price,
-                            'name': item.name,
-                            'description': item.description,
-                            'categoryName': item.attributes
-                                .firstWhere(
-                                  (a) =>
-                                      a.attributeName?.toLowerCase() == 'type',
-                                  orElse: () => Attribute(
-                                      id: 0,
-                                      attributeName: '',
-                                      attributeValue: ''),
-                                )
-                                .attributeValue,
-                            'media': item.media,
-                          })
-                      .toList(),
-                  onBottomSheetVisibilityChanged:
-                      _onBottomSheetVisibilityChanged,
-                ),
-              ),
-            );
-
-            if (!mounted) return;
-
-            if (result != null && result is Map<String, dynamic>) {
-              final updatedCart = result['updatedCart'] as Map<int, int>?;
-              final updatedCartLength = result['cartItemsLength'] ?? 0;
-
-              if (updatedCart != null) {
-                cart.clear();
-                selectedItems.clear();
-
-                for (var entry in updatedCart.entries) {
-                  final productId = entry.key;
-                  final quantity = entry.value;
-
-                  final item = menuItems.firstWhere(
-                    (item) => item.id == productId,
-                    orElse: () => Content(
-                      id: 0,
-                      name: '',
-                      shortCode: '',
-                      ignoreTax: false,
-                      discount: true,
-                      description: '',
-                      price: 0,
-                      available: false,
-                      shopifyProductId: '',
-                      shopifyVariantId: '',
-                      businessId: 0,
-                      categoryId: 0,
-                      media: [],
-                      attributes: [],
+        totalItems: totalItems,
+        onViewCartPressed: () async {
+          _bottomSheetController?.close();
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => CartScreen(
+                cartItems: selectedItems.map((item) {
+                  final onlinePriceAttr = item.attributes.firstWhere(
+                    (attr) =>
+                        attr.attributeName?.toLowerCase() == 'onlineprice',
+                    orElse: () => Attribute(
+                      id: null,
+                      attributeName: null,
+                      attributeValue: null,
                     ),
                   );
+                  final effectivePrice = onlinePriceAttr.attributeValue != null
+                      ? double.tryParse(onlinePriceAttr.attributeValue!) ??
+                          (item.price ?? 0)
+                      : item.price ?? 0;
 
-                  if (item.id != 0) {
-                    cart[item.name ?? ""] = quantity;
-                    selectedItems.add(item);
-                  }
+                  return {
+                    'productId': item.id,
+                    'quantity': cart[item.name] ?? 0,
+                    'price': effectivePrice,
+                    'name': item.name,
+                    'description': item.description,
+                    'categoryName': item.attributes
+                        .firstWhere(
+                          (a) => a.attributeName?.toLowerCase() == 'type',
+                          orElse: () => Attribute(
+                            id: 0,
+                            attributeName: '',
+                            attributeValue: '',
+                          ),
+                        )
+                        .attributeValue,
+                    'media': item.media,
+                  };
+                }).toList(),
+                onBottomSheetVisibilityChanged: _onBottomSheetVisibilityChanged,
+              ),
+            ),
+          );
+
+          if (!mounted) return;
+
+          if (result != null && result is Map<String, dynamic>) {
+            final updatedCart = result['updatedCart'] as Map<int, int>?;
+            final updatedCartLength = result['cartItemsLength'] ?? 0;
+
+            if (updatedCart != null) {
+              cart.clear();
+              selectedItems.clear();
+
+              for (var entry in updatedCart.entries) {
+                final productId = entry.key;
+                final quantity = entry.value;
+
+                final item = menuItems.firstWhere(
+                  (item) => item.id == productId,
+                  orElse: () => Content(
+                    id: 0,
+                    name: '',
+                    shortCode: '',
+                    ignoreTax: false,
+                    discount: true,
+                    description: '',
+                    price: 0,
+                    available: false,
+                    shopifyProductId: '',
+                    shopifyVariantId: '',
+                    businessId: 0,
+                    categoryId: 0,
+                    media: [],
+                    attributes: [],
+                  ),
+                );
+
+                if (item.id != 0) {
+                  cart[item.name ?? ""] = quantity;
+                  selectedItems.add(item);
                 }
-
-                totalItems = updatedCartLength;
-
-                _onBottomSheetVisibilityChanged(false);
-                await Future.delayed(const Duration(milliseconds: 100));
-
-                if (mounted && cart.isNotEmpty) {
-                  showPersistentCart();
-                }
-
-                if (!widget.isGuest) _loadMenu();
               }
+
+              totalItems = updatedCartLength;
+
+              _onBottomSheetVisibilityChanged(false);
+              await Future.delayed(const Duration(milliseconds: 100));
+
+              if (mounted && cart.isNotEmpty) {
+                showPersistentCart();
+              }
+
+              if (!widget.isGuest) _loadMenu();
             }
-          });
+          }
+        },
+      );
     });
 
     _bottomSheetController!.closed.then((_) {
@@ -297,6 +311,7 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       isBottomSheetVisible = true;
     });
   }
+
 
   void _onBottomSheetVisibilityChanged(bool visible) {
     if (!mounted) return;

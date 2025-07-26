@@ -3,7 +3,8 @@ import 'package:eato/core/constants/api_constants.dart';
 import 'package:eato/data/model/restaurants/guestNearbyRestaurants/guestNearbyRestaurants_model.dart';
 
 abstract class GuestNearByRestaurantsRemoteDataSource {
-  Future<GuestNearByRestaurantsModel> guestNearByRestaurants(Map<String, dynamic> params);
+  Future<GuestNearByRestaurantsModel> guestNearByRestaurants(
+      Map<String, dynamic> params);
 }
 
 class GuestNearByRestaurantsRemoteDataSourceImpl
@@ -13,15 +14,18 @@ class GuestNearByRestaurantsRemoteDataSourceImpl
   GuestNearByRestaurantsRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<GuestNearByRestaurantsModel> guestNearByRestaurants(Map<String, dynamic> params) async {
+  Future<GuestNearByRestaurantsModel> guestNearByRestaurants(
+      Map<String, dynamic> params) async {
     try {
       final double latitude = params['latitude'];
       final double longitude = params['longitude'];
       final String postalCode = params['postalCode'];
       final int page = params['page'];
       final int size = params['size'];
+      final String searchTerm = params['searchTerm'];
 
-      final url = '$baseUrl2${guestNearbyRestaurantsUrl(latitude, longitude, postalCode, page, size)}';
+      final url =
+          '$baseUrl2${guestNearbyRestaurantsUrl(latitude, longitude, postalCode, page, size, searchTerm)}';
 
       final response = await client.get(
         url,
@@ -39,7 +43,8 @@ class GuestNearByRestaurantsRemoteDataSourceImpl
         throw Exception('Failed to load data: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Failed to load GuestNearByRestaurants data: ${e.toString()}');
+      throw Exception(
+          'Failed to load GuestNearByRestaurants data: ${e.toString()}');
     }
   }
 }

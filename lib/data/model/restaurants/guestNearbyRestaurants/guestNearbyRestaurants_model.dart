@@ -42,7 +42,7 @@ class GuestNearByRestaurantsModel {
     }
 
     Map<String, dynamic> toJson() => {
-        "content": content.map((x) => x?.toJson()).toList(),
+        "content": content.map((x) => x.toJson()).toList(),
         "pageable": pageable?.toJson(),
         "totalElements": totalElements,
         "totalPages": totalPages,
@@ -117,8 +117,8 @@ class Content {
         "creationDate": creationDate?.toIso8601String(),
         "userDTO": userDto?.toJson(),
         "addressDTO": addressDto?.toJson(),
-        "attributes": attributes.map((x) => x?.toJson()).toList(),
-        "mediaList": mediaList.map((x) => x?.toJson()).toList(),
+        "attributes": attributes.map((x) => x.toJson()).toList(),
+        "mediaList": mediaList.map((x) => x.toJson()).toList(),
         "status": status,
     };
 
