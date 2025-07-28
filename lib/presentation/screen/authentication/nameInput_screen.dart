@@ -23,6 +23,7 @@ class _NameInputScreenState extends State<NameInputScreen> {
   late TextEditingController _lastNameController;
   late TextEditingController _emailController;
   final _formKey = GlobalKey<FormState>();
+bool _hasNavigated = false;
 
   bool _isSubmitting = false;
 
@@ -82,7 +83,8 @@ class _NameInputScreenState extends State<NameInputScreen> {
             title: "Failed",
             message: "Something went wrong",
           );
-        } else if (state.data != null) {
+        } else if (state.data != null && !_hasNavigated) {
+          _hasNavigated = true;
           CustomSnackbars.showSuccessSnack(
             context: context,
             title: "Success",

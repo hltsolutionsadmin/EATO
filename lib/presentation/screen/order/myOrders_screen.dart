@@ -1,6 +1,5 @@
 import 'package:eato/components/custom_topbar.dart';
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/data/model/orders/orderHistory/orderHistory_model.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_cubit.dart';
 import 'package:eato/presentation/cubit/orders/orderHistory/orderHistory_state.dart';
@@ -68,16 +67,20 @@ class _MyOrdersState extends State<MyOrders> {
     }
   }
 
-  void _onSearchChanged(String query) {
-    _currentSearchQuery = query;
-    _fetchInitialOrders();
-  }
+  // void _onSearchChanged(String query) {
+  //   _currentSearchQuery = query;
+  //   _fetchInitialOrders();
+  // }
 
-  String timeAgo(DateTime time) {
-    final diff = DateTime.now().difference(time);
+  String timeAgo(DateTime timeUtc) {
+    final timeIst = timeUtc.add(Duration(hours: 5, minutes: 30));
+    final now = DateTime.now();
+    final diff = now.difference(timeIst);
+
     if (diff.inDays > 0) return '${diff.inDays} days ago';
     if (diff.inHours > 0) return '${diff.inHours} hours ago';
-    return '${diff.inMinutes} mins ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes} mins ago';
+    return 'just now';
   }
 
   @override
@@ -239,15 +242,15 @@ class _MyOrdersState extends State<MyOrders> {
           SizedBox(height: 12),
 
           /// Order Status
-          Text(
-            "Status: ${capitalizeStatus(order.orderStatus ?? '')}",
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: getStatusColor(order.orderStatus ?? ''),
-            ),
-          ),
+          // Text(
+          //   "Status: ${capitalizeStatus(order.orderStatus ?? '')}",
+          //   style: TextStyle(
+          //     fontWeight: FontWeight.bold,
+          //     color: getStatusColor(order.orderStatus ?? ''),
+          //   ),
+          // ),
 
-          SizedBox(height: 12),
+          // SizedBox(height: 12),
 
           /// Order Items
           if (order.orderItems.isNotEmpty) ...[
@@ -323,21 +326,20 @@ class _MyOrdersState extends State<MyOrders> {
           ],
 
           /// Order Tracker
-          (order.orderStatus?.toUpperCase() == 'REJECTED' ||
-                  order.orderStatus?.toUpperCase() == 'DELIVERED')
+          (order.orderStatus?.toUpperCase() == 'REJECTED'
+              //  ||
+              //         order.orderStatus?.toUpperCase() == 'DELIVERED'
+              )
               ? SizedBox()
               : buildTracker(order.orderStatus ?? ''),
-
         ],
       ),
     );
   }
 
-
- Widget buildTracker(String status) {
+  Widget buildTracker(String status) {
     final statusUpper = status.toUpperCase();
 
-    // Define valid status steps in the order flow
     final statusSteps = [
       'PLACED',
       'PREPARING',
@@ -345,9 +347,8 @@ class _MyOrdersState extends State<MyOrders> {
       'DELIVERED',
     ];
 
-    // Add final states like Cancelled/Rejected if they occur
     if (statusUpper == 'CANCELLED' || statusUpper == 'REJECTED') {
-      statusSteps.add(statusUpper); // Append cancelled or rejected
+      statusSteps.add(statusUpper);
     }
 
     final statusIcons = {
@@ -361,30 +362,34 @@ class _MyOrdersState extends State<MyOrders> {
 
     final progress = getProgressIndex(statusUpper);
 
-    return Column(
-      children: [
-        Row(
-          children: List.generate(statusSteps.length, (i) {
-            final step = statusSteps[i];
-            final isActive = i < progress;
-            final isCurrent = i == progress - 1;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            height: 70,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: List.generate(statusSteps.length, (i) {
+                final step = statusSteps[i];
+                final isActive = i < progress;
+                final isCurrent = i == progress - 1;
 
-            return Expanded(
-              child: Column(
-                children: [
-                  Row(
+                return Expanded(
+                  child: Column(
                     children: [
-                      if (i != 0)
-                        Expanded(
-                          child: Container(
-                            height: 2,
-                            color: i < progress
-                                ? AppColor.PrimaryColor
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                      Column(
+                      Row(
                         children: [
+                          if (i != 0)
+                            Expanded(
+                              child: Container(
+                                height: 2,
+                                color: i < progress
+                                    ? AppColor.PrimaryColor
+                                    : Colors.grey.shade300,
+                              ),
+                            ),
                           Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
@@ -401,39 +406,38 @@ class _MyOrdersState extends State<MyOrders> {
                                   : Colors.grey.shade600,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            capitalizeStatus(step.replaceAll('_', ' ')),
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: isActive ? Colors.black87 : Colors.grey,
-                              fontWeight: isCurrent
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
+                          if (i != statusSteps.length - 1)
+                            Expanded(
+                              child: Container(
+                                height: 2,
+                                color: i < progress - 1
+                                    ? AppColor.PrimaryColor
+                                    : Colors.grey.shade300,
+                              ),
                             ),
-                          ),
                         ],
                       ),
-                      if (i != statusSteps.length - 1)
-                        Expanded(
-                          child: Container(
-                            height: 2,
-                            color: i < progress - 1
-                                ? AppColor.PrimaryColor
-                                : Colors.grey.shade300,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        capitalizeStatus(step.replaceAll('_', ' ')),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: isActive ? Colors.black87 : Colors.grey,
+                          fontWeight:
+                              isCurrent ? FontWeight.bold : FontWeight.normal,
                         ),
+                      ),
                     ],
                   ),
-                ],
-              ),
-            );
-          }),
-        ),
-      ],
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
-
 
 
   Color getStatusColor(String status) {
@@ -453,13 +457,14 @@ class _MyOrdersState extends State<MyOrders> {
     }
   }
 
-int getProgressIndex(String status) {
+  int getProgressIndex(String status) {
     switch (status.toUpperCase()) {
       case 'PLACED':
         return 1;
       case 'CONFIRMED':
       case 'ACCEPTED':
       case 'PREPARING':
+      case 'READY_FOR_PICKUP':
         return 2;
       case 'OUT_FOR_DELIVERY':
         return 3;
@@ -467,13 +472,11 @@ int getProgressIndex(String status) {
         return 4;
       case 'CANCELLED':
       case 'REJECTED':
-        return 5; // Final step if cancelled or rejected
+        return 5;
       default:
         return 0;
     }
   }
-
-
 }
 
 String capitalizeStatus(String status) {

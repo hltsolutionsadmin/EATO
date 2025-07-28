@@ -2,27 +2,27 @@ class GetRestaurantsByProductNameModel {
   GetRestaurantsByProductNameModel({
     required this.content,
     required this.pageable,
-    required this.last,
     required this.totalPages,
     required this.totalElements,
+    required this.last,
     required this.size,
     required this.number,
     required this.sort,
-    required this.first,
     required this.numberOfElements,
+    required this.first,
     required this.empty,
   });
 
   final List<Content> content;
   final Pageable? pageable;
-  final bool? last;
   final int? totalPages;
   final int? totalElements;
+  final bool? last;
   final int? size;
-  final num? number;
+  final int? number;
   final List<dynamic> sort;
+  final int? numberOfElements;
   final bool? first;
-  final num? numberOfElements;
   final bool? empty;
 
   factory GetRestaurantsByProductNameModel.fromJson(Map<String, dynamic> json) {
@@ -33,37 +33,111 @@ class GetRestaurantsByProductNameModel {
               json["content"]!.map((x) => Content.fromJson(x))),
       pageable:
           json["pageable"] == null ? null : Pageable.fromJson(json["pageable"]),
-      last: json["last"],
       totalPages: json["totalPages"],
       totalElements: json["totalElements"],
+      last: json["last"],
       size: json["size"],
       number: json["number"],
       sort: json["sort"] == null
           ? []
           : List<dynamic>.from(json["sort"]!.map((x) => x)),
-      first: json["first"],
       numberOfElements: json["numberOfElements"],
+      first: json["first"],
       empty: json["empty"],
     );
   }
 
   Map<String, dynamic> toJson() => {
-        "content": content.map((x) => x?.toJson()).toList(),
+        "content": content.map((x) => x.toJson()).toList(),
         "pageable": pageable?.toJson(),
-        "last": last,
         "totalPages": totalPages,
         "totalElements": totalElements,
+        "last": last,
         "size": size,
         "number": number,
         "sort": sort.map((x) => x).toList(),
-        "first": first,
         "numberOfElements": numberOfElements,
+        "first": first,
         "empty": empty,
       };
 }
 
 class Content {
   Content({
+    required this.id,
+    required this.name,
+    required this.category,
+    required this.createdAt,
+    required this.attributes,
+    required this.products,
+    required this.approved,
+  });
+
+  final int? id;
+  final String? name;
+  final String? category;
+  final DateTime? createdAt;
+  final List<Attribute> attributes;
+  final List<Product> products;
+  final bool? approved;
+
+  factory Content.fromJson(Map<String, dynamic> json) {
+    return Content(
+      id: json["id"],
+      name: json["name"],
+      category: json["category"],
+      createdAt: DateTime.tryParse(json["createdAt"] ?? ""),
+      attributes: json["attributes"] == null
+          ? []
+          : List<Attribute>.from(
+              json["attributes"]!.map((x) => Attribute.fromJson(x))),
+      products: json["products"] == null
+          ? []
+          : List<Product>.from(
+              json["products"]!.map((x) => Product.fromJson(x))),
+      approved: json["approved"],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "name": name,
+        "category": category,
+        "createdAt": createdAt?.toIso8601String(),
+        "attributes": attributes.map((x) => x.toJson()).toList(),
+        "products": products.map((x) => x.toJson()).toList(),
+        "approved": approved,
+      };
+}
+
+class Attribute {
+  Attribute({
+    required this.id,
+    required this.attributeName,
+    required this.attributeValue,
+  });
+
+  final int? id;
+  final String? attributeName;
+  final String? attributeValue;
+
+  factory Attribute.fromJson(Map<String, dynamic> json) {
+    return Attribute(
+      id: json["id"],
+      attributeName: json["attributeName"],
+      attributeValue: json["attributeValue"],
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        "id": id,
+        "attributeName": attributeName,
+        "attributeValue": attributeValue,
+      };
+}
+
+class Product {
+  Product({
     required this.id,
     required this.name,
     required this.shortCode,
@@ -86,7 +160,7 @@ class Content {
   final bool? ignoreTax;
   final bool? discount;
   final String? description;
-  final num? price;
+  final double? price;
   final bool? available;
   final int? businessId;
   final String? businessName;
@@ -95,8 +169,8 @@ class Content {
   final List<Media> media;
   final List<Attribute> attributes;
 
-  factory Content.fromJson(Map<String, dynamic> json) {
-    return Content(
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
       id: json["id"],
       name: json["name"],
       shortCode: json["shortCode"],
@@ -132,34 +206,8 @@ class Content {
         "businessName": businessName,
         "categoryId": categoryId,
         "categoryName": categoryName,
-        "media": media.map((x) => x?.toJson()).toList(),
-        "attributes": attributes.map((x) => x?.toJson()).toList(),
-      };
-}
-
-class Attribute {
-  Attribute({
-    required this.id,
-    required this.attributeName,
-    required this.attributeValue,
-  });
-
-  final int? id;
-  final String? attributeName;
-  final String? attributeValue;
-
-  factory Attribute.fromJson(Map<String, dynamic> json) {
-    return Attribute(
-      id: json["id"],
-      attributeName: json["attributeName"],
-      attributeValue: json["attributeValue"],
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        "id": id,
-        "attributeName": attributeName,
-        "attributeValue": attributeValue,
+        "media": media.map((x) => x.toJson()).toList(),
+        "attributes": attributes.map((x) => x.toJson()).toList(),
       };
 }
 
