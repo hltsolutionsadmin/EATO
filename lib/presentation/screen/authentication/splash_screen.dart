@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:eato/components/bottomTab.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_cubit.dart';
 import 'package:eato/presentation/cubit/authentication/currentcustomer/get/current_customer_state.dart';
@@ -42,6 +44,14 @@ class _SplashScreenState extends State<SplashScreen> {
     await Future.delayed(const Duration(seconds: 4));
 
     final prefs = await SharedPreferences.getInstance();
+
+    // Get and save unique device ID
+    String? deviceId = await _getUniqueDeviceId();
+    if (deviceId != null) {
+      await prefs.setString('device_id', deviceId);
+    }
+    print("Device ID: $deviceId");
+
     final token = prefs.getString('TOKEN');
     final isFirstTime = prefs.getBool('isFirstTime') ?? true;
 
@@ -58,6 +68,24 @@ class _SplashScreenState extends State<SplashScreen> {
 
     await context.read<CurrentCustomerCubit>().GetCurrentCustomer(context);
     setState(() => _navigateManually = true);
+  }
+
+  Future<String?> _getUniqueDeviceId() async {
+    final deviceInfoPlugin = DeviceInfoPlugin();
+
+    try {
+      if (Platform.isAndroid) {
+        final androidInfo = await deviceInfoPlugin.androidInfo;
+        return androidInfo.id; // Unique on Android
+      } else if (Platform.isIOS) {
+        final iosInfo = await deviceInfoPlugin.iosInfo;
+        return iosInfo.identifierForVendor; // Unique on iOS
+      }
+    } catch (e) {
+      debugPrint("Device ID fetch error: $e");
+    }
+
+    return null;
   }
 
   void _navigateTo(Widget screen) {

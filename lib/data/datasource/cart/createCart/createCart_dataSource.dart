@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:eato/core/constants/api_constants.dart';
 import 'package:eato/data/model/cart/createCart/createCart_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class CreateCartRemoteDataSource {
   Future<CreateCartModel> createCart();
@@ -13,9 +14,16 @@ class CreateCartRemoteDataSourceImpl implements CreateCartRemoteDataSource {
 
   @override
   Future<CreateCartModel> createCart() async {
+    final prefs = await SharedPreferences.getInstance();
+    final deviceId = prefs.getString('device_id') ?? '';
     try {
       final response = await client.post(
         '$baseUrl$createCartUrl',
+        options: Options(
+          headers: {
+            'X-Device-Id': deviceId,
+          },
+        ),
       );
 
       print('CreateCart Response: ${response.data}');

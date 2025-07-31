@@ -12,7 +12,7 @@ class ProductsAddToCartCubit extends Cubit<ProductsAddToCartState> {
       : super(ProductsAddToCartInitial());
 
   Future<void> addToCart(
-    List<Map<String, dynamic>> payload, {
+    Map<String, dynamic> payload, {
     context,
     bool forceReplace = false,
   }) async {

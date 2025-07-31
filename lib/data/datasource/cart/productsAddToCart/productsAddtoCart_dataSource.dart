@@ -4,17 +4,19 @@ import 'package:eato/data/model/cart/productsAddToCart/productsAddtoCart_model.d
 
 abstract class ProductsAddToCartRemoteDataSource {
   Future<List<ProductsAddToCartModel>> productsAddToCart(
-   List<Map<String, dynamic>> payload
+    Map<String, dynamic> payload,
   );
 }
 
-class ProductsAddToCartRemoteDataSourceImpl implements ProductsAddToCartRemoteDataSource {
+class ProductsAddToCartRemoteDataSourceImpl
+    implements ProductsAddToCartRemoteDataSource {
   final Dio client;
 
   ProductsAddToCartRemoteDataSourceImpl({required this.client});
 
   @override
-  Future<List<ProductsAddToCartModel>> productsAddToCart(List<Map<String, dynamic>> payload) async {
+  Future<List<ProductsAddToCartModel>> productsAddToCart(
+      Map<String, dynamic> payload) async {
     print('ProductsAddToCart Payload: $payload');
     try {
       final response = await client.post(
@@ -39,7 +41,8 @@ class ProductsAddToCartRemoteDataSourceImpl implements ProductsAddToCartRemoteDa
           return [ProductsAddToCartModel.fromJson(response.data)];
         }
       } else {
-        throw Exception('Failed to ProductsAddToCart. Status code: ${response.statusCode}');
+        throw Exception(
+            'Failed to ProductsAddToCart. Status code: ${response.statusCode}');
       }
     } catch (e) {
       print('ProductsAddToCart Error: $e');
@@ -47,3 +50,4 @@ class ProductsAddToCartRemoteDataSourceImpl implements ProductsAddToCartRemoteDa
     }
   }
 }
+
