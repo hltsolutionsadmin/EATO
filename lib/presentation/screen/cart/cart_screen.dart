@@ -4,7 +4,6 @@ import 'package:eato/presentation/screen/widgets/cart/address_card.dart';
 import 'package:eato/presentation/screen/widgets/cart/cart_item_card.dart';
 import 'package:eato/presentation/screen/widgets/cart/checkout_bottom_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:http/http.dart' as http;
 import 'package:razorpay_flutter/razorpay_flutter.dart';
@@ -41,6 +40,7 @@ class _CartScreenState extends State<CartScreen> {
   late Razorpay _razorpay;
   static const razorPayKey = 'rzp_test_aa2AmRQV2HpRyT';
   static const razorPaySecret = 'UMfObdnXjWv3opzzTwHwAiv8';
+  final TextEditingController notesController = TextEditingController();
 
   final Map<String, int> cart = {};
   final List<Map<String, dynamic>> selectedItems = [];
@@ -186,9 +186,6 @@ class _CartScreenState extends State<CartScreen> {
                     message: "Something went wrong");
               }
               setState(() => loading = false);
-            } else if (state is ProductsAddToCartSuccess) {
-              // CustomSnackbars.showSuccessSnack(
-              //     context: context, title: "SUCCESS", message: "Item Updated");
             }
           },
         ),
@@ -258,6 +255,94 @@ class _CartScreenState extends State<CartScreen> {
                 }
               },
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              child: InkWell(
+                onTap: () async {
+                  final newNote = await showDialog<String>(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text("📝 Add Notes"),
+                      content: TextField(
+                        controller: notesController,
+                        decoration: const InputDecoration(
+                          hintText: "e.g. Deliver between 5–6 PM",
+                        ),
+                        maxLines: 3,
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.pop(
+                              context, notesController.text.trim()),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (newNote != null) {
+                    setState(() => notesController.text = newNote);
+
+                    final List<Map<String, dynamic>> itemsPayload =
+                        selectedItems.map((item) {
+                      final name = item['name'];
+                      final quantity = cart[name] ?? 1;
+                      return {
+                        "productId": item['productId'] ?? item['id'],
+                        "quantity": quantity,
+                        "price": item['price'] ?? 0,
+                      };
+                    }).toList();
+
+                    final Map<String, dynamic> payload = {
+                      "notes": notesController.text.trim(),
+                      "items": itemsPayload,
+                    };
+
+                    context.read<ProductsAddToCartCubit>().addToCart(payload);
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.notes_rounded, color: Colors.orange),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          notesController.text.isEmpty
+                              ? "Add delivery notes"
+                              : notesController.text,
+                          style: TextStyle(
+                            color: notesController.text.isEmpty
+                                ? Colors.grey
+                                : Colors.black,
+                            fontStyle: notesController.text.isEmpty
+                                ? FontStyle.italic
+                                : FontStyle.normal,
+                          ),
+                        ),
+                      ),
+                      const Icon(Icons.edit, size: 18, color: Colors.grey),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             Expanded(
               child: selectedItems.isEmpty
                   ? const Center(child: Text("No items in cart"))
@@ -270,8 +355,6 @@ class _CartScreenState extends State<CartScreen> {
                             item: item,
                             quantity: cart[item['name']] ?? 1,
                             onQuantityChanged: (q) async {
-                              final productId = item['productId'] ?? item['id'];
-                              final price = item['price'] ?? 0;
 
                               setState(() {
                                 if (q <= 0) {
@@ -291,23 +374,33 @@ class _CartScreenState extends State<CartScreen> {
                                     .read<GetCartCubit>()
                                     .fetchCart(context);
                               } else {
-                                // 🛒 Otherwise, just update the cart
+                                final List<Map<String, dynamic>> itemsPayload =
+                                    selectedItems.map((item) {
+                                  final name = item['name'];
+                                  final quantity = cart[name] ?? 1;
+                                  return {
+                                    "productId":
+                                        item['productId'] ?? item['id'],
+                                    "quantity": quantity,
+                                    "price": item['price'] ?? 0,
+                                  };
+                                }).toList();
+
+                                final Map<String, dynamic> payload = {
+                                  "notes": notesController.text.trim(),
+                                  "items": itemsPayload,
+                                };
+
                                 context
                                     .read<ProductsAddToCartCubit>()
-                                    .addToCart([
-                                  {
-                                    "productId": productId,
-                                    "quantity": q,
-                                    "price": price
-                                  }
-                                ]);
+                                    .addToCart(payload);
+
                                 context.read<GetCartCubit>().fetchCart(context);
                               }
 
                               widget.onBottomSheetVisibilityChanged
                                   ?.call(cart.isNotEmpty);
                             },
-
                           );
                         } else {
                           return Padding(

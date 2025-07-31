@@ -7,7 +7,7 @@ class ProductsAddToCartUseCase {
   ProductsAddToCartUseCase(this.repository);
 
   Future<List<ProductsAddToCartModel>> call(
-    List<Map<String, dynamic>> payload, {
+    Map<String, dynamic> payload, {
     bool forceReplace = false,
   }) async {
     return await repository.productsAddToCart(payload, forceReplace: forceReplace);

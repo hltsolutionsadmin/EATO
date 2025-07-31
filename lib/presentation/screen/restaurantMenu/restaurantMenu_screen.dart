@@ -175,12 +175,21 @@ class _RestaurantMenuScreenState extends State<RestaurantMenuScreen> {
       if (idx != -1) menuItems[idx] = item;
     });
 
-    final payload = {
-      "productId": item.id,
-      "quantity": qty,
-      "price": item.price ?? 0
+final List<Map<String, dynamic>> items = selectedItems
+        .map((item) => {
+              "productId": item.id,
+              "quantity": qty,
+              "price": item.price ?? 0,
+            })
+        .toList();
+
+    final Map<String, dynamic> payload = {
+      "notes": "notesController.text.trim()",
+      "items": items,
     };
-    context.read<ProductsAddToCartCubit>().addToCart([payload]);
+
+    debugPrint('ProductsAddToCart Payload: $payload');
+    context.read<ProductsAddToCartCubit>().addToCart(payload);
     context.read<GetCartCubit>().fetchCart(context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {

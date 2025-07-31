@@ -3,6 +3,7 @@ import 'package:eato/core/constants/api_constants.dart';
 import 'package:eato/data/model/payment/payment_model.dart';
 import 'package:eato/data/model/payments/payment_refund_model.dart';
 import 'package:eato/data/model/payments/refund_status_model.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 abstract class PaymentRemoteDataSource {
   Future<PaymentModel> Payment(Map<String, dynamic> payload);
@@ -17,10 +18,17 @@ class PaymentRemoteDataSourceImpl implements PaymentRemoteDataSource {
 
   @override
   Future<PaymentModel> Payment(Map<String, dynamic> payload) async {
+    final prefs = await SharedPreferences.getInstance();
+    final deviceId = prefs.getString('device_id') ?? '';
     try {
       final response = await client.post(
         '$baseUrl$paymentUrl',
         data: payload,
+        options: Options(
+          headers: {
+            'X-Device-Id': deviceId,
+          },
+        ),
       );
 
       print('Payment Response: ${response.data}');

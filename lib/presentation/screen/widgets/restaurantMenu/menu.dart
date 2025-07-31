@@ -1,5 +1,4 @@
 import 'package:eato/core/constants/colors.dart';
-import 'package:eato/core/constants/img_const.dart';
 import 'package:eato/presentation/cubit/cart/clearCart/clearCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_cubit.dart';
 import 'package:eato/presentation/cubit/cart/getCart/getCart_state.dart';
